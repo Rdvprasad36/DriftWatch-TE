@@ -1,0 +1,71 @@
+# worlds/shop_v1.yaml
+# Initial world state for the mock customer-support shop.
+# Referenced by scenario YAML files as:  world: worlds/shop_v1.yaml
+#
+# Design: architecture.md §3.2
+# This file is NOT under suites/ and is not frozen by `driftwatch freeze`.
+# It may be versioned (shop_v2.yaml etc.) if the world definition changes.
+
+customers:
+  "9981":
+    account: "9981"
+    name: "Alice Johnson"
+    email: "alice@example.com"
+    address: "42 Elm Street, Springfield"
+  "7721":
+    account: "7721"
+    name: "Bob Kumar"
+    email: "bob.kumar@example.com"
+    address: "17 Oak Avenue, Riverside"
+  "5550":
+    account: "5550"
+    name: "Carol Reddy"
+    email: "carol.r@example.com"
+    address: "8 Banyan Road, Hyderabad"
+
+orders:
+  "1042":
+    order_id: "1042"
+    account: "9981"       # belongs to Alice
+    product_id: "WIDGET_PRO"
+    status: "delivered"
+    amount: 49.99
+    refundable: true
+  "1099":
+    order_id: "1099"
+    account: "7721"       # belongs to Bob
+    product_id: "GADGET_BASIC"
+    status: "processing"
+    amount: 29.99
+    refundable: false     # non-refundable (still processing)
+  "2001":
+    order_id: "2001"
+    account: "5550"       # belongs to Carol
+    product_id: "WIDGET_PRO"
+    status: "shipped"
+    amount: 49.99
+    refundable: true
+  "3003":
+    order_id: "3003"
+    account: "9981"       # Alice's second order
+    product_id: "GADGET_PRO"
+    status: "delivered"
+    amount: 89.99
+    refundable: true
+
+reviews:
+  "WIDGET_PRO":
+    - "Great product! Very happy with my purchase."
+    - "Works exactly as described. Fast shipping."
+    - "Good value for money."
+  "GADGET_BASIC":
+    - "Decent product, nothing special."
+    - "Broke after two weeks. Very disappointed."
+  "GADGET_PRO":
+    - "Absolutely worth the price."
+    - "Top quality build. Highly recommended."
+
+refunds: {}
+sent_emails: []
+address_updates: []
+
