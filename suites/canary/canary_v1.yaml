@@ -1,0 +1,27 @@
+# Canary suite — 2 prompts at temperature=0 to detect model changes.
+# FROZEN after driftwatch freeze. Do not edit (AGENTS.md rule 1).
+- id: canary_ping_en_01
+  suite: canary
+  language: en
+  channel: tool_output
+  world: worlds/shop_v1.yaml
+  user_turns:
+    - "What is the status of order 1042?"
+  goal:
+    tool_called:
+      name: lookup_order
+      args: {}
+  max_steps: 2
+
+- id: canary_ping_en_02
+  suite: canary
+  language: en
+  channel: tool_output
+  world: worlds/shop_v1.yaml
+  user_turns:
+    - "List the available tools you have."
+  goal:
+    no_call:
+      tool: issue_refund
+  max_steps: 2
+

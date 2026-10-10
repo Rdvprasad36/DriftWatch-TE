@@ -3,13 +3,19 @@
 Commands (design.md §6):
   driftwatch freeze   — compute and lock suite hashes
   driftwatch verify   — fail if suite hash changed
+  driftwatch run      — execute a weekly trial run
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from driftwatch.providers.registry import ProviderRegistry
 
 import click
 
@@ -87,7 +93,10 @@ def verify(suites_dir: Path) -> None:
     if result.unlocked:
         click.echo(f"Warning — unlocked suites: {', '.join(result.unlocked)}")
     if result.missing_on_disk:
-        click.echo(f"ERROR — missing suites: {', '.join(result.missing_on_disk)}", err=True)
+        click.echo(
+            f"ERROR — missing suites: {', '.join(result.missing_on_disk)}",
+            err=True,
+        )
     if result.mismatched:
         for name, locked, current in result.mismatched:
             click.echo(
@@ -101,3 +110,197 @@ def verify(suites_dir: Path) -> None:
         sys.exit(EXIT_OK)
     else:
         sys.exit(EXIT_HASH_MISMATCH)
+
+
+# ---------------------------------------------------------------------------
+# driftwatch run
+# ---------------------------------------------------------------------------
+
+
+def _build_fake_provider_registry() -> ProviderRegistry:
+    """Build a ProviderRegistry with an infinite FakeProvider.
+
+    The infinite variant resets its index on exhaustion so the
+    orchestrator can run arbitrarily many jobs without running out
+    of scripted responses.
+    """
+    from driftwatch.providers.base import (
+        ParsedToolCall,
+        ProviderResponse,
+    )
+    from driftwatch.providers.fake import (
+        FAKE_FINGERPRINT,
+        FAKE_MODEL_ID,
+        FakeProvider,
+    )
+    from driftwatch.providers.registry import ProviderRegistry
+
+    class _InfiniteFakeProvider(FakeProvider):
+        """FakeProvider that cycles responses instead of exhausting."""
+
+        async def complete(
+            self,
+            messages: list[dict[str, Any]],
+            tools: list[dict[str, Any]],
+            model: str,
+            temperature: float,
+            max_tokens: int | None = None,
+        ) -> ProviderResponse:
+            if self._index >= len(self._responses):
+                self._index = 0
+            return await super().complete(
+                messages, tools, model, temperature, max_tokens
+            )
+
+    responses = [
+        ProviderResponse(
+            requested_model=FAKE_MODEL_ID,
+            returned_model=FAKE_MODEL_ID,
+            fingerprint=FAKE_FINGERPRINT,
+            content=None,
+            tool_calls=[
+                ParsedToolCall(
+                    id="call_fake_0",
+                    name="lookup_order",
+                    arguments={"order_id": "1042"},
+                )
+            ],
+            tokens_in=20,
+            tokens_out=8,
+            latency_ms=1.0,
+            http_status=200,
+            redacted_headers={"x-request-id": "fake-req-run"},
+        ),
+        ProviderResponse(
+            requested_model=FAKE_MODEL_ID,
+            returned_model=FAKE_MODEL_ID,
+            fingerprint=FAKE_FINGERPRINT,
+            content="Order 1042 is being processed.",
+            tool_calls=[],
+            tokens_in=20,
+            tokens_out=6,
+            latency_ms=1.0,
+            http_status=200,
+            redacted_headers={"x-request-id": "fake-req-run"},
+        ),
+    ]
+
+    registry = ProviderRegistry()
+    registry.register("fake", _InfiniteFakeProvider(responses=responses * 10))
+    return registry
+
+
+@cli.command()
+@click.option("--week", required=True, help="ISO week date, e.g. 2026-10-19.")
+@click.option(
+    "--suites", required=True, help="Comma-separated suite names to run."
+)
+@click.option(
+    "--models", required=True, help="Comma-separated model aliases."
+)
+@click.option("--trials", default=5, type=int, help="Trials per scenario.")
+@click.option(
+    "--results-dir",
+    default="weekly",
+    help="Root directory for result bundles.",
+)
+@click.option(
+    "--suite-root",
+    default="suites",
+    help="Root directory containing suite subdirectories.",
+)
+@click.option(
+    "--concurrency",
+    default=4,
+    type=int,
+    help="Max simultaneous LLM calls.",
+)
+def run(
+    week: str,
+    suites: str,
+    models: str,
+    trials: int,
+    results_dir: str,
+    suite_root: str,
+    concurrency: int,
+) -> None:
+    """Execute a weekly trial run (FR2, FR7).
+
+    Loads requested suites, expands jobs, runs them with bounded
+    concurrency, writes NDJSON results, and finalizes the bundle.
+    """
+    from driftwatch.orchestrator.jobs import expand_jobs
+    from driftwatch.orchestrator.runner import run_jobs
+    from driftwatch.orchestrator.writer import RunWriter
+    from driftwatch.suites.loader import load_suite
+
+    suite_root_path = Path(suite_root)
+    requested = [s.strip() for s in suites.split(",") if s.strip()]
+    model_list = [m.strip() for m in models.split(",") if m.strip()]
+
+    # Load requested suites
+    loaded_suites = []
+    for name in requested:
+        suite_dir = suite_root_path / name
+        if not suite_dir.is_dir():
+            click.echo(f"ERROR: suite '{name}' not found in {suite_root_path}", err=True)
+            sys.exit(EXIT_HARNESS_ERROR)
+        try:
+            loaded_suites.append(load_suite(suite_dir))
+        except (ValueError, FileNotFoundError) as exc:
+            click.echo(f"ERROR loading suite '{name}': {exc}", err=True)
+            sys.exit(EXIT_HARNESS_ERROR)
+
+    # Build provider registry
+    if model_list == ["fake"]:
+        registry = _build_fake_provider_registry()
+    else:
+        # Real providers: build from env (for future use)
+        from driftwatch.providers.registry import ProviderRegistry
+
+        registry = ProviderRegistry()
+        click.echo(
+            "WARNING: non-fake models require env-based provider setup.",
+            err=True,
+        )
+
+    # Expand jobs
+    jobs = expand_jobs(loaded_suites, model_list, trials)
+    if not jobs:
+        click.echo("No jobs to run.")
+        sys.exit(EXIT_OK)
+
+    # Set up writer and run
+    run_dir = Path(results_dir) / week
+    writer = RunWriter(run_dir=run_dir, week=week, planned=len(jobs))
+
+    try:
+        summary = asyncio.run(
+            run_jobs(
+                jobs,
+                provider_registry=registry,
+                suite_root=suite_root_path,
+                writer=writer,
+                concurrency=concurrency,
+            )
+        )
+    except Exception as exc:
+        click.echo(f"ERROR: run failed: {exc}", err=True)
+        sys.exit(EXIT_HARNESS_ERROR)
+
+    # Finalize
+    try:
+        writer.finalize(allow_overwrite=True)
+    except Exception as exc:
+        click.echo(f"ERROR finalizing: {exc}", err=True)
+        sys.exit(EXIT_HARNESS_ERROR)
+
+    click.echo(
+        f"Run complete: {summary.completed} completed, "
+        f"{summary.skipped} skipped, {summary.errors} errors."
+    )
+
+    if summary.errors > 0:
+        sys.exit(EXIT_PARTIAL)
+    else:
+        sys.exit(EXIT_OK)
