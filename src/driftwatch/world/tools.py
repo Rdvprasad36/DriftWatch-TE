@@ -106,6 +106,25 @@ class ToolRegistry:
         """Return names of all registered tools."""
         return list(self._tools.keys())
 
+    def patch_description(self, name: str, payload: str) -> None:
+        """Append *payload* to the description of tool *name* (tool_description channel).
+
+        Mutates the registry in place.  The caller must ensure a fresh registry
+        is used per trial so patches do not bleed across trials (architecture.md §3.3).
+
+        Raises:
+            KeyError: If *name* is not a registered tool.
+        """
+        if name not in self._tools:
+            available = ", ".join(sorted(self._tools)) or "<none>"
+            msg = f"Cannot patch unknown tool '{name}'. Registered: {available}"
+            raise KeyError(msg)
+        fn, spec = self._tools[name]
+        patched_spec = spec.model_copy(
+            update={"description": f"{spec.description}\n\n{payload}"}
+        )
+        self._tools[name] = (fn, patched_spec)
+
 
 # ---------------------------------------------------------------------------
 # Tool implementations
