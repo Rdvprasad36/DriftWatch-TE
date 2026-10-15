@@ -304,3 +304,60 @@ def run(
         sys.exit(EXIT_PARTIAL)
     else:
         sys.exit(EXIT_OK)
+
+
+
+# ---------------------------------------------------------------------------
+# driftwatch summarize
+# ---------------------------------------------------------------------------
+
+
+@cli.command()
+@click.option("--week", required=True, help="ISO week date, e.g. 2026-10-19.")
+@click.option(
+    "--results-dir",
+    default="weekly",
+    help="Root directory containing weekly run bundles.",
+)
+@click.option(
+    "--output-dir",
+    default="results/summary",
+    help="Output directory for summary JSON files.",
+)
+def summarize(week: str, results_dir: str, output_dir: str) -> None:
+    """Generate a summary JSON for a weekly run (FR7).
+
+    Reads trials.parquet from the run bundle and writes a compact
+    summary to results/summary/<week>.json for the dashboard.
+    """
+    from driftwatch.storage.summary import write_summary
+
+    run_dir = Path(results_dir) / week
+    if not run_dir.is_dir():
+        click.echo(
+            f"ERROR: run directory '{run_dir}' not found.", err=True
+        )
+        sys.exit(EXIT_HARNESS_ERROR)
+
+    parquet_path = run_dir / "trials.parquet"
+    if not parquet_path.exists():
+        click.echo(
+            f"ERROR: trials.parquet not found in '{run_dir}'. "
+            "Run `driftwatch run` first.",
+            err=True,
+        )
+        sys.exit(EXIT_HARNESS_ERROR)
+
+    try:
+        path = write_summary(
+            run_dir, week=week, output_dir=Path(output_dir)
+        )
+        click.echo(f"Summary written: {path}")
+        sys.exit(EXIT_OK)
+    except Exception as exc:
+        click.echo(f"ERROR: {exc}", err=True)
+        sys.exit(EXIT_HARNESS_ERROR)
+
+
+if __name__ == "__main__":
+    cli()
