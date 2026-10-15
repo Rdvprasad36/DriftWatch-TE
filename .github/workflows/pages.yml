@@ -1,0 +1,56 @@
+name: Deploy Dashboard to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "results/summary/**"
+      - "dashboard/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build static site directory
+        run: |
+          mkdir -p _site/data
+          # Copy dashboard files if dashboard directory exists
+          if [ -d "dashboard" ]; then
+            cp -r dashboard/* _site/
+          else
+            # Minimal index placeholder if dashboard is built in Step 12
+            echo '<!DOCTYPE html><html><head><title>DriftWatch-TE Dashboard</title></head><body><h1>DriftWatch-TE</h1><p>Dashboard coming in Phase 1.</p></body></html>' > _site/index.html
+          fi
+          # Copy summary data files
+          if [ -d "results/summary" ]; then
+            cp -r results/summary/* _site/data/ 2>/dev/null || true
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "_site"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

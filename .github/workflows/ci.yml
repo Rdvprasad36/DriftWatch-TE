@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    name: Lint, Type Check, and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint with ruff
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Type check with mypy
+        run: |
+          mypy src
+
+      - name: Run offline unit tests
+        run: |
+          pytest -q
+
+      - name: Verify suite integrity (if locked)
+        run: |
+          if [ -f "suites/SUITE_LOCK.json" ]; then
+            python -m driftwatch.cli.main verify
+          else
+            echo "Suites not yet frozen (freeze planned for Step 10 before Run 1)."
+          fi

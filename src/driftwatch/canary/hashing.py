@@ -95,3 +95,4 @@ def compare_canary_runs(
         "drift_detected": drift_detected,
         "changes": changes,
     }
+

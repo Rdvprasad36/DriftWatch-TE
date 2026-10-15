@@ -202,3 +202,4 @@ def write_canary_bundle(
     )
     logger.info("Wrote canary bundle: %s (%d results)", out_path, len(results))
     return out_path
+
