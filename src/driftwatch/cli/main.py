@@ -359,5 +359,79 @@ def summarize(week: str, results_dir: str, output_dir: str) -> None:
         sys.exit(EXIT_HARNESS_ERROR)
 
 
+# ---------------------------------------------------------------------------
+# driftwatch canary
+# ---------------------------------------------------------------------------
+
+
+@cli.command()
+@click.option("--week", required=True, help="ISO week date, e.g. 2026-10-19.")
+@click.option(
+    "--models", required=True, help="Comma-separated model aliases."
+)
+@click.option(
+    "--suite-dir",
+    default="suites/canary",
+    help="Path to canary suite directory.",
+)
+@click.option(
+    "--results-dir",
+    default="weekly",
+    help="Root directory for result bundles.",
+)
+def canary(week: str, models: str, suite_dir: str, results_dir: str) -> None:
+    """Execute canary prompts at temperature 0.0 (FR5).
+
+    Detects underlying model changes by recording deterministic output hashes.
+    Saves output to weekly/<week>/canary.json.
+    """
+    from driftwatch.canary.runner import (
+        load_canary_prompts,
+        run_canaries,
+        write_canary_bundle,
+    )
+
+    suite_path = Path(suite_dir)
+    if not suite_path.is_dir():
+        click.echo(f"ERROR: canary suite directory '{suite_path}' not found.", err=True)
+        sys.exit(EXIT_HARNESS_ERROR)
+
+    try:
+        prompts = load_canary_prompts(suite_path)
+    except Exception as exc:
+        click.echo(f"ERROR loading canary suite: {exc}", err=True)
+        sys.exit(EXIT_HARNESS_ERROR)
+
+    model_list = [m.strip() for m in models.split(",") if m.strip()]
+
+    if model_list == ["fake"]:
+        registry = _build_fake_provider_registry()
+    else:
+        from driftwatch.providers.registry import ProviderRegistry
+
+        registry = ProviderRegistry()
+        click.echo(
+            "WARNING: non-fake models require env-based provider setup.",
+            err=True,
+        )
+
+    run_dir = Path(results_dir) / week
+
+    try:
+        results = asyncio.run(
+            run_canaries(
+                prompts,
+                provider_registry=registry,
+                model_aliases=model_list,
+            )
+        )
+        out_path = write_canary_bundle(results, run_dir, week=week)
+        click.echo(f"Canary bundle written: {out_path} ({len(results)} prompt(s))")
+        sys.exit(EXIT_OK)
+    except Exception as exc:
+        click.echo(f"ERROR: {exc}", err=True)
+        sys.exit(EXIT_HARNESS_ERROR)
+
+
 if __name__ == "__main__":
     cli()
