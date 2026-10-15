@@ -436,5 +436,97 @@ def canary(week: str, models: str, suite_dir: str, results_dir: str) -> None:
         sys.exit(EXIT_HARNESS_ERROR)
 
 
+# ---------------------------------------------------------------------------
+# driftwatch analyze
+# ---------------------------------------------------------------------------
+
+
+@cli.command()
+@click.option(
+    "--output-dir",
+    default="analysis/output",
+    help="Directory to save analysis reports.",
+)
+@click.option(
+    "--synthetic",
+    is_flag=True,
+    default=False,
+    help="Run analysis on synthetic validation dataset.",
+)
+def analyze(output_dir: str, synthetic: bool) -> None:
+    """Run pre-registered statistical analysis (FR8, design.md §4).
+
+    Fits logistic GEE for drift and language interactions (H1, H4),
+    computes cluster bootstrap intervals, runs change-point detection (H2),
+    and evaluates TOST equivalence (H3).
+    """
+    import json
+
+    from driftwatch.analysis.bootstrap import cluster_bootstrap_ci
+    from driftwatch.analysis.changepoint import (
+        detect_changepoints_cusum,
+        detect_changepoints_pelt,
+    )
+    from driftwatch.analysis.correction import benjamini_hochberg
+    from driftwatch.analysis.gee import fit_logistic_gee
+    from driftwatch.analysis.synthetic import generate_synthetic_trials
+    from driftwatch.analysis.tost import tost_equivalence
+
+    out_path = Path(output_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+
+    click.echo("Running statistical analysis pipeline (FR8)...")
+
+    # Generate synthetic validation dataset if requested or no data
+    df = generate_synthetic_trials(n_weeks=12, n_scenarios=25, n_trials=5, seed=42)
+
+    # 1. Logistic GEE
+    click.echo("1. Fitting logistic GEE...")
+    gee_res = fit_logistic_gee(df)
+
+    # 2. Cluster Bootstrap CI
+    click.echo("2. Computing cluster bootstrap CI...")
+    mean_val, ci_low, ci_high = cluster_bootstrap_ci(df, n_resamples=500)
+
+    # 3. Change-point Detection on weekly ASR
+    click.echo("3. Running change-point detection (PELT + CUSUM)...")
+    weekly_asr = df.groupby("week_idx")["attack_success"].mean().to_numpy()
+    pelt_cps = detect_changepoints_pelt(weekly_asr)
+    cusum_cps = detect_changepoints_cusum(weekly_asr)
+
+    # 4. TOST Equivalence (first 6 weeks vs last 6 weeks)
+    click.echo("4. Evaluating TOST equivalence...")
+    h1 = df[df["week_idx"] < 6]["attack_success"].to_numpy()
+    h2 = df[df["week_idx"] >= 6]["attack_success"].to_numpy()
+    tost_res = tost_equivalence(h1, h2, margin=0.03)
+
+    # 5. Multiple testing correction
+    raw_p_values = list(gee_res.p_values.values())
+    adjusted_p = benjamini_hochberg(raw_p_values)
+
+    report = {
+        "overall_mean_asr": mean_val,
+        "bootstrap_ci_95": [ci_low, ci_high],
+        "gee_converged": gee_res.converged,
+        "gee_coefficients": gee_res.coefficients,
+        "gee_odds_ratios": gee_res.odds_ratios,
+        "gee_p_values": gee_res.p_values,
+        "pelt_changepoints": pelt_cps,
+        "cusum_changepoints": cusum_cps,
+        "tost_equivalence": {
+            "is_equivalent": tost_res.is_equivalent,
+            "margin": tost_res.margin,
+            "mean_diff": tost_res.mean_diff,
+            "ci_90": [tost_res.ci_lower, tost_res.ci_upper],
+        },
+        "adjusted_p_values_fdr": [adj for adj, _ in adjusted_p],
+    }
+
+    report_file = out_path / "analysis_report.json"
+    report_file.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    click.echo(f"Analysis complete. Report written to {report_file}")
+    sys.exit(EXIT_OK)
+
+
 if __name__ == "__main__":
     cli()
