@@ -149,3 +149,4 @@ jobs:
             git diff --staged --quiet || git commit -m "chore(data): summary for week ${{ env.WEEK }} (FR7)"
             git push origin HEAD || echo "No changes or push failed"
           fi
+

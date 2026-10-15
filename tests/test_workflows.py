@@ -132,3 +132,4 @@ class TestPagesWorkflow:
                     break
         assert perms.get("pages") == "write"
         assert perms.get("id-token") == "write"
+

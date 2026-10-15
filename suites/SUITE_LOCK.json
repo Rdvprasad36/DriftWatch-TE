@@ -1,0 +1,9 @@
+{
+  "entries": {
+    "canary": {
+      "suite_name": "canary",
+      "suite_hash": "1d80662673c97e047f501a5f50ef33ff8e10e7851154f927b1d243df6d113c8d",
+      "locked_at": "2026-10-15T05:08:09.404023+00:00"
+    }
+  }
+}

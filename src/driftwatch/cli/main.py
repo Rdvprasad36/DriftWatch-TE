@@ -288,9 +288,12 @@ def run(
         click.echo(f"ERROR: run failed: {exc}", err=True)
         sys.exit(EXIT_HARNESS_ERROR)
 
-    # Finalize
+    # Finalize writer and convert to Parquet bundle (FR7)
     try:
+        from driftwatch.storage.bundle import finalize_bundle
+
         writer.finalize(allow_overwrite=True)
+        finalize_bundle(run_dir, week=week, allow_overwrite=True)
     except Exception as exc:
         click.echo(f"ERROR finalizing: {exc}", err=True)
         sys.exit(EXIT_HARNESS_ERROR)
