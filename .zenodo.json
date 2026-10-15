@@ -1,0 +1,23 @@
+{
+  "title": "DriftWatch-TE: Longitudinal Security Drift in Hosted LLM Agents with Telugu and Tenglish Attack Sets",
+  "description": "Research harness, benchmark suites, and longitudinal evaluation data tracking prompt injection Attack Success Rate (ASR) over time on hosted LLM agents across English, Telugu, and Tenglish.",
+  "creators": [
+    {
+      "name": "DriftWatch Research Team",
+      "affiliation": "Open Security Research"
+    }
+  ],
+  "access_right": "open",
+  "license": "Apache-2.0",
+  "keywords": [
+    "large-language-models",
+    "prompt-injection",
+    "agent-security",
+    "longitudinal-drift",
+    "telugu",
+    "tenglish",
+    "code-mixing"
+  ],
+  "upload_type": "dataset"
+}
+

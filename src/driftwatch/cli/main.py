@@ -528,5 +528,105 @@ def analyze(output_dir: str, synthetic: bool) -> None:
     sys.exit(EXIT_OK)
 
 
+# ---------------------------------------------------------------------------
+# driftwatch event
+# ---------------------------------------------------------------------------
+
+
+@cli.group()
+def event() -> None:
+    """Manage provider changelog events (FR11, design.md §6)."""
+
+
+@event.command(name="add")
+@click.option("--provider", required=True, help="Provider name (e.g. openrouter, groq, cerebras).")
+@click.option("--model", required=True, help="Model alias or identifier.")
+@click.option("--date", required=True, help="Date of event (YYYY-MM-DD).")
+@click.option("--url", default="", help="Link to release note, changelog, or status page.")
+@click.option("--note", required=True, help="Description of the change or observation.")
+@click.option(
+    "--events-file",
+    default="events/provider_events.json",
+    help="Path to store events JSON file.",
+)
+def event_add(
+    provider: str,
+    model: str,
+    date: str,
+    url: str,
+    note: str,
+    events_file: str,
+) -> None:
+    """Add a dated provider changelog entry (FR11)."""
+    import json
+    from datetime import datetime
+
+    # Validate date
+    try:
+        datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        click.echo(f"ERROR: Invalid date '{date}'. Expected YYYY-MM-DD.", err=True)
+        sys.exit(EXIT_HARNESS_ERROR)
+
+    path = Path(events_file)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    events: list[dict[str, str]] = []
+    if path.exists():
+        try:
+            events = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            events = []
+
+    new_event = {
+        "provider": provider,
+        "model": model,
+        "date": date,
+        "url": url,
+        "note": note,
+    }
+    events.append(new_event)
+    events.sort(key=lambda x: x["date"])
+
+    path.write_text(json.dumps(events, indent=2), encoding="utf-8")
+    click.echo(f"Event recorded in {path}: [{date}] {provider}/{model}: {note}")
+    sys.exit(EXIT_OK)
+
+
+@event.command(name="list")
+@click.option(
+    "--events-file",
+    default="events/provider_events.json",
+    help="Path to events JSON file.",
+)
+def event_list(events_file: str) -> None:
+    """List recorded provider events."""
+    import json
+
+    path = Path(events_file)
+    if not path.exists():
+        click.echo("No events recorded yet.")
+        sys.exit(EXIT_OK)
+
+    try:
+        events: list[dict[str, str]] = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        click.echo(f"ERROR reading events: {exc}", err=True)
+        sys.exit(EXIT_HARNESS_ERROR)
+
+    if not events:
+        click.echo("No events recorded.")
+        sys.exit(EXIT_OK)
+
+    click.echo(f"Recorded Provider Events ({len(events)}):")
+    for ev in events:
+        click.echo(
+            f"  - [{ev.get('date')}] {ev.get('provider')} / {ev.get('model')}: "
+            f"{ev.get('note')} ({ev.get('url', 'no url')})"
+        )
+    sys.exit(EXIT_OK)
+
+
 if __name__ == "__main__":
     cli()
+
