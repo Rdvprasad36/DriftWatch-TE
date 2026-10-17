@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DriftWatch-TE: Longitudinal Security Evaluation Report</title>
+  <style>
+    :root {
+      --text: #0f172a;
+      --bg: #ffffff;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --accent: #0284c7;
+      --header-navy: #0F2A43;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; margin: 0; padding: 40px 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    header.report-header { border-bottom: 2px solid var(--accent); padding-bottom: 16px; margin-bottom: 28px; }
+    h1 { font-size: 1.85rem; color: var(--header-navy); margin-bottom: 8px; }
+    .meta-bar { font-size: 0.88rem; color: var(--muted); }
+    h2 { font-size: 1.3rem; color: var(--header-navy); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-top: 32px; margin-bottom: 14px; }
+    h3 { font-size: 1.05rem; margin-top: 20px; }
+    p, li { font-size: 0.94rem; }
+    blockquote { background: #f8fafc; border-left: 4px solid var(--accent); padding: 12px 18px; margin: 18px 0; border-radius: 4px; font-size: 0.92rem; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.88rem; }
+    th, td { border: 1px solid var(--border); padding: 10px 12px; text-align: left; }
+    th { background: #f1f5f9; color: var(--text); font-weight: 600; }
+    code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.86em; }
+    /* Print Stylesheet for PDF Export */
+    @media print {
+      body { padding: 0; background: #fff; color: #000; font-size: 11pt; }
+      .container { max-width: 100%; width: 100%; margin: 0; }
+      header.report-header { page-break-after: avoid; }
+      h2, h3 { page-break-after: avoid; }
+      table, blockquote { page-break-inside: avoid; }
+      @page { margin: 20mm 15mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="report-header">
+      <h1>DriftWatch-TE: Longitudinal Security Evaluation Report</h1>
+      <div class="meta-bar">Generated: 2026-10-17 12:36:22 UTC &bull; Git SHA: <code>9ac1042</code> &bull; Study Weeks: 0 of 12</div>
+    </header>
+    <h2>1. Summary</h2>
+    <blockquote><strong>NOTICE: Formal longitudinal results are not yet available.</strong><br>Minimum pre-registered threshold of 4 study weeks required for inferential drift tests. 0 week(s) recorded to date.</blockquote>
+    <h2>2. Study Design</h2>
+    <ul>
+      <li><strong>Objective:</strong> Quantifying indirect prompt injection Attack Success Rate (ASR) drift on hosted endpoints.</li>
+      <li><strong>Sandbox:</strong> Deterministic mock shop world (<code>worlds/shop_v1.yaml</code>) with invariant goal predicates.</li>
+      <li><strong>Languages:</strong> English (<code>en</code>), Telugu (<code>te</code>), and Tenglish (<code>te-Latn</code>).</li>
+      <li><strong>Invariance Control:</strong> Pinned local model evaluated longitudinally via TOST (&plusmn;3% margin).</li>
+    </ul>
+    <h2>3. Data Completeness &amp; Progress</h2>
+    <p>Completed <strong>0</strong> of 12 planned study weeks across <strong>16</strong> total trials.</p>
+    <table>
+      <thead><tr><th>Week Date</th><th>Classification</th><th>Trials</th></tr></thead>
+      <tbody>
+        <tr><td><code>2026-10-16</code></td><td>Pilot / Pre-study</td><td>16</td></tr>
+      </tbody>
+    </table>
+    <h2>4. Output 1: Drift Results</h2>
+    <p><em>Inferential drift results gated until &ge; 4 study weeks are gathered.</em></p>
+    <h2>5. Output 2: Language Results</h2>
+    <p><em>Language interaction models gated until &ge; 4 study weeks are gathered.</em></p>
+    <h2>6. Uncertainty &amp; Limitations</h2>
+    <ul>
+      <li>Models adjust for scenario clustering via GEE with exchangeable working correlation.</li>
+      <li>Multiple testing across endpoints is controlled using Benjamini-Hochberg FDR at &alpha; = 0.05.</li>
+      <li>Black-box API access evaluates behavioral drift only without internal weight inspection.</li>
+    </ul>
+    <h2>7. Reproducibility &amp; Audit Trail</h2>
+    <p>Git Commit: <code>9ac1042</code></p>
+    <h3>Frozen Suite Hashes:</h3>
+    <ul>
+      <li><code>canary</code>: <code>1d80662673c97e047f501a5f50ef33ff8e10e7851154f927b1d243df6d113c8d</code></li>
+      <li><code>attacks_v1</code>: <code>dafc0338875444212e4c07a414e1a7d902f7a89b5cab8f943791bb6a1df114b4</code></li>
+      <li><code>control</code>: <code>1ae8f9e419a98dee801cb5f4c59d7a8b178d012b161dac5e48a57c578b1e93cd</code></li>
+    </ul>
+  </div>
+</body>
+</html>

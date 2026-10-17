@@ -148,9 +148,7 @@ def _build_fake_provider_registry() -> ProviderRegistry:
         ) -> ProviderResponse:
             if self._index >= len(self._responses):
                 self._index = 0
-            return await super().complete(
-                messages, tools, model, temperature, max_tokens
-            )
+            return await super().complete(messages, tools, model, temperature, max_tokens)
 
     responses = [
         ProviderResponse(
@@ -192,12 +190,8 @@ def _build_fake_provider_registry() -> ProviderRegistry:
 
 @cli.command()
 @click.option("--week", required=True, help="ISO week date, e.g. 2026-10-19.")
-@click.option(
-    "--suites", required=True, help="Comma-separated suite names to run."
-)
-@click.option(
-    "--models", required=True, help="Comma-separated model aliases."
-)
+@click.option("--suites", required=True, help="Comma-separated suite names to run.")
+@click.option("--models", required=True, help="Comma-separated model aliases.")
 @click.option("--trials", default=5, type=int, help="Trials per scenario.")
 @click.option(
     "--results-dir",
@@ -255,14 +249,9 @@ def run(
     if model_list == ["fake"]:
         registry = _build_fake_provider_registry()
     else:
-        # Real providers: build from env (for future use)
-        from driftwatch.providers.registry import ProviderRegistry
+        from driftwatch.providers.registry import build_from_env
 
-        registry = ProviderRegistry()
-        click.echo(
-            "WARNING: non-fake models require env-based provider setup.",
-            err=True,
-        )
+        registry = build_from_env()
 
     # Expand jobs
     jobs = expand_jobs(loaded_suites, model_list, trials)
@@ -309,7 +298,6 @@ def run(
         sys.exit(EXIT_OK)
 
 
-
 # ---------------------------------------------------------------------------
 # driftwatch summarize
 # ---------------------------------------------------------------------------
@@ -337,24 +325,19 @@ def summarize(week: str, results_dir: str, output_dir: str) -> None:
 
     run_dir = Path(results_dir) / week
     if not run_dir.is_dir():
-        click.echo(
-            f"ERROR: run directory '{run_dir}' not found.", err=True
-        )
+        click.echo(f"ERROR: run directory '{run_dir}' not found.", err=True)
         sys.exit(EXIT_HARNESS_ERROR)
 
     parquet_path = run_dir / "trials.parquet"
     if not parquet_path.exists():
         click.echo(
-            f"ERROR: trials.parquet not found in '{run_dir}'. "
-            "Run `driftwatch run` first.",
+            f"ERROR: trials.parquet not found in '{run_dir}'. Run `driftwatch run` first.",
             err=True,
         )
         sys.exit(EXIT_HARNESS_ERROR)
 
     try:
-        path = write_summary(
-            run_dir, week=week, output_dir=Path(output_dir)
-        )
+        path = write_summary(run_dir, week=week, output_dir=Path(output_dir))
         click.echo(f"Summary written: {path}")
         sys.exit(EXIT_OK)
     except Exception as exc:
@@ -369,9 +352,7 @@ def summarize(week: str, results_dir: str, output_dir: str) -> None:
 
 @cli.command()
 @click.option("--week", required=True, help="ISO week date, e.g. 2026-10-19.")
-@click.option(
-    "--models", required=True, help="Comma-separated model aliases."
-)
+@click.option("--models", required=True, help="Comma-separated model aliases.")
 @click.option(
     "--suite-dir",
     default="suites/canary",
@@ -410,13 +391,9 @@ def canary(week: str, models: str, suite_dir: str, results_dir: str) -> None:
     if model_list == ["fake"]:
         registry = _build_fake_provider_registry()
     else:
-        from driftwatch.providers.registry import ProviderRegistry
+        from driftwatch.providers.registry import build_from_env
 
-        registry = ProviderRegistry()
-        click.echo(
-            "WARNING: non-fake models require env-based provider setup.",
-            err=True,
-        )
+        registry = build_from_env()
 
     run_dir = Path(results_dir) / week
 
@@ -443,9 +420,19 @@ def canary(week: str, models: str, suite_dir: str, results_dir: str) -> None:
 
 @cli.command()
 @click.option(
+    "--output-file",
+    default="results/analysis/analysis.json",
+    help="Target path for analysis.json.",
+)
+@click.option(
     "--output-dir",
-    default="analysis/output",
-    help="Directory to save analysis reports.",
+    default=None,
+    help="Legacy directory path for analysis output.",
+)
+@click.option(
+    "--weekly-dir",
+    default="weekly",
+    help="Directory containing weekly run bundles.",
 )
 @click.option(
     "--synthetic",
@@ -453,78 +440,100 @@ def canary(week: str, models: str, suite_dir: str, results_dir: str) -> None:
     default=False,
     help="Run analysis on synthetic validation dataset.",
 )
-def analyze(output_dir: str, synthetic: bool) -> None:
-    """Run pre-registered statistical analysis (FR8, design.md §4).
+def analyze(output_file: str, output_dir: str | None, weekly_dir: str, synthetic: bool) -> None:
+    """Run pre-registered statistical analysis (FR8, Item 2).
 
     Fits logistic GEE for drift and language interactions (H1, H4),
-    computes cluster bootstrap intervals, runs change-point detection (H2),
-    and evaluates TOST equivalence (H3).
+    computes change-point detection (H2), TOST equivalence (H3),
+    evaluates hypotheses H1-H6, and outputs results/analysis/analysis.json.
     """
-    import json
+    from driftwatch.analysis.pipeline import run_analysis_pipeline
 
-    from driftwatch.analysis.bootstrap import cluster_bootstrap_ci
-    from driftwatch.analysis.changepoint import (
-        detect_changepoints_cusum,
-        detect_changepoints_pelt,
-    )
-    from driftwatch.analysis.correction import benjamini_hochberg
-    from driftwatch.analysis.gee import fit_logistic_gee
-    from driftwatch.analysis.synthetic import generate_synthetic_trials
-    from driftwatch.analysis.tost import tost_equivalence
-
-    out_path = Path(output_dir)
-    out_path.mkdir(parents=True, exist_ok=True)
+    target_path = Path(output_file)
+    if output_dir:
+        target_path = Path(output_dir) / "analysis_report.json"
 
     click.echo("Running statistical analysis pipeline (FR8)...")
+    run_analysis_pipeline(
+        weekly_root=Path(weekly_dir),
+        output_path=target_path,
+        synthetic_validation=synthetic,
+    )
+    click.echo(f"Analysis complete. Report written to {target_path}")
+    sys.exit(EXIT_OK)
 
-    # Generate synthetic validation dataset if requested or no data
-    df = generate_synthetic_trials(n_weeks=12, n_scenarios=25, n_trials=5, seed=42)
 
-    # 1. Logistic GEE
-    click.echo("1. Fitting logistic GEE...")
-    gee_res = fit_logistic_gee(df)
+# ---------------------------------------------------------------------------
+# driftwatch export
+# ---------------------------------------------------------------------------
 
-    # 2. Cluster Bootstrap CI
-    click.echo("2. Computing cluster bootstrap CI...")
-    mean_val, ci_low, ci_high = cluster_bootstrap_ci(df, n_resamples=500)
 
-    # 3. Change-point Detection on weekly ASR
-    click.echo("3. Running change-point detection (PELT + CUSUM)...")
-    weekly_asr = df.groupby("week_idx")["attack_success"].mean().to_numpy()
-    pelt_cps = detect_changepoints_pelt(weekly_asr)
-    cusum_cps = detect_changepoints_cusum(weekly_asr)
+@cli.command()
+@click.option(
+    "--weekly-dir",
+    default="weekly",
+    help="Root directory containing weekly run bundles.",
+)
+@click.option(
+    "--results-dir",
+    default="results",
+    help="Directory to write exports and summaries.",
+)
+@click.option(
+    "--events-file",
+    default="events/provider_events.json",
+    help="Path to provider events JSON file.",
+)
+def export(weekly_dir: str, results_dir: str, events_file: str) -> None:
+    """Export trial records (CSV, JSONL, schema) and update summaries (Item 2 & 3)."""
+    from driftwatch.storage.exports import export_all
 
-    # 4. TOST Equivalence (first 6 weeks vs last 6 weeks)
-    click.echo("4. Evaluating TOST equivalence...")
-    h1 = df[df["week_idx"] < 6]["attack_success"].to_numpy()
-    h2 = df[df["week_idx"] >= 6]["attack_success"].to_numpy()
-    tost_res = tost_equivalence(h1, h2, margin=0.03)
+    click.echo("Exporting trial records and synchronizing summaries...")
+    paths = export_all(
+        weekly_root=Path(weekly_dir),
+        results_root=Path(results_dir),
+        events_file=Path(events_file) if Path(events_file).exists() else None,
+    )
+    exports_out = Path(results_dir) / "exports"
+    click.echo(
+        f"Export complete: records.csv, records.jsonl, schema.json written to {exports_out}"
+    )
+    click.echo(f"Summary index updated: {paths['summary_index']}")
+    sys.exit(EXIT_OK)
 
-    # 5. Multiple testing correction
-    raw_p_values = list(gee_res.p_values.values())
-    adjusted_p = benjamini_hochberg(raw_p_values)
 
-    report = {
-        "overall_mean_asr": mean_val,
-        "bootstrap_ci_95": [ci_low, ci_high],
-        "gee_converged": gee_res.converged,
-        "gee_coefficients": gee_res.coefficients,
-        "gee_odds_ratios": gee_res.odds_ratios,
-        "gee_p_values": gee_res.p_values,
-        "pelt_changepoints": pelt_cps,
-        "cusum_changepoints": cusum_cps,
-        "tost_equivalence": {
-            "is_equivalent": tost_res.is_equivalent,
-            "margin": tost_res.margin,
-            "mean_diff": tost_res.mean_diff,
-            "ci_90": [tost_res.ci_lower, tost_res.ci_upper],
-        },
-        "adjusted_p_values_fdr": [adj for adj, _ in adjusted_p],
-    }
+# ---------------------------------------------------------------------------
+# driftwatch report
+# ---------------------------------------------------------------------------
 
-    report_file = out_path / "analysis_report.json"
-    report_file.write_text(json.dumps(report, indent=2), encoding="utf-8")
-    click.echo(f"Analysis complete. Report written to {report_file}")
+
+@cli.command()
+@click.option(
+    "--analysis-file",
+    default="results/analysis/analysis.json",
+    help="Path to analysis.json file.",
+)
+@click.option(
+    "--index-file",
+    default="results/summary/index.json",
+    help="Path to results/summary/index.json.",
+)
+@click.option(
+    "--output-dir",
+    default="reports",
+    help="Directory to write report.md and report.html.",
+)
+def report(analysis_file: str, index_file: str, output_dir: str) -> None:
+    """Generate Markdown and HTML research reports from analysis data (Item 3)."""
+    from driftwatch.reporting.generator import generate_reports
+
+    click.echo("Generating evaluation reports...")
+    out_paths = generate_reports(
+        analysis_file=Path(analysis_file),
+        summary_index_file=Path(index_file),
+        output_dir=Path(output_dir),
+    )
+    click.echo(f"Reports generated: {out_paths['report_md']} and {out_paths['report_html']}")
     sys.exit(EXIT_OK)
 
 
@@ -629,4 +638,3 @@ def event_list(events_file: str) -> None:
 
 if __name__ == "__main__":
     cli()
-
