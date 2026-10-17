@@ -36,11 +36,11 @@ class TestDashboard:
 
         required_views = [
             "overview",  # View 1: Overview grid ASR over time
-            "control",   # View 2: Task success & canary
+            "control",  # View 2: Task success & canary
             "language",  # View 3: Language breakdown (en, te, te-Latn)
-            "change",    # View 4: Change points with provider events
+            "change",  # View 4: Change points with provider events
             "negative",  # View 5: Negative control (local model TOST)
-            "method",    # View 6: Data and methods
+            "method",  # View 6: Data and methods
         ]
         for view in required_views:
             assert view in content, f"Dashboard missing view section for '{view}'"
@@ -61,6 +61,57 @@ class TestDashboard:
         assert "<!DOCTYPE html>" in content or "<!doctype html>" in content.lower()
         assert "<html" in content
         assert "</html>" in content
+
+    def test_dashboard_has_no_fabricated_percentages(self) -> None:
+        """Dashboard index.html contains no hard-coded result percentage literals."""
+        import re
+
+        dashboard_html = Path("dashboard/index.html")
+        content = dashboard_html.read_text(encoding="utf-8")
+
+        # Exclude standard CSS declarations like width: 100% or height: 100%
+        # Look for result percentages like 14.2%, 22.8%, 8.4%, 11.5%, etc.
+        decimal_percentages = re.findall(r"\b\d+\.\d+%", content)
+        assert not decimal_percentages, (
+            f"Found hard-coded decimal percentage literals in dashboard: {decimal_percentages}"
+        )
+
+        # Ensure no hardcoded outcome percentages in text (e.g., [11.8%, 16.9%])
+        ci_brackets = re.findall(r"\[\s*\d+(\.\d+)?%\s*,\s*\d+(\.\d+)?%\s*\]", content)
+        assert not ci_brackets, (
+            f"Found hard-coded CI percentage literals in dashboard: {ci_brackets}"
+        )
+
+    def test_dashboard_has_no_hardcoded_p_values(self) -> None:
+        """Dashboard index.html contains no fabricated p-value literals."""
+        import re
+
+        dashboard_html = Path("dashboard/index.html")
+        content = dashboard_html.read_text(encoding="utf-8")
+
+        p_values = re.findall(r"\bp\s*[<>=]\s*0?\.\d+", content, re.IGNORECASE)
+        assert not p_values, f"Found hard-coded p-value literals in dashboard: {p_values}"
+
+    def test_dashboard_has_no_hardcoded_model_names(self) -> None:
+        """Dashboard index.html contains no hard-coded target model name literals.
+
+        Model names must be discovered dynamically from runtime evaluation data.
+        """
+        dashboard_html = Path("dashboard/index.html")
+        content = dashboard_html.read_text(encoding="utf-8").lower()
+
+        forbidden_model_literals = [
+            "llama-3.1-8b",
+            "llama-3.3-70b",
+            "llama-3.2-1b",
+            "gemma-2-9b",
+            "meta-llama/llama",
+            "groq/gemma",
+            "cerebras/llama",
+            "ollama/llama",
+        ]
+        found = [m for m in forbidden_model_literals if m in content]
+        assert not found, f"Found hard-coded model name literals in dashboard/index.html: {found}"
 
 
 class TestProviderEventsCLI:
@@ -175,4 +226,3 @@ class TestDatasetCardAndRelease:
         )
         assert result.returncode == 0, f"Release script failed: {result.stderr}\n{result.stdout}"
         assert "Dry-run verification passed" in result.stdout
-
