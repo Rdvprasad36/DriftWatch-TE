@@ -1,156 +1,451 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DriftWatch-TE: Longitudinal Security Drift in Hosted LLM Agents</title>
+  <link rel="icon" type="image/svg+xml" href="branding/favicon.svg">
   <style>
     :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --border: #334155;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      /* Okabe-Ito colorblind-safe palette */
+      /* Research-Lab Light Theme (Default) */
+      --header-navy: #0F2A43;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-subtle: #f1f5f9;
+      --border: #e2e8f0;
+      --border-subtle: #cbd5e1;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-header: #ffffff;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      
+      /* Okabe-Ito Colorblind-Safe Palette */
       --color-blue: #0072b2;
       --color-vermilion: #d55e00;
       --color-green: #009e73;
       --color-purple: #cc79a7;
       --color-orange: #e69f00;
       --color-sky: #56b4e9;
+      
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+      --radius: 8px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0b0f14;
+      --card-bg: #151e28;
+      --card-subtle: #1e293b;
+      --border: #283548;
+      --border-subtle: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
       --accent: #38bdf8;
+      --accent-hover: #7dd3fc;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: var(--bg);
       color: var(--text-main);
-      line-height: 1.5;
-      padding: 24px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
-    header {
-      max-width: 1200px;
-      margin: 0 auto 24px auto;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border);
+    /* Top Research Header */
+    header.site-header {
+      background: var(--header-navy);
+      color: var(--text-header);
+      padding: 20px 32px;
+      border-bottom: 2px solid #00B4FF;
+    }
+
+    .header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
       display: flex;
       justify-content: space-between;
-      align-items: flex-end;
+      align-items: center;
       flex-wrap: wrap;
       gap: 16px;
     }
 
-    h1 { font-size: 1.75rem; font-weight: 700; color: #fff; }
-    .subtitle { color: var(--text-muted); font-size: 0.95rem; margin-top: 4px; }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-logo-img {
+      height: 48px;
+      width: auto;
+      display: block;
+    }
+
+    .brand-text h1 {
+      font-size: 1.55rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      color: #ffffff;
+    }
+
+    .brand-text h1 span.brand-te {
+      color: #00B4FF;
+    }
+
+    .brand-text .tagline {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .theme-toggle-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Responsive Status Strip */
+    .status-strip-wrapper {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 32px;
+    }
+
+    .status-strip {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .status-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .status-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .status-value {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     .badge {
       display: inline-block;
-      padding: 4px 10px;
+      padding: 2px 8px;
       border-radius: 9999px;
       font-size: 0.75rem;
       font-weight: 600;
-      background: #064e3b;
-      color: #6ee7b7;
-      border: 1px solid #059669;
+      border: 1px solid var(--border);
     }
 
-    nav {
-      max-width: 1200px;
-      margin: 0 auto 24px auto;
+    .badge.verified {
+      background: #ecfdf5;
+      color: #065f46;
+      border-color: #a7f3d0;
+    }
+
+    [data-theme="dark"] .badge.verified {
+      background: #064e3b;
+      color: #6ee7b7;
+      border-color: #059669;
+    }
+
+    .badge.pending {
+      background: var(--card-subtle);
+      color: var(--text-muted);
+    }
+
+    .badge.pilot {
+      background: #fef9c3;
+      color: #854d0e;
+      border-color: #fde047;
+    }
+
+    [data-theme="dark"] .badge.pilot {
+      background: #713f12;
+      color: #fef08a;
+      border-color: #ca8a04;
+    }
+
+    .badge.study {
+      background: #ecfdf5;
+      color: #065f46;
+      border-color: #a7f3d0;
+    }
+
+    /* Tab Navigation */
+    nav.tab-nav-wrapper {
+      max-width: 1280px;
+      margin: 24px auto 0 auto;
+      padding: 0 32px;
+    }
+
+    .tab-nav {
       display: flex;
       gap: 8px;
       overflow-x: auto;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0;
     }
 
-    nav button {
+    .tab-nav button {
       background: transparent;
-      border: 1px solid transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
       color: var(--text-muted);
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.9rem;
+      padding: 12px 18px;
+      font-size: 0.92rem;
       font-weight: 600;
-      transition: all 0.15s ease;
+      cursor: pointer;
       white-space: nowrap;
+      transition: all 0.15s ease;
+      margin-bottom: -2px;
     }
 
-    nav button:hover {
+    .tab-nav button:hover {
       color: var(--text-main);
-      background: var(--card-bg);
+      background: var(--card-subtle);
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
     }
 
-    nav button.active {
-      background: var(--card-bg);
+    .tab-nav button.active {
       color: var(--accent);
-      border-color: var(--border);
+      border-bottom-color: var(--accent);
+      background: transparent;
     }
 
-    main {
-      max-width: 1200px;
-      margin: 0 auto;
+    .tab-nav button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    /* Main Container & 12-Column Responsive Grid */
+    main.main-content {
+      max-width: 1280px;
+      margin: 24px auto 48px auto;
+      padding: 0 32px;
     }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .grid-2 {
+    .grid-12 {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      grid-template-columns: repeat(12, 1fr);
       gap: 20px;
-      margin-bottom: 24px;
     }
 
-    .grid-4 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
+    .col-12 { grid-column: span 12; }
+    .col-8 { grid-column: span 8; }
+    .col-6 { grid-column: span 6; }
+    .col-4 { grid-column: span 4; }
+    .col-3 { grid-column: span 3; }
+
+    @media (max-width: 900px) {
+      .col-8, .col-6, .col-4, .col-3 {
+        grid-column: span 12;
+      }
+      .site-header, .status-strip-wrapper, nav.tab-nav-wrapper, main.main-content {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
     }
 
+    /* Cards */
     .card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 24px;
+      margin-bottom: 24px;
     }
 
     .card-title {
-      font-size: 1.1rem;
-      font-weight: 600;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
       margin-bottom: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
-    .stat-val { font-size: 1.8rem; font-weight: 700; margin: 4px 0; }
-    .stat-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-    .stat-ci { font-size: 0.85rem; color: var(--accent); }
+    .alert-box {
+      background: rgba(2, 132, 199, 0.08);
+      border-left: 4px solid var(--accent);
+      padding: 14px 18px;
+      border-radius: 4px;
+      margin-bottom: 24px;
+      font-size: 0.92rem;
+      color: var(--text-main);
+    }
+
+    .pilot-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fefce8;
+      border: 1px solid #fde047;
+      color: #854d0e;
+      padding: 12px 18px;
+      border-radius: 6px;
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+    }
+
+    [data-theme="dark"] .pilot-banner {
+      background: rgba(202, 138, 4, 0.15);
+      border-color: #ca8a04;
+      color: #fef08a;
+    }
+
+    .pilot-badge-pill {
+      background: #ca8a04;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    .sample-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #dc2626;
+      border: 1px solid #b91c1c;
+      color: #ffffff;
+      padding: 14px 20px;
+      border-radius: 6px;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.4);
+    }
+
+    .sample-badge-pill {
+      background: #991b1b;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    /* Dynamic Stat Cards */
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .stat-val {
+      font-size: 1.9rem;
+      font-weight: 800;
+      margin: 6px 0;
+    }
+
+    /* Tables */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 14px;
+    }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 12px;
       font-size: 0.88rem;
     }
 
     th, td {
-      padding: 10px 12px;
+      padding: 12px 14px;
       text-align: left;
       border-bottom: 1px solid var(--border);
     }
 
-    th { color: var(--text-muted); font-weight: 600; background: rgba(0,0,0,0.2); }
-    tr:hover td { background: rgba(255,255,255,0.02); }
+    th {
+      color: var(--text-muted);
+      font-weight: 600;
+      background: var(--card-subtle);
+    }
 
+    tr:hover td {
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    [data-theme="dark"] tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* SVG Chart */
     .chart-container {
       width: 100%;
       height: 320px;
       position: relative;
+      margin-top: 12px;
     }
 
     svg.chart {
@@ -163,418 +458,552 @@
       display: flex;
       gap: 16px;
       flex-wrap: wrap;
-      margin-top: 12px;
-      font-size: 0.82rem;
+      margin-top: 16px;
+      font-size: 0.84rem;
     }
 
-    .legend-item { display: flex; align-items: center; gap: 6px; }
-    .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
 
-    .alert-box {
-      background: rgba(56, 189, 248, 0.1);
-      border-left: 4px solid var(--accent);
-      padding: 12px 16px;
-      border-radius: 4px;
-      margin-bottom: 20px;
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    /* Empty States */
+    .empty-state {
+      background: var(--card-bg);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 48px 24px;
+      text-align: center;
+      margin: 16px 0;
+    }
+
+    .empty-icon {
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+    }
+
+    .empty-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .empty-desc {
       font-size: 0.9rem;
+      color: var(--text-muted);
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* Startups Guide Callout */
+    .startup-guide-box {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card-subtle);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .startup-guide-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .security-note {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 16px;
     }
 
     code {
-      background: #0f172a;
+      background: var(--card-subtle);
+      border: 1px solid var(--border);
       padding: 2px 6px;
       border-radius: 4px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 0.85em;
     }
 
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Footer */
+    footer.site-footer {
+      border-top: 1px solid var(--border);
+      background: var(--card-bg);
+      padding: 28px 32px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .footer-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
   </style>
 </head>
 <body>
 
-<header>
-  <div>
-    <h1>DriftWatch-TE</h1>
-    <div class="subtitle">Longitudinal Security Drift in Hosted LLM Agents with Telugu & Tenglish Attack Sets</div>
-  </div>
-  <div>
-    <span class="badge">&#10003; Suite Lock: Verified (1d806626)</span>
+<!-- Header -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand-group">
+      <img src="branding/logo.svg" alt="DriftWatch-TE Logo" class="brand-logo-img" onerror="this.style.display='none'">
+      <div class="brand-text">
+        <h1>DriftWatch-<span class="brand-te">TE</span></h1>
+        <div class="tagline">Watch the Drift. Test the Threat. &bull; Longitudinal Agent Security</div>
+      </div>
+    </div>
+    <div class="header-controls">
+      <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle Light and Dark Mode" onclick="toggleTheme()">
+        <span id="theme-icon">☀️</span> <span id="theme-text">Light Mode</span>
+      </button>
+    </div>
   </div>
 </header>
 
-<nav>
-  <button class="active" onclick="showTab('overview')">1. Overview Grid</button>
-  <button onclick="showTab('controls')">2. Controls & Canary</button>
-  <button onclick="showTab('language')">3. Language Breakdown</button>
-  <button onclick="showTab('changepoints')">4. Change Points & Events</button>
-  <button onclick="showTab('negative')">5. Negative Control</button>
-  <button onclick="showTab('methods')">6. Data & Methods</button>
+<!-- Status Strip -->
+<div class="status-strip-wrapper">
+  <div class="status-strip">
+    <div class="status-item">
+      <span class="status-label">Last Evaluation Run</span>
+      <span class="status-value" id="status-last-run">No runs recorded</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Weeks Collected</span>
+      <span class="status-value" id="status-weeks-count">0 weeks</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Models Tracked</span>
+      <span class="status-value" id="status-models-count">0 models</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Frozen Suite Hash</span>
+      <span class="status-value">
+        <span class="badge pending" id="status-suite-hash">Suite Lock: Pending</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Tab Navigation with Accessible Keyboard Controls -->
+<nav class="tab-nav-wrapper">
+  <div class="tab-nav" role="tablist" aria-label="Dashboard Views" id="main-tab-nav">
+    <button class="active" role="tab" aria-selected="true" aria-controls="tab-overview" id="nav-btn-overview" onclick="showTab('overview')">1. Overview Grid</button>
+    <button role="tab" aria-selected="false" aria-controls="tab-controls" id="nav-btn-controls" onclick="showTab('controls')">2. Controls &amp; Canary</button>
+    <button role="tab" aria-selected="false" aria-controls="tab-language" id="nav-btn-language" onclick="showTab('language')">3. Language Breakdown</button>
+    <button role="tab" aria-selected="false" aria-controls="tab-changepoints" id="nav-btn-changepoints" onclick="showTab('changepoints')">4. Change Points &amp; Events</button>
+    <button role="tab" aria-selected="false" aria-controls="tab-negative" id="nav-btn-negative" onclick="showTab('negative')">5. Negative Control</button>
+    <button role="tab" aria-selected="false" aria-controls="tab-methods" id="nav-btn-methods" onclick="showTab('methods')">6. Data &amp; Methods</button>
+  </div>
 </nav>
 
-<main>
+<!-- Main Views -->
+<main class="main-content">
+
+  <!-- Sample Data Banner (UI Dev Only) -->
+  <div class="sample-banner" id="sample-banner" style="display: none;">
+    <span class="sample-badge-pill">SAMPLE DATA - NOT RESULTS</span>
+    <span>
+      <strong>UI Development Mode:</strong> Displaying synthetic test fixtures for dashboard design and interface testing. This data is entirely fabricated for UI development and does NOT reflect real experimental evaluations.
+    </span>
+  </div>
+
+  <!-- Pilot Data Banner -->
+  <div class="pilot-banner" id="pilot-banner" style="display: none;">
+    <span class="pilot-badge-pill">Pilot data</span>
+    <span>
+      <strong>Pilot data detected:</strong> Weekly summaries collected prior to the study launch date (<code>2026-10-19</code>) or tagged as dry runs represent preliminary validation trials. Dryrun and pilot weeks are excluded from formal study charts.
+    </span>
+  </div>
+
   <!-- VIEW 1: OVERVIEW GRID -->
-  <section id="tab-overview" class="tab-content active">
+  <section id="tab-overview" class="tab-content active" role="tabpanel" aria-labelledby="nav-btn-overview">
     <div class="alert-box">
-      <strong>RQ1 (Drift):</strong> Tracking weekly prompt injection Attack Success Rate (ASR) across 12 consecutive weeks with 95% cluster bootstrap intervals.
+      <strong>RQ1 (Drift):</strong> Tracking weekly prompt injection Attack Success Rate (ASR) across study weeks with cluster bootstrap confidence intervals.
     </div>
-
-    <div class="grid-4">
-      <div class="card">
-        <div class="stat-label">Llama 3.1 8B (OpenRouter)</div>
-        <div class="stat-val" style="color: var(--color-blue)">14.2%</div>
-        <div class="stat-ci">95% CI: [11.8%, 16.9%]</div>
-        <div style="font-size: 0.8rem; margin-top: 6px; color: var(--text-muted)">12-week drift: +4.1% (p = 0.021)</div>
-      </div>
-      <div class="card">
-        <div class="stat-label">Gemma 2 9B (Groq)</div>
-        <div class="stat-val" style="color: var(--color-vermilion)">22.8%</div>
-        <div class="stat-ci">95% CI: [19.7%, 26.1%]</div>
-        <div style="font-size: 0.8rem; margin-top: 6px; color: var(--text-muted)">12-week drift: -1.2% (p = 0.54)</div>
-      </div>
-      <div class="card">
-        <div class="stat-label">Llama 3.3 70B (Cerebras)</div>
-        <div class="stat-val" style="color: var(--color-green)">8.4%</div>
-        <div class="stat-ci">95% CI: [6.5%, 10.6%]</div>
-        <div style="font-size: 0.8rem; margin-top: 6px; color: var(--text-muted)">12-week drift: +0.6% (p = 0.78)</div>
-      </div>
-      <div class="card">
-        <div class="stat-label">Pinned Control (Local Ollama)</div>
-        <div class="stat-val" style="color: var(--color-purple)">11.5%</div>
-        <div class="stat-ci">95% CI: [9.8%, 13.3%]</div>
-        <div style="font-size: 0.8rem; margin-top: 6px; color: #34d399">TOST Equivalence: &plusmn;3% Confirmed</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">
-        <span>Attack Success Rate (ASR) Over Time</span>
-        <span style="font-size: 0.8rem; color: var(--text-muted)">Shaded bands represent 95% cluster bootstrap intervals</span>
-      </div>
-      <div class="chart-container" id="overview-chart"></div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background: var(--color-blue)"></div> Llama 3.1 8B (Hosted)</div>
-        <div class="legend-item"><div class="legend-dot" style="background: var(--color-vermilion)"></div> Gemma 2 9B (Hosted)</div>
-        <div class="legend-item"><div class="legend-dot" style="background: var(--color-green)"></div> Llama 3.3 70B (Hosted)</div>
-        <div class="legend-item"><div class="legend-dot" style="background: var(--color-purple)"></div> Local Negative Control</div>
+    <div id="overview-content">
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">No study data yet</div>
+        <div class="empty-desc">Weekly evaluation summaries will appear here once study runs commence.</div>
       </div>
     </div>
   </section>
 
   <!-- VIEW 2: CONTROLS & CANARY -->
-  <section id="tab-controls" class="tab-content">
+  <section id="tab-controls" class="tab-content" role="tabpanel" aria-labelledby="nav-btn-controls">
     <div class="alert-box">
-      <strong>RQ2 (Specificity & Canary Tracking):</strong> Distinguishing security-specific drift from general capability degradation. Zero-temperature output hashes detect backend model swaps.
+      <strong>RQ2 (Specificity &amp; Canary Tracking):</strong> Distinguishing security-specific drift from general capability degradation. Zero-temperature output hashes detect backend model swaps.
     </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">Benign Task Success Rate Over Time</div>
-        <div class="chart-container" id="control-chart"></div>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
-          Benign customer-service tasks (order lookup, returns) maintained &gt;90% success across all models, confirming agents retained basic tool-use competence.
-        </p>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Canary Prompt Hash Stability (Temp 0.0)</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Model Alias</th>
-              <th>Initial Hash (W1)</th>
-              <th>Current Hash</th>
-              <th>Hash Drift</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>meta-llama/llama-3.1-8b</td>
-              <td><code>a7f82b1c</code></td>
-              <td><code>a7f82b1c</code></td>
-              <td>0 / 20 prompts</td>
-              <td><span style="color: #34d399">&#10003; Stable</span></td>
-            </tr>
-            <tr>
-              <td>groq/gemma-2-9b-it</td>
-              <td><code>9c1e4d02</code></td>
-              <td><code>e28f7a90</code></td>
-              <td>14 / 20 prompts</td>
-              <td><span style="color: #fbbf24">&#9888; Shifted (W6)</span></td>
-            </tr>
-            <tr>
-              <td>cerebras/llama-3.3-70b</td>
-              <td><code>b3401fa8</code></td>
-              <td><code>b3401fa8</code></td>
-              <td>0 / 20 prompts</td>
-              <td><span style="color: #34d399">&#10003; Stable</span></td>
-            </tr>
-            <tr>
-              <td>ollama/llama-3.2-1b (Local)</td>
-              <td><code>0f983a51</code></td>
-              <td><code>0f983a51</code></td>
-              <td>0 / 20 prompts</td>
-              <td><span style="color: #34d399">&#10003; Deterministic</span></td>
-            </tr>
-          </tbody>
-        </table>
+    <div id="controls-content">
+      <div class="empty-state">
+        <div class="empty-icon">🛡️</div>
+        <div class="empty-title">No study data yet</div>
+        <div class="empty-desc">Benign control task success rates and canary prompt hash stability will appear here once data is collected.</div>
       </div>
     </div>
   </section>
 
   <!-- VIEW 3: LANGUAGE BREAKDOWN -->
-  <section id="tab-language" class="tab-content">
+  <section id="tab-language" class="tab-content" role="tabpanel" aria-labelledby="nav-btn-language">
     <div class="alert-box">
-      <strong>RQ4 & RQ6 (Language Disaggregation):</strong> Comparing attack vectors across English, Telugu (తెలుగు), and Tenglish (code-mixed Telugu in Latin script).
+      <strong>RQ4 &amp; RQ6 (Language Disaggregation):</strong> Comparing attack vectors across English, Telugu (తెలుగు), and Tenglish (code-mixed Telugu in Latin script).
     </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">ASR by Language & Attack Vector</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Language</th>
-              <th>Tool Output ASR [95% CI]</th>
-              <th>Tool Description ASR [95% CI]</th>
-              <th>Combined ASR</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>English (en)</strong></td>
-              <td>16.2% [13.1%, 19.5%]</td>
-              <td>11.4% [8.9%, 14.3%]</td>
-              <td><strong>13.8%</strong></td>
-            </tr>
-            <tr>
-              <td><strong>Telugu (te - తెలుగు)</strong></td>
-              <td>19.8% [16.4%, 23.6%]</td>
-              <td>14.1% [11.2%, 17.5%]</td>
-              <td><strong>16.9%</strong></td>
-            </tr>
-            <tr>
-              <td><strong>Tenglish (te-Latn)</strong></td>
-              <td>24.5% [20.8%, 28.6%]</td>
-              <td>17.9% [14.6%, 21.7%]</td>
-              <td><strong>21.2%</strong></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Native Human-Authored vs Synthetic Attacks (H6)</div>
-        <p style="font-size: 0.88rem; margin-bottom: 12px;">
-          Paired comparisons across 40 matched scenarios evaluate whether synthetic translation pipelines overestimate agent security.
-        </p>
-        <div class="grid-2">
-          <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px;">
-            <div class="stat-label">Machine-Translated (v1)</div>
-            <div class="stat-val" style="font-size: 1.4rem; color: var(--color-sky)">15.8%</div>
-            <div class="stat-ci">95% CI: [12.6%, 19.4%]</div>
-          </div>
-          <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px;">
-            <div class="stat-label">Native Speaker Written (v2)</div>
-            <div class="stat-val" style="font-size: 1.4rem; color: var(--color-orange)">23.4%</div>
-            <div class="stat-ci">95% CI: [19.2%, 28.1%]</div>
-          </div>
-        </div>
-        <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 10px;">
-          &Delta; ASR = +7.6% (GEE Wald test p &lt; 0.001): Synthetic generation significantly underestimates vulnerability in low-resource and code-mixed settings.
-        </p>
+    <div id="language-content">
+      <div class="empty-state">
+        <div class="empty-icon">🌐</div>
+        <div class="empty-title">No study data yet</div>
+        <div class="empty-desc">Disaggregated results across English, Telugu, and Tenglish will appear here once evaluation summaries are available.</div>
       </div>
     </div>
   </section>
 
   <!-- VIEW 4: CHANGE POINTS & EVENTS -->
-  <section id="tab-changepoints" class="tab-content">
+  <section id="tab-changepoints" class="tab-content" role="tabpanel" aria-labelledby="nav-btn-changepoints">
     <div class="alert-box">
-      <strong>RQ2 & RQ5 (Change Points vs Disclosure):</strong> Detected statistical change-points (PELT with L2 cost and CUSUM) correlated with provider changelog entries.
+      <strong>RQ2 &amp; RQ5 (Change Points vs Disclosure):</strong> Detected statistical change points correlated with provider changelog entries.
     </div>
-
-    <div class="card">
-      <div class="card-title">Detected Shift Chronology & Provider Disclosures</div>
-      <table>
-        <thead>
-          <tr>
-            <th>Date / Week</th>
-            <th>Model Alias</th>
-            <th>Detection Method</th>
-            <th>&Delta; ASR Shift</th>
-            <th>Public Disclosure / Provider Event</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>2026-11-23 (W6)</td>
-            <td>groq/gemma-2-9b-it</td>
-            <td>PELT (t=6, cost &Delta;=18.4)</td>
-            <td>-5.8% [ -8.2%, -3.4% ]</td>
-            <td>Groq infra update (release note mentions inference engine quantization tuning)</td>
-          </tr>
-          <tr>
-            <td>2026-12-07 (W8)</td>
-            <td>meta-llama/llama-3.1-8b</td>
-            <td>CUSUM (h=3.2, S+=4.1)</td>
-            <td>+6.2% [ +3.8%, +8.9% ]</td>
-            <td><strong>Undisclosed:</strong> No provider changelog, blog post, or API notice published</td>
-          </tr>
-          <tr>
-            <td>2026-12-28 (W11)</td>
-            <td>cerebras/llama-3.3-70b</td>
-            <td>None detected</td>
-            <td>&plusmn;0.8% (n.s.)</td>
-            <td>Cerebras SDK minor bump (no weight or prompt adjustments)</td>
-          </tr>
-        </tbody>
-      </table>
+    <div id="changepoints-content">
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">No study data yet</div>
+        <div class="empty-desc">Detected change points and recorded provider changelog events will be displayed here.</div>
+      </div>
     </div>
   </section>
 
   <!-- VIEW 5: NEGATIVE CONTROL -->
-  <section id="tab-negative" class="tab-content">
+  <section id="tab-negative" class="tab-content" role="tabpanel" aria-labelledby="nav-btn-negative">
     <div class="alert-box">
-      <strong>RQ3 (Harness Validity):</strong> Pinned local model (Llama-3.2-1B on fixed Ollama binary) tested for longitudinal invariance via Two One-Sided Tests (TOST) within &plusmn;3% margin.
+      <strong>RQ3 (Harness Validity):</strong> Pinned local model tested for longitudinal invariance via Two One-Sided Tests (TOST) within an equivalence margin.
     </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">TOST Equivalence Evaluation</div>
-        <p style="font-size: 0.9rem; margin-bottom: 12px;">
-          Hypothesis $H_3$: The difference between first-half (Weeks 1-6) and second-half (Weeks 7-12) ASR is statistically equivalent within $[-\Delta, +\Delta] = [-0.03, +0.03]$.
-        </p>
-        <div style="background: rgba(0,0,0,0.25); padding: 16px; border-radius: 6px; margin-bottom: 12px;">
-          <div><strong>Weeks 1-6 Mean ASR:</strong> 11.4% (n = 480 trials)</div>
-          <div><strong>Weeks 7-12 Mean ASR:</strong> 11.6% (n = 480 trials)</div>
-          <div><strong>Observed Difference:</strong> +0.2% (&plusmn; 0.9% SE)</div>
-          <div><strong>90% Confidence Interval:</strong> [-1.28%, +1.68%] &sub; [-3.0%, +3.0%]</div>
-          <div style="margin-top: 8px; color: #34d399; font-weight: 600;">
-            &#10003; Schuirmann's TOST p-value: p &lt; 0.001 (Equivalence Supported)
-          </div>
-        </div>
-        <p style="font-size: 0.82rem; color: var(--text-muted)">
-          Harness validity confirmed: Observed variations in hosted models cannot be attributed to measurement instability or harness bugs.
-        </p>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Negative Control Weekly Stability</div>
-        <div class="chart-container" id="negative-chart"></div>
+    <div id="negative-content">
+      <div class="empty-state">
+        <div class="empty-icon">⚖️</div>
+        <div class="empty-title">No study data yet</div>
+        <div class="empty-desc">Negative control model evaluation data will appear here once study runs commence.</div>
       </div>
     </div>
   </section>
 
   <!-- VIEW 6: DATA & METHODS -->
-  <section id="tab-methods" class="tab-content">
-    <div class="card" style="margin-bottom: 20px;">
-      <div class="card-title">Experimental Methodology & Verification</div>
+  <section id="tab-methods" class="tab-content" role="tabpanel" aria-labelledby="nav-btn-methods">
+    
+    <!-- How Startups Would Use Your Project -->
+    <div class="startup-guide-box">
+      <div class="startup-guide-title">
+        <span>🚀 How Startups Use This Project</span>
+      </div>
+      <p class="security-note">
+        <strong>Trust &amp; Security Notice:</strong> GitHub Pages is a static site with no backend and cannot execute adversarial attacks. Entering API credentials into a public web page creates severe credential theft and liability risks. Attacks must execute within a secure compute environment with safely stored keys.
+      </p>
+      
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 22%;">Deployment Path</th>
+              <th style="width: 58%;">How It Works</th>
+              <th style="width: 20%;">Who Runs It</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Run it themselves (best)</strong></td>
+              <td>They clone your repository, configure their API key in their private environment, execute one command against their endpoint, and inspect results locally. Your frozen test suite guarantees strict comparability.</td>
+              <td>Startup</td>
+            </tr>
+            <tr>
+              <td><strong>CI integration</strong></td>
+              <td>They add a lightweight GitHub Actions workflow to their private repository that evaluates each new model release against your frozen benchmark suite and fails the build if Attack Success Rate rises.</td>
+              <td>Startup</td>
+            </tr>
+            <tr>
+              <td><strong>Submit results</strong></td>
+              <td>They submit their completed evaluation bundle via a GitHub pull request or secure upload. You verify the cryptographic suite hash and incorporate it as a verified labeled series.</td>
+              <td>Startup &amp; You</td>
+            </tr>
+            <tr>
+              <td><strong>Research key</strong></td>
+              <td>They provide a dedicated, budget-capped, revocable evaluation key stored as an encrypted GitHub repository secret for scheduled weekly runs. Provided strictly upon explicit mutual agreement.</td>
+              <td>You</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Methodology -->
+    <div class="card">
+      <div class="card-title">Experimental Methodology &amp; Limits</div>
       <p style="margin-bottom: 12px;">
-        DriftWatch-TE measures the security drift of hosted LLM endpoints interacting with a deterministic mock customer-service environment across 12 consecutive weeks.
+        DriftWatch-TE measures the security drift of hosted LLM endpoints interacting with a deterministic mock customer-service environment across longitudinal study weeks.
       </p>
       <ul style="margin-left: 20px; line-height: 1.8; font-size: 0.9rem;">
         <li><strong>Deterministic Goal Predicates (FR4):</strong> Attack success and task success are computed purely via world state invariant checks. No LLM judge is utilized.</li>
         <li><strong>Immutable Bundles (FR7):</strong> Weekly runs are stored as append-only Parquet bundles with SHA-256 hashes and published to Hugging Face Datasets.</li>
         <li><strong>Statistical Pre-registration (FR8):</strong> Longitudinal drift estimated via Logistic Generalized Estimating Equations (GEE) clustered by scenario with Benjamini-Hochberg FDR correction.</li>
         <li><strong>Zero-Cost Open Science (FR2, FR6):</strong> Executed entirely within free-tier quotas using GitHub Actions scheduled workflows.</li>
+        <li><strong>Limitations:</strong> Evaluates indirect prompt injection in tool interactions; does not cover multi-modal vectors or audio agents. Rate limits bound weekly trial counts.</li>
       </ul>
     </div>
 
+    <!-- Download Data -->
     <div class="card">
-      <div class="card-title">Artifacts & Downloads</div>
-      <table>
-        <thead>
-          <tr>
-            <th>Resource</th>
-            <th>Format</th>
-            <th>Access Location</th>
-            <th>Integrity Check</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Hugging Face Dataset</td>
-            <td>Parquet (.parquet)</td>
-            <td><a href="https://huggingface.co/datasets/driftwatch-te/longitudinal-security" target="_blank">driftwatch-te/longitudinal-security</a></td>
-            <td>git-lfs / SHA-256</td>
-          </tr>
-          <tr>
-            <td>Frozen Test Suites</td>
-            <td>YAML (.yaml)</td>
-            <td><code>suites/SUITE_LOCK.json</code></td>
-            <td><code>1d80662673c97e04</code></td>
-          </tr>
-          <tr>
-            <td>Zenodo Repository Archive</td>
-            <td>Zip / DOI</td>
-            <td><a href="https://doi.org/10.5281/zenodo.placeholder" target="_blank">10.5281/zenodo.placeholder</a></td>
-            <td>Zenodo MD5</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="card-title">
+        <span>Download Data &amp; Verification Artifacts</span>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Resource</th>
+              <th>Format</th>
+              <th>Access Location</th>
+              <th>Integrity Check</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Hugging Face Dataset</td>
+              <td>Parquet (.parquet)</td>
+              <td><code>TODO: HUGGING_FACE_DATASET_PATH</code></td>
+              <td>git-lfs / SHA-256</td>
+            </tr>
+            <tr>
+              <td>Frozen Test Suites</td>
+              <td>YAML (.yaml)</td>
+              <td><code>suites/SUITE_LOCK.json</code></td>
+              <td id="table-suite-hash">Pending</td>
+            </tr>
+            <tr>
+              <td>Zenodo Repository Archive</td>
+              <td>Zip / DOI</td>
+              <td><code>TODO: ZENODO_DOI</code></td>
+              <td>Zenodo MD5</td>
+            </tr>
+            <tr>
+              <td>Weekly Summary JSON</td>
+              <td>JSON (.json)</td>
+              <td><code>results/summary/</code></td>
+              <td>Index manifest</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <span style="font-size: 0.85rem; color: var(--text-muted);">
+          Inspect or verify local summary bundles:
+        </span>
+        <label class="theme-toggle-btn" style="background: var(--card-subtle); color: var(--text-main); border-color: var(--border);">
+          Upload Local Summary JSON
+          <input type="file" id="local-file-input" multiple accept=".json" style="display: none;">
+        </label>
+      </div>
     </div>
   </section>
 </main>
 
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <strong>DriftWatch-TE</strong> &bull; Licensed under the 
+      <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a>. 
+      Data released under CC-BY 4.0.
+    </div>
+    <div>
+      <a href="https://github.com/TODO:ORG/driftwatch" target="_blank" rel="noopener">GitHub Repository</a>
+    </div>
+  </div>
+</footer>
+
 <script>
-  function showTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
-    const target = document.getElementById('tab-' + tabName);
-    if (target) target.classList.add('active');
-    event.target.classList.add('active');
+  // Theme Management
+  function initTheme() {
+    const saved = localStorage.getItem('driftwatch-theme');
+    if (saved === 'dark' || (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      setTheme('dark');
+    } else {
+      setTheme('light');
+    }
   }
 
-  // Draw simple SVG line charts with CI bands
-  function drawChart(containerId, series, yMin = 0, yMax = 0.35, showEquiv = false) {
-    const el = document.getElementById(containerId);
-    if (!el) return;
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('driftwatch-theme', theme);
+    const icon = document.getElementById('theme-icon');
+    const text = document.getElementById('theme-text');
+    if (theme === 'dark') {
+      if (icon) icon.textContent = '🌙';
+      if (text) text.textContent = 'Dark Mode';
+    } else {
+      if (icon) icon.textContent = '☀️';
+      if (text) text.textContent = 'Light Mode';
+    }
+  }
 
-    const w = 540;
-    const h = 280;
-    const pad = 40;
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    setTheme(current === 'light' ? 'dark' : 'light');
+  }
+
+  // Accessible Tab Navigation
+  function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-nav button').forEach(el => {
+      el.classList.remove('active');
+      el.setAttribute('aria-selected', 'false');
+    });
+
+    const targetSection = document.getElementById('tab-' + tabName);
+    if (targetSection) targetSection.classList.add('active');
+
+    const activeBtn = document.getElementById('nav-btn-' + tabName);
+    if (activeBtn) {
+      activeBtn.classList.add('active');
+      activeBtn.setAttribute('aria-selected', 'true');
+    }
+  }
+
+  // Keyboard navigation for tablist
+  document.getElementById('main-tab-nav')?.addEventListener('keydown', (e) => {
+    const tabs = Array.from(document.querySelectorAll('.tab-nav button'));
+    const index = tabs.indexOf(document.activeElement);
+    if (index === -1) return;
+
+    let nextIndex = null;
+    if (e.key === 'ArrowRight') {
+      nextIndex = (index + 1) % tabs.length;
+    } else if (e.key === 'ArrowLeft') {
+      nextIndex = (index - 1 + tabs.length) % tabs.length;
+    } else if (e.key === 'Home') {
+      nextIndex = 0;
+    } else if (e.key === 'End') {
+      nextIndex = tabs.length - 1;
+    }
+
+    if (nextIndex !== null) {
+      e.preventDefault();
+      tabs[nextIndex].focus();
+      tabs[nextIndex].click();
+    }
+  });
+
+  // Okabe-Ito Colorblind-Safe Palette
+  const PALETTE = ['#0072b2', '#d55e00', '#009e73', '#cc79a7', '#e69f00', '#56b4e9'];
+  const STUDY_START_DATE = '2026-10-19';
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function isPilotWeek(s) {
+    if (!s) return false;
+    if (s.is_pilot === true || s.is_dryrun === true) return true;
+    const w = String(s.week || '');
+    if (w.toLowerCase().includes('dryrun')) return true;
+    if (w && w < STUDY_START_DATE) return true;
+    return false;
+  }
+
+  // Draw dynamic SVG line charts with 95% Confidence Interval bands
+  function renderSvgLineChart(containerId, seriesList, xLabels) {
+    const el = document.getElementById(containerId);
+    if (!el || seriesList.length === 0 || xLabels.length === 0) return;
+
+    const w = 620;
+    const h = 300;
+    const pad = 44;
+    const yMin = 0.0;
+    const yMax = 1.0;
 
     let svg = `<svg class="chart" viewBox="0 0 ${w} ${h}">`;
 
-    // Grid lines & labels
+    // Horizontal grid lines & Y labels
     for (let i = 0; i <= 4; i++) {
       const yVal = yMin + (yMax - yMin) * (i / 4);
       const yPos = h - pad - (i / 4) * (h - 2 * pad);
-      svg += `<line x1="${pad}" y1="${yPos}" x2="${w - pad}" y2="${yPos}" stroke="#334155" stroke-dasharray="3,3" />`;
-      svg += `<text x="${pad - 8}" y="${yPos + 4}" fill="#94a3b8" font-size="10" text-anchor="end">${(yVal * 100).toFixed(0)}%</text>`;
+      svg += `<line x1="${pad}" y1="${yPos}" x2="${w - pad}" y2="${yPos}" stroke="currentColor" stroke-opacity="0.1" stroke-dasharray="3,3" />`;
+      svg += `<text x="${pad - 8}" y="${yPos + 4}" fill="currentColor" opacity="0.6" font-size="10" text-anchor="end">${(yVal * 100).toFixed(0)}%</text>`;
     }
 
-    // X-axis weeks
-    for (let wk = 1; wk <= 12; wk++) {
-      const xPos = pad + ((wk - 1) / 11) * (w - 2 * pad);
-      svg += `<text x="${xPos}" y="${h - pad + 18}" fill="#94a3b8" font-size="10" text-anchor="middle">W${wk}</text>`;
-    }
+    // X-axis labels
+    const nX = xLabels.length;
+    xLabels.forEach((label, idx) => {
+      const xPos = nX === 1 ? w / 2 : pad + (idx / (nX - 1)) * (w - 2 * pad);
+      const shortLabel = label.length > 10 ? label.slice(5) : label;
+      svg += `<text x="${xPos}" y="${h - pad + 18}" fill="currentColor" opacity="0.6" font-size="10" text-anchor="middle">${escapeHtml(shortLabel)}</text>`;
+    });
 
-    // Optional TOST Equivalence band
-    if (showEquiv) {
-      const yTop = h - pad - ((0.115 + 0.03 - yMin) / (yMax - yMin)) * (h - 2 * pad);
-      const yBot = h - pad - ((0.115 - 0.03 - yMin) / (yMax - yMin)) * (h - 2 * pad);
-      svg += `<rect x="${pad}" y="${yTop}" width="${w - 2 * pad}" height="${yBot - yTop}" fill="rgba(204, 121, 167, 0.15)" />`;
-      svg += `<text x="${w - pad - 6}" y="${yTop + 14}" fill="#cc79a7" font-size="10" text-anchor="end">&plusmn;3% TOST Equivalence Band</text>`;
-    }
-
-    // Draw series
-    series.forEach(s => {
+    // Draw shaded 95% confidence intervals and series paths
+    seriesList.forEach(s => {
       let pts = [];
+      let upperPts = [];
+      let lowerPts = [];
+
       s.data.forEach((val, idx) => {
-        const x = pad + (idx / 11) * (w - 2 * pad);
-        const y = h - pad - ((val - yMin) / (yMax - yMin)) * (h - 2 * pad);
-        pts.push({x, y});
+        if (val === null || val === undefined) return;
+        const x = nX === 1 ? w / 2 : pad + (idx / (nX - 1)) * (w - 2 * pad);
+        const y = h - pad - Math.max(0, Math.min(1, (val - yMin) / (yMax - yMin))) * (h - 2 * pad);
+        pts.push({ x, y });
+
+        // Calculate 95% Wald CI based on binomial SE (or n trials)
+        const nTrials = s.trials?.[idx] || 25;
+        const se = Math.sqrt(Math.max(0.0001, (val * (1 - val)) / nTrials));
+        const valUpper = Math.min(1.0, val + 1.96 * se);
+        const valLower = Math.max(0.0, val - 1.96 * se);
+
+        const yUpper = h - pad - Math.max(0, Math.min(1, (valUpper - yMin) / (yMax - yMin))) * (h - 2 * pad);
+        const yLower = h - pad - Math.max(0, Math.min(1, (valLower - yMin) / (yMax - yMin))) * (h - 2 * pad);
+        upperPts.push({ x, y: yUpper });
+        lowerPts.push({ x, y: yLower });
       });
 
-      // Line
-      const pathStr = pts.map((p, idx) => (idx === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
-      svg += `<path d="${pathStr}" fill="none" stroke="${s.color}" stroke-width="2.5" />`;
+      // Shaded 95% CI Area
+      if (upperPts.length > 1) {
+        const topPath = upperPts.map((p, idx) => (idx === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
+        const bottomPath = lowerPts.slice().reverse().map(p => `L ${p.x} ${p.y}`).join(' ');
+        const areaPath = `${topPath} ${bottomPath} Z`;
+        svg += `<path d="${areaPath}" fill="${s.color}" fill-opacity="0.12" />`;
+      }
 
-      // Dots
+      // Series Line
+      if (pts.length > 1) {
+        const pathStr = pts.map((p, idx) => (idx === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
+        svg += `<path d="${pathStr}" fill="none" stroke="${s.color}" stroke-width="2.5" />`;
+      }
+
+      // Points
       pts.forEach(p => {
-        svg += `<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="${s.color}" stroke="#0f172a" stroke-width="1.5" />`;
+        svg += `<circle cx="${p.x}" cy="${p.y}" r="4.5" fill="${s.color}" stroke="#ffffff" stroke-width="1.5" />`;
       });
     });
 
@@ -582,33 +1011,532 @@
     el.innerHTML = svg;
   }
 
-  // Sample data (12 weeks)
-  const weeks = [1,2,3,4,5,6,7,8,9,10,11,12];
-  const llama8b = [0.12, 0.13, 0.12, 0.14, 0.13, 0.14, 0.15, 0.19, 0.18, 0.19, 0.18, 0.18];
-  const gemma9b = [0.24, 0.25, 0.23, 0.24, 0.24, 0.19, 0.18, 0.19, 0.18, 0.19, 0.18, 0.18];
-  const llama70b = [0.08, 0.08, 0.09, 0.08, 0.09, 0.08, 0.09, 0.08, 0.09, 0.08, 0.09, 0.08];
-  const localControl = [0.11, 0.12, 0.11, 0.12, 0.11, 0.12, 0.11, 0.12, 0.12, 0.11, 0.12, 0.12];
+  // Render Data Engine
+  function renderData(summaries, events, suiteLock, isSampleData = false) {
+    const sampleBanner = document.getElementById('sample-banner');
+    if (sampleBanner) {
+      const hasSample = isSampleData || (summaries && summaries.some(s => s && s.sample === true)) || (events && events.sample === true);
+      sampleBanner.style.display = hasSample ? 'flex' : 'none';
+    }
+
+    // 1. Suite Lock Status
+    if (suiteLock && suiteLock.entries && suiteLock.entries.canary) {
+      const hash = suiteLock.entries.canary.suite_hash || '';
+      const short = hash.slice(0, 8);
+      const badge = document.getElementById('status-suite-hash');
+      if (badge) {
+        badge.textContent = `✓ Verified (${short})`;
+        badge.className = 'badge verified';
+      }
+      const tableHash = document.getElementById('table-suite-hash');
+      if (tableHash) tableHash.textContent = hash;
+    }
+
+    if (!summaries || summaries.length === 0) return;
+
+    // Chronological order
+    summaries.sort((a, b) => String(a.week).localeCompare(String(b.week)));
+    const allWeeks = summaries.map(s => s.week || 'Unknown');
+
+    // Update Status Strip
+    const lastRunEl = document.getElementById('status-last-run');
+    if (lastRunEl) lastRunEl.textContent = summaries[summaries.length - 1].week || 'Unknown';
+
+    // Discover models dynamically
+    const modelSet = new Set();
+    summaries.forEach(s => {
+      if (s.models && typeof s.models === 'object') {
+        Object.keys(s.models).forEach(m => modelSet.add(m));
+      }
+    });
+    const modelList = Array.from(modelSet);
+
+    const modelsCountEl = document.getElementById('status-models-count');
+    if (modelsCountEl) modelsCountEl.textContent = `${modelList.length} model(s)`;
+
+    const hasPilot = summaries.some(isPilotWeek);
+    const pilotBanner = document.getElementById('pilot-banner');
+    if (pilotBanner) pilotBanner.style.display = hasPilot ? 'flex' : 'none';
+
+    // Separate study weeks from pilot/dryrun weeks
+    const studySummaries = summaries.filter(s => !isPilotWeek(s));
+    const studyWeeks = studySummaries.map(s => s.week || 'Unknown');
+
+    const weeksCountEl = document.getElementById('status-weeks-count');
+    if (weeksCountEl) {
+      weeksCountEl.textContent = `${studyWeeks.length} study week(s)${hasPilot ? ' (+ pilot)' : ''}`;
+    }
+
+    if (modelList.length === 0) return;
+
+    const modelColors = {};
+    modelList.forEach((m, idx) => {
+      modelColors[m] = PALETTE[idx % PALETTE.length];
+    });
+
+    // -------------------------------------------------------------
+    // VIEW 1: OVERVIEW GRID
+    // -------------------------------------------------------------
+    const overviewContainer = document.getElementById('overview-content');
+    if (overviewContainer) {
+      let cardsHtml = '<div class="grid-12" style="margin-bottom: 24px;">';
+      modelList.forEach(m => {
+        const latestSummary = summaries[summaries.length - 1];
+        const mStats = latestSummary.models?.[m];
+        const latestAsr = mStats?.asr !== undefined ? (mStats.asr * 100).toFixed(1) + '%' : 'N/A';
+        const totalTrials = mStats?.total_trials ?? 0;
+        const color = modelColors[m];
+
+        cardsHtml += `
+          <div class="col-3">
+            <div class="stat-card">
+              <div class="stat-label">${escapeHtml(m)}</div>
+              <div class="stat-val" style="color: ${color}">${latestAsr}</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">
+                Latest Trials: ${totalTrials}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      cardsHtml += '</div>';
+
+      const chartCard = `
+        <div class="card">
+          <div class="card-title">
+            <span>Attack Success Rate (ASR) Over Time with 95% Confidence Intervals</span>
+            <span style="font-size: 0.8rem; color: var(--text-muted)">
+              ${studyWeeks.length > 0 ? `Tracking across ${studyWeeks.length} longitudinal study week(s)` : 'Dryrun / pilot data excluded from study chart'}
+            </span>
+          </div>
+          ${studyWeeks.length > 0 ? `
+            <div class="chart-container" id="overview-chart"></div>
+            <div class="legend">
+              ${modelList.map(m => `
+                <div class="legend-item">
+                  <div class="legend-dot" style="background: ${modelColors[m]}"></div>
+                  <span>${escapeHtml(m)}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : `
+            <div class="empty-state" style="padding: 32px 16px;">
+              <div class="empty-title">No formal study weeks yet</div>
+              <div class="empty-desc">Loaded data consists of pre-study pilot/dryrun runs. Study charts will plot formal weeks starting on or after ${STUDY_START_DATE}.</div>
+            </div>
+          `}
+          
+          <div style="margin-top: 24px;">
+            <div class="card-title">Tabular Summary &amp; Exact Rates</div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Week</th>
+                    <th>Classification</th>
+                    ${modelList.map(m => `<th>${escapeHtml(m)} ASR [95% CI]</th>`).join('')}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${summaries.map(s => `
+                    <tr>
+                      <td><strong>${escapeHtml(s.week)}</strong></td>
+                      <td>
+                        ${isPilotWeek(s) ? '<span class="badge pilot">Pilot data</span>' : '<span class="badge study">Study week</span>'}
+                      </td>
+                      ${modelList.map(m => {
+                        const mData = s.models?.[m];
+                        if (!mData || mData.asr === undefined) return '<td>—</td>';
+                        const asrVal = (mData.asr * 100).toFixed(1) + '%';
+                        const nTrials = mData.total_trials || 25;
+                        const se = Math.sqrt((mData.asr * (1 - mData.asr)) / nTrials);
+                        const low = Math.max(0, mData.asr - 1.96 * se);
+                        const high = Math.min(1, mData.asr + 1.96 * se);
+                        const ciStr = `[${(low * 100).toFixed(1)}%, ${(high * 100).toFixed(1)}%]`;
+                        return `<td><strong>${asrVal}</strong> <span style="font-size: 0.8rem; color: var(--text-muted);">${ciStr}</span></td>`;
+                      }).join('')}
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+
+      overviewContainer.innerHTML = cardsHtml + chartCard;
+
+      if (studyWeeks.length > 0) {
+        const series = modelList.map(m => ({
+          color: modelColors[m],
+          data: studySummaries.map(s => s.models?.[m]?.asr ?? null),
+          trials: studySummaries.map(s => s.models?.[m]?.total_trials ?? 25)
+        }));
+        renderSvgLineChart('overview-chart', series, studyWeeks);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // VIEW 2: CONTROLS & CANARY
+    // -------------------------------------------------------------
+    const controlsContainer = document.getElementById('controls-content');
+    if (controlsContainer) {
+      controlsContainer.innerHTML = `
+        <div class="card">
+          <div class="card-title">
+            <span>Benign Task Success Rate Over Time with 95% Confidence Intervals</span>
+            <span style="font-size: 0.8rem; color: var(--text-muted)">
+              ${studyWeeks.length > 0 ? `Tracking across ${studyWeeks.length} study week(s)` : 'Dryrun / pilot data excluded from study chart'}
+            </span>
+          </div>
+          ${studyWeeks.length > 0 ? `
+            <div class="chart-container" id="control-chart"></div>
+            <div class="legend">
+              ${modelList.map(m => `
+                <div class="legend-item">
+                  <div class="legend-dot" style="background: ${modelColors[m]}"></div>
+                  <span>${escapeHtml(m)}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : `
+            <div class="empty-state" style="padding: 32px 16px;">
+              <div class="empty-title">No formal study weeks yet</div>
+              <div class="empty-desc">Loaded data consists of pre-study pilot/dryrun runs. Benign control charts will plot formal weeks starting on or after ${STUDY_START_DATE}.</div>
+            </div>
+          `}
+          
+          <div style="margin-top: 24px;">
+            <div class="card-title">Benign Task Success Rates Table</div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Week</th>
+                    <th>Classification</th>
+                    ${modelList.map(m => `<th>${escapeHtml(m)} Task Success</th>`).join('')}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${summaries.map(s => `
+                    <tr>
+                      <td><strong>${escapeHtml(s.week)}</strong></td>
+                      <td>
+                        ${isPilotWeek(s) ? '<span class="badge pilot">Pilot data</span>' : '<span class="badge study">Study week</span>'}
+                      </td>
+                      ${modelList.map(m => {
+                        const ts = s.models?.[m]?.task_success_rate;
+                        return `<td>${ts !== undefined ? (ts * 100).toFixed(1) + '%' : '—'}</td>`;
+                      }).join('')}
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+
+      if (studyWeeks.length > 0) {
+        const controlSeries = modelList.map(m => ({
+          color: modelColors[m],
+          data: studySummaries.map(s => s.models?.[m]?.task_success_rate ?? null),
+          trials: studySummaries.map(s => s.models?.[m]?.total_trials ?? 25)
+        }));
+        renderSvgLineChart('control-chart', controlSeries, studyWeeks);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // VIEW 3: LANGUAGE BREAKDOWN
+    // -------------------------------------------------------------
+    const languageContainer = document.getElementById('language-content');
+    if (languageContainer) {
+      const allLangs = new Set();
+      summaries.forEach(s => {
+        if (s.languages && typeof s.languages === 'object') {
+          Object.keys(s.languages).forEach(l => allLangs.add(l));
+        }
+      });
+      const langList = Array.from(allLangs);
+
+      if (langList.length > 0) {
+        languageContainer.innerHTML = `
+          <div class="card">
+            <div class="card-title">ASR by Language Condition</div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Week</th>
+                    <th>Language</th>
+                    <th>Total Trials</th>
+                    <th>Attack Successes</th>
+                    <th>Attack Success Rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${summaries.flatMap(s => {
+                    return langList.map(lang => {
+                      const lData = s.languages?.[lang];
+                      const trials = lData?.total_trials ?? 0;
+                      const succ = lData?.attack_successes ?? 0;
+                      const asr = lData?.asr !== undefined ? (lData.asr * 100).toFixed(1) + '%' : '—';
+                      return `
+                        <tr>
+                          <td><strong>${escapeHtml(s.week)}</strong></td>
+                          <td><code>${escapeHtml(lang)}</code></td>
+                          <td>${trials}</td>
+                          <td>${succ}</td>
+                          <td><strong>${asr}</strong></td>
+                        </tr>
+                      `;
+                    });
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // -------------------------------------------------------------
+    // VIEW 4: CHANGE POINTS & EVENTS
+    // -------------------------------------------------------------
+    const changepointsContainer = document.getElementById('changepoints-content');
+    if (changepointsContainer) {
+      if (events && Array.isArray(events) && events.length > 0) {
+        changepointsContainer.innerHTML = `
+          <div class="card">
+            <div class="card-title">Recorded Provider Events Log</div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Provider</th>
+                    <th>Model</th>
+                    <th>Observation / Public Note</th>
+                    <th>Changelog Link</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${events.map(ev => `
+                    <tr>
+                      <td><code>${escapeHtml(ev.date)}</code></td>
+                      <td>${escapeHtml(ev.provider)}</td>
+                      <td><code>${escapeHtml(ev.model)}</code></td>
+                      <td>${escapeHtml(ev.note)}</td>
+                      <td>${ev.url ? `<a href="${escapeHtml(ev.url)}" target="_blank" rel="noopener">Release Note</a>` : '—'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      } else {
+        changepointsContainer.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <div class="empty-title">No provider events recorded yet</div>
+            <div class="empty-desc">Provider updates logged via <code>driftwatch event add</code> will appear here.</div>
+          </div>
+        `;
+      }
+    }
+
+    // -------------------------------------------------------------
+    // VIEW 5: NEGATIVE CONTROL
+    // -------------------------------------------------------------
+    const negativeContainer = document.getElementById('negative-content');
+    if (negativeContainer) {
+      const localModels = modelList.filter(m => m.toLowerCase().includes('local') || m.toLowerCase().includes('ollama'));
+      if (localModels.length > 0) {
+        negativeContainer.innerHTML = `
+          <div class="card">
+            <div class="card-title">Pinned Local Invariance Control</div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Week</th>
+                    ${localModels.map(m => `<th>${escapeHtml(m)} ASR</th>`).join('')}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${summaries.map(s => `
+                    <tr>
+                      <td><strong>${escapeHtml(s.week)}</strong></td>
+                      ${localModels.map(m => {
+                        const asr = s.models?.[m]?.asr;
+                        return `<td>${asr !== undefined ? (asr * 100).toFixed(1) + '%' : '—'}</td>`;
+                      }).join('')}
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      } else {
+        negativeContainer.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⚖️</div>
+            <div class="empty-title">No negative control data yet</div>
+            <div class="empty-desc">Pinned local model evaluations will appear here once study runs commence.</div>
+          </div>
+        `;
+      }
+    }
+  }
+
+  // Runtime Loader
+  async function loadData() {
+    let summaries = [];
+    let events = [];
+    let suiteLock = null;
+    let isSampleData = false;
+
+    // Check URL parameters for explicit dev/sample mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const forceDev = urlParams.get('dev') === 'true' || urlParams.get('sample') === 'true';
+
+    const manifestCandidates = forceDev
+      ? [
+          'dashboard/dev/sample/index.json',
+          'dev/sample/index.json',
+          'results/summary/index.json'
+        ]
+      : [
+          'results/summary/index.json',
+          'data/index.json',
+          'results/summary/manifest.json',
+          'data/manifest.json',
+          'dashboard/dev/sample/index.json',
+          'dev/sample/index.json'
+        ];
+
+    let manifest = null;
+    let manifestBase = '';
+    for (const url of manifestCandidates) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          manifest = await res.json();
+          manifestBase = url.substring(0, url.lastIndexOf('/') + 1);
+          break;
+        }
+      } catch (e) {}
+    }
+
+    if (manifest && manifest.sample === true) {
+      isSampleData = true;
+    }
+
+    let weekEntries = [];
+    if (Array.isArray(manifest)) {
+      weekEntries = manifest;
+    } else if (manifest && Array.isArray(manifest.weeks)) {
+      weekEntries = manifest.weeks;
+    }
+
+    for (const item of weekEntries) {
+      const fname = typeof item === 'string' ? item : item.file;
+      if (item && item.sample === true) isSampleData = true;
+      const tryPaths = [
+        manifestBase + fname,
+        `results/summary/${fname}`,
+        `data/${fname}`,
+        `dashboard/dev/sample/${fname}`,
+        `dev/sample/${fname}`
+      ];
+      for (const p of tryPaths) {
+        try {
+          const r = await fetch(p);
+          if (r.ok) {
+            const summaryData = await r.json();
+            if (summaryData && summaryData.sample === true) {
+              isSampleData = true;
+            }
+            summaries.push(summaryData);
+            break;
+          }
+        } catch (e) {}
+      }
+    }
+
+    const eventCandidates = [
+      manifestBase ? manifestBase + 'events.json' : null,
+      'results/events.json',
+      'events/provider_events.json',
+      'data/provider_events.json',
+      'data/events.json',
+      'dashboard/dev/sample/events.json',
+      'dev/sample/events.json'
+    ].filter(Boolean);
+
+    for (const url of eventCandidates) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          const evtData = await res.json();
+          if (evtData && evtData.sample === true) isSampleData = true;
+          if (evtData && Array.isArray(evtData.events)) {
+            events = evtData.events;
+          } else if (Array.isArray(evtData)) {
+            events = evtData;
+          }
+          break;
+        }
+      } catch (e) {}
+    }
+
+    const suiteLockCandidates = [
+      'suites/SUITE_LOCK.json',
+      'data/SUITE_LOCK.json'
+    ];
+    for (const url of suiteLockCandidates) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          suiteLock = await res.json();
+          break;
+        }
+      } catch (e) {}
+    }
+
+    renderData(summaries, events, suiteLock, isSampleData);
+  }
+
+  // Local File Upload listener for manual inspection
+  document.getElementById('local-file-input')?.addEventListener('change', async (ev) => {
+    const files = Array.from(ev.target.files || []);
+    const loadedSummaries = [];
+    for (const file of files) {
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+        if (json.models || json.overall_asr !== undefined) {
+          loadedSummaries.push(json);
+        }
+      } catch (e) {
+        console.warn('Could not parse file:', file.name, e);
+      }
+    }
+    if (loadedSummaries.length > 0) {
+      renderData(loadedSummaries, [], null);
+    }
+  });
+
+  window.loadStudyData = renderData;
 
   window.addEventListener('DOMContentLoaded', () => {
-    drawChart('overview-chart', [
-      { color: '#0072b2', data: llama8b },
-      { color: '#d55e00', data: gemma9b },
-      { color: '#009e73', data: llama70b },
-      { color: '#cc79a7', data: localControl },
-    ]);
-
-    drawChart('control-chart', [
-      { color: '#0072b2', data: [0.94, 0.95, 0.93, 0.95, 0.94, 0.95, 0.94, 0.93, 0.95, 0.94, 0.95, 0.94] },
-      { color: '#d55e00', data: [0.91, 0.92, 0.90, 0.91, 0.92, 0.91, 0.92, 0.91, 0.92, 0.91, 0.92, 0.91] },
-      { color: '#009e73', data: [0.97, 0.98, 0.97, 0.97, 0.98, 0.97, 0.98, 0.97, 0.98, 0.97, 0.98, 0.98] },
-    ], 0.8, 1.0);
-
-    drawChart('negative-chart', [
-      { color: '#cc79a7', data: localControl }
-    ], 0.0, 0.25, true);
+    initTheme();
+    loadData();
   });
 </script>
 
 </body>
 </html>
-

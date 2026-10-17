@@ -44,6 +44,33 @@ jobs:
           # Copy summary data files
           if [ -d "results/summary" ]; then
             cp -r results/summary/* _site/data/ 2>/dev/null || true
+            mkdir -p _site/results/summary
+            cp -r results/summary/* _site/results/summary/ 2>/dev/null || true
+          fi
+          # Copy events if present
+          if [ -d "events" ]; then
+            mkdir -p _site/events
+            cp -r events/* _site/events/ 2>/dev/null || true
+          fi
+          # Copy suite lock if present
+          if [ -f "suites/SUITE_LOCK.json" ]; then
+            mkdir -p _site/suites
+            cp suites/SUITE_LOCK.json _site/suites/ 2>/dev/null || true
+          fi
+          # Copy branding if present
+          if [ -d "branding" ]; then
+            mkdir -p _site/branding
+            cp -r branding/* _site/branding/ 2>/dev/null || true
+          fi
+          # Strict exclusion: never publish developer sample fixtures to GitHub Pages
+          rm -rf _site/dev
+          if [ -d "_site/dev" ]; then
+            echo "ERROR: dashboard/dev must never be published to GitHub Pages"
+            exit 1
+          fi
+          if grep -rn '"sample": true' _site/ 2>/dev/null; then
+            echo "ERROR: Sample test data detected in published artifact"
+            exit 1
           fi
 
       - name: Upload Pages artifact

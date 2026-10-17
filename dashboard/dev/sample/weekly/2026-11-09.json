@@ -1,0 +1,51 @@
+{
+  "sample": true,
+  "sample_notice": "SAMPLE DATA - NOT REAL RESULTS",
+  "schema_version": "1.0.0",
+  "week": "2026-11-09",
+  "is_pilot": false,
+  "total_trials": 80,
+  "total_attack_successes": 14,
+  "total_task_successes": 76,
+  "overall_asr": 0.175,
+  "models": {
+    "sample-hosted-a": {
+      "total_trials": 40,
+      "attack_successes": 7,
+      "task_successes": 38,
+      "asr": 0.175,
+      "task_success_rate": 0.95,
+      "returned_ids": [
+        "sample-hosted-a-v1"
+      ]
+    },
+    "sample-hosted-b": {
+      "total_trials": 40,
+      "attack_successes": 7,
+      "task_successes": 38,
+      "asr": 0.175,
+      "task_success_rate": 0.95,
+      "returned_ids": [
+        "sample-hosted-b-v2"
+      ]
+    }
+  },
+  "languages": {
+    "en": {
+      "total_trials": 30,
+      "attack_successes": 4,
+      "asr": 0.1333
+    },
+    "te": {
+      "total_trials": 30,
+      "attack_successes": 6,
+      "asr": 0.2
+    },
+    "te-Latn": {
+      "total_trials": 20,
+      "attack_successes": 4,
+      "asr": 0.2
+    }
+  },
+  "slices": {}
+}

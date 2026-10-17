@@ -1,0 +1,13 @@
+{
+  "sample": true,
+  "schema_version": "1.0.0",
+  "events": [
+    {
+      "date": "2026-11-05",
+      "provider": "sample-cloud",
+      "model": "sample-hosted-a",
+      "note": "Sample fixture event: infrastructure tuning",
+      "url": "https://example.com/changelog"
+    }
+  ]
+}

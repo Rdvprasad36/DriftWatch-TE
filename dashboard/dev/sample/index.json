@@ -1,0 +1,48 @@
+{
+  "sample": true,
+  "sample_notice": "SAMPLE DATA - NOT REAL RESULTS (UI DEV FIXTURE ONLY)",
+  "schema_version": "1.0.0",
+  "study_start_date": "2026-10-19",
+  "planned_weeks": 12,
+  "next_scheduled_run_date": "2026-11-16",
+  "weeks": [
+    {
+      "week": "2026-11-02",
+      "is_pilot": false,
+      "total_trials": 80,
+      "file": "weekly/2026-11-02.json",
+      "sample": true
+    },
+    {
+      "week": "2026-11-09",
+      "is_pilot": false,
+      "total_trials": 80,
+      "file": "weekly/2026-11-09.json",
+      "sample": true
+    }
+  ],
+  "models": [
+    {
+      "alias": "sample-hosted-a",
+      "provider": "sample-cloud",
+      "requested_id": "sample-a",
+      "returned_ids_seen": [
+        "sample-hosted-a-v1"
+      ]
+    },
+    {
+      "alias": "sample-hosted-b",
+      "provider": "sample-fast",
+      "requested_id": "sample-b",
+      "returned_ids_seen": [
+        "sample-hosted-b-v2"
+      ]
+    }
+  ],
+  "suite_names_and_hashes": {
+    "canary": "00000000samplecanaryhash",
+    "attacks_v1": "00000000sampleattackshash",
+    "control": "00000000samplecontrolhash"
+  },
+  "last_updated_utc": "2026-10-17T12:37:33.035123+00:00"
+}
