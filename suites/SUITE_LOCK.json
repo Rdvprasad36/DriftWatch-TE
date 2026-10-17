@@ -4,6 +4,16 @@
       "suite_name": "canary",
       "suite_hash": "1d80662673c97e047f501a5f50ef33ff8e10e7851154f927b1d243df6d113c8d",
       "locked_at": "2026-10-15T05:08:09.404023+00:00"
+    },
+    "attacks_v1": {
+      "suite_name": "attacks_v1",
+      "suite_hash": "dafc0338875444212e4c07a414e1a7d902f7a89b5cab8f943791bb6a1df114b4",
+      "locked_at": "2026-10-17T06:21:05.681610+00:00"
+    },
+    "control": {
+      "suite_name": "control",
+      "suite_hash": "1ae8f9e419a98dee801cb5f4c59d7a8b178d012b161dac5e48a57c578b1e93cd",
+      "locked_at": "2026-10-17T06:21:05.681610+00:00"
     }
   }
 }

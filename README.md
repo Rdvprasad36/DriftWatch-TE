@@ -3,7 +3,7 @@
 [![CI](https://github.com/driftwatch-te/driftwatch/actions/workflows/ci.yml/badge.svg)](https://github.com/driftwatch-te/driftwatch/actions/workflows/ci.yml)
 [![Pages](https://github.com/driftwatch-te/driftwatch/actions/workflows/pages.yml/badge.svg)](https://github.com/driftwatch-te/driftwatch/actions/workflows/pages.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.placeholder.svg)](https://doi.org/10.5281/zenodo.placeholder)
+[![DOI](https://img.shields.io/badge/DOI-TODO%3A%2010.5281%2Fzenodo.TODO-blue.svg)](#citation)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 
 > **A Longitudinal Study of Security Drift in Hosted LLM Agents, with Telugu and Tenglish Attack Sets.**
@@ -178,11 +178,11 @@ The dashboard includes 6 interactive views:
 ```bibtex
 @misc{driftwatch2026,
   title={DriftWatch-TE: A Longitudinal Study of Security Drift in Hosted LLM Agents with Telugu and Tenglish Attack Sets},
-  author={DriftWatch Research Team},
+  author={TODO: Author Name(s)},
   year={2026},
   publisher={Zenodo},
-  doi={10.5281/zenodo.placeholder},
-  url={https://github.com/driftwatch-te/driftwatch}
+  doi={TODO: 10.5281/zenodo.TODO},
+  url={https://github.com/TODO:ORG/driftwatch}
 }
 ```
 

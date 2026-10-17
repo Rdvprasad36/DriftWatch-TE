@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "analyzed_at_utc": "2026-10-17T12:35:50.074352+00:00",
+  "study_weeks_count": 0,
+  "per_model_trend": {},
+  "change_points": [],
+  "local_control_equivalence": null,
+  "language_interactions": {},
+  "native_versus_machine": null,
+  "hypotheses": {
+    "H1": {
+      "status": "not_enough_data",
+      "rule": "GEE longitudinal drift slope b1 significant after Benjamini-Hochberg FDR (requires >= 4 study weeks).",
+      "details": {}
+    },
+    "H2": {
+      "status": "not_enough_data",
+      "rule": "Change points detected via PELT/CUSUM with cluster bootstrap CI excluding 0 (requires >= 4 study weeks).",
+      "details": {}
+    },
+    "H3": {
+      "status": "not_enough_data",
+      "rule": "Two One-Sided Tests (TOST) on local control model within +/-0.03 margin (requires >= 4 study weeks).",
+      "details": {}
+    },
+    "H4": {
+      "status": "not_enough_data",
+      "rule": "GEE week:language interaction terms b3 for Telugu/Tenglish (requires >= 4 study weeks).",
+      "details": {}
+    },
+    "H5": {
+      "status": "not_enough_data",
+      "rule": "Proportion of supported change points matching public provider release notes (requires >= 4 study weeks).",
+      "details": {}
+    },
+    "H6": {
+      "status": "not_enough_data",
+      "rule": "Paired difference in ASR between native (v2) and machine (v1) scenarios with CI excluding 0.",
+      "details": {}
+    }
+  }
+}

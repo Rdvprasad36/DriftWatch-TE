@@ -72,6 +72,7 @@ class OpenAICompatProvider(BaseProvider):
         timeout: float = 30.0,
         base_delay: float = 1.0,
         max_delay: float = 60.0,
+        default_model: str | None = None,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         # Keep the key private — redact before saving
@@ -80,6 +81,7 @@ class OpenAICompatProvider(BaseProvider):
         self._timeout = timeout
         self._base_delay = base_delay
         self._max_delay = max_delay
+        self._default_model = default_model
 
     # ------------------------------------------------------------------
     # Public interface
@@ -97,8 +99,16 @@ class OpenAICompatProvider(BaseProvider):
 
         Never raises.  Returns a ProviderResponse with ``error`` set on failure.
         """
+        is_generic_alias = model in {
+            "groq",
+            "groq-llama3",
+            "google",
+            "openrouter",
+            "local",
+        }
+        target_model = self._default_model if (self._default_model and is_generic_alias) else model
         body: dict[str, Any] = {
-            "model": model,
+            "model": target_model,
             "messages": messages,
             "temperature": temperature,
         }
@@ -240,9 +250,7 @@ class OpenAICompatProvider(BaseProvider):
             except json_module.JSONDecodeError:
                 args = {}
                 logger.warning("Could not parse tool_call arguments JSON for '%s'", tc_name)
-            tool_calls.append(
-                ParsedToolCall(id=tc.get("id") or "", name=tc_name, arguments=args)
-            )
+            tool_calls.append(ParsedToolCall(id=tc.get("id") or "", name=tc_name, arguments=args))
 
         return ProviderResponse(
             requested_model=model,
@@ -271,4 +279,3 @@ class OpenAICompatProvider(BaseProvider):
     def _safe_request_headers(self) -> dict[str, str]:
         """Return request headers with auth redacted (for error ProviderResponse)."""
         return redact_headers({"Authorization": f"Bearer {self._api_key}"})
-

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80">
+  <g transform="translate(10, 8)">
+    <!-- Circular radar arc -->
+    <path d="M 22 14 A 22 22 0 0 1 50 25" fill="none" stroke="#e5e7eb" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 52 30 A 22 22 0 0 1 24 54" fill="none" stroke="#00b4ff" stroke-width="3.5" stroke-linecap="round"/>
+    <!-- Orbital radar node -->
+    <circle cx="53" cy="23" r="3.2" fill="#00b4ff"/>
+    <!-- Hawk / Raven Head profile -->
+    <path d="M 18 48 C 16 41 18 34 22 29 C 27 23 35 20 44 21 C 39 22 36 24 33 28 C 38 26 46 26 52 31 C 46 32 40 34 36 38 C 40 37 43 37 45 38 C 40 41 36 45 35 50 C 33 47 31 43 29 41 C 26 44 23 47 18 48 Z" fill="#e5e7eb"/>
+    <path d="M 28 32 C 33 28 40 27 47 30 C 43 31 39 33 36 36 C 33 40 31 44 30 49 C 28 44 27 39 28 32 Z" fill="#00b4ff" opacity="0.9"/>
+    <!-- Eye -->
+    <circle cx="42" cy="29" r="1.6" fill="#00b4ff"/>
+  </g>
+  <!-- Brand text -->
+  <text x="82" y="44" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="28" font-weight="800" fill="#ffffff" letter-spacing="-0.5px">DriftWatch-<tspan fill="#00b4ff">TE</tspan></text>
+  <text x="83" y="62" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12" font-weight="500" fill="#94a3b8" letter-spacing="0.5px">Watch the Drift. Test the Threat.</text>
+</svg>

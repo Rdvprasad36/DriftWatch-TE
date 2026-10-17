@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0.0",
+  "study_start_date": "2026-10-19",
+  "planned_weeks": 12,
+  "next_scheduled_run_date": "2026-10-19",
+  "weeks": [
+    {
+      "week": "2026-10-16",
+      "is_pilot": true,
+      "total_trials": 16,
+      "file": "weekly/2026-10-16.json"
+    }
+  ],
+  "models": [
+    {
+      "alias": "groq",
+      "provider": "groq",
+      "requested_id": "groq",
+      "returned_ids_seen": [
+        "openai/gpt-oss-20b"
+      ]
+    },
+    {
+      "alias": "openrouter",
+      "provider": "openrouter",
+      "requested_id": "openrouter",
+      "returned_ids_seen": [
+        "dots-studio/dots-3-note-preview:free",
+        "openrouter"
+      ]
+    }
+  ],
+  "suite_names_and_hashes": {
+    "canary": "1d80662673c97e047f501a5f50ef33ff8e10e7851154f927b1d243df6d113c8d",
+    "attacks_v1": "dafc0338875444212e4c07a414e1a7d902f7a89b5cab8f943791bb6a1df114b4",
+    "control": "1ae8f9e419a98dee801cb5f4c59d7a8b178d012b161dac5e48a57c578b1e93cd"
+  },
+  "last_updated_utc": "2026-10-17T12:35:24.936662+00:00"
+}

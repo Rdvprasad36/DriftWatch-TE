@@ -1,0 +1,178 @@
+{
+  "schema_version": "1.0.0",
+  "title": "DriftWatch-TE Trial Records Schema",
+  "description": "Schema definition for per-trial records exported by DriftWatch-TE.",
+  "columns": [
+    "trial_id",
+    "scenario_id",
+    "run_week",
+    "timestamp_utc",
+    "model_alias",
+    "requested_model",
+    "returned_model_id",
+    "suite",
+    "suite_hash",
+    "attack_class",
+    "channel",
+    "language",
+    "origin",
+    "trial_index",
+    "tool_calls",
+    "attack_success",
+    "task_success",
+    "steps",
+    "stop_reason",
+    "error_type",
+    "http_errors",
+    "tokens_in",
+    "tokens_out",
+    "latency_ms",
+    "git_sha"
+  ],
+  "json_schema": {
+    "description": "Specification of the 25 trial record columns.",
+    "properties": {
+      "trial_id": {
+        "title": "Trial Id",
+        "type": "string"
+      },
+      "scenario_id": {
+        "title": "Scenario Id",
+        "type": "string"
+      },
+      "run_week": {
+        "title": "Run Week",
+        "type": "string"
+      },
+      "timestamp_utc": {
+        "title": "Timestamp Utc",
+        "type": "string"
+      },
+      "model_alias": {
+        "title": "Model Alias",
+        "type": "string"
+      },
+      "requested_model": {
+        "title": "Requested Model",
+        "type": "string"
+      },
+      "returned_model_id": {
+        "title": "Returned Model Id",
+        "type": "string"
+      },
+      "suite": {
+        "title": "Suite",
+        "type": "string"
+      },
+      "suite_hash": {
+        "title": "Suite Hash",
+        "type": "string"
+      },
+      "attack_class": {
+        "title": "Attack Class",
+        "type": "string"
+      },
+      "channel": {
+        "title": "Channel",
+        "type": "string"
+      },
+      "language": {
+        "title": "Language",
+        "type": "string"
+      },
+      "origin": {
+        "enum": [
+          "native",
+          "machine"
+        ],
+        "title": "Origin",
+        "type": "string"
+      },
+      "trial_index": {
+        "title": "Trial Index",
+        "type": "integer"
+      },
+      "tool_calls": {
+        "description": "JSON-encoded string of tool calls: [{'name': ..., 'arguments': ...}]",
+        "title": "Tool Calls",
+        "type": "string"
+      },
+      "attack_success": {
+        "title": "Attack Success",
+        "type": "boolean"
+      },
+      "task_success": {
+        "title": "Task Success",
+        "type": "boolean"
+      },
+      "steps": {
+        "title": "Steps",
+        "type": "integer"
+      },
+      "stop_reason": {
+        "title": "Stop Reason",
+        "type": "string"
+      },
+      "error_type": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Error Type"
+      },
+      "http_errors": {
+        "title": "Http Errors",
+        "type": "integer"
+      },
+      "tokens_in": {
+        "title": "Tokens In",
+        "type": "integer"
+      },
+      "tokens_out": {
+        "title": "Tokens Out",
+        "type": "integer"
+      },
+      "latency_ms": {
+        "title": "Latency Ms",
+        "type": "number"
+      },
+      "git_sha": {
+        "title": "Git Sha",
+        "type": "string"
+      }
+    },
+    "required": [
+      "trial_id",
+      "scenario_id",
+      "run_week",
+      "timestamp_utc",
+      "model_alias",
+      "requested_model",
+      "returned_model_id",
+      "suite",
+      "suite_hash",
+      "attack_class",
+      "channel",
+      "language",
+      "origin",
+      "trial_index",
+      "tool_calls",
+      "attack_success",
+      "task_success",
+      "steps",
+      "stop_reason",
+      "error_type",
+      "http_errors",
+      "tokens_in",
+      "tokens_out",
+      "latency_ms",
+      "git_sha"
+    ],
+    "title": "ExportRowSchema",
+    "type": "object"
+  }
+}
