@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
 from driftwatch.cli.main import EXIT_OK, cli
@@ -112,6 +113,132 @@ class TestDashboard:
         ]
         found = [m for m in forbidden_model_literals if m in content]
         assert not found, f"Found hard-coded model name literals in dashboard/index.html: {found}"
+
+    def test_navbar_has_no_img(self) -> None:
+        """The navigation bar uses a plain text wordmark with no <img> tag."""
+        import re
+
+        dashboard_html = Path("dashboard/index.html")
+        content = dashboard_html.read_text(encoding="utf-8")
+
+        navbar_match = re.search(
+            r"<header[^>]*class=[\"'][^\"']*navbar[^\"']*[\"'][^>]*>(.*?)</header>",
+            content,
+            re.DOTALL | re.IGNORECASE,
+        )
+        assert navbar_match, "Navbar header element not found in dashboard/index.html"
+        navbar_html = navbar_match.group(1)
+
+        imgs = re.findall(r"<img[^>]*>", navbar_html, re.IGNORECASE)
+        assert not imgs, f"Navigation bar must not contain <img> tags, found: {imgs}"
+        assert "DriftWatch-" in navbar_html, "Navbar must contain 'DriftWatch-' wordmark text"
+        assert "TE" in navbar_html, "Navbar must contain 'TE' wordmark accent"
+
+    def test_no_emojis_in_dashboard_readme_reports(self) -> None:
+        """Dashboard, README, and reports contain no emoji characters."""
+        import re
+
+        # Regex covering standard Unicode emoji and pictograph ranges
+        emoji_pattern = re.compile(
+            r"[\U0001F600-\U0001F64F]"  # emoticons
+            r"|[\U0001F300-\U0001F5FF]"  # symbols & pictographs
+            r"|[\U0001F680-\U0001F6FF]"  # transport & map
+            r"|[\U0001F1E0-\U0001F1FF]"  # flags
+            r"|[\U0001F900-\U0001FAFF]"  # supplemental symbols
+            r"|[\u2600-\u26FF]"  # misc symbols
+            r"|[\u2700-\u27BF]"  # dingbats
+        )
+
+        files_to_check: list[Path] = [Path("README.md")]
+
+        dashboard_dir = Path("dashboard")
+        if dashboard_dir.is_dir():
+            for p in dashboard_dir.rglob("*"):
+                # Skip binary fonts and vendored minified JS
+                if (
+                    p.is_file()
+                    and p.suffix.lower() in [".html", ".css", ".js", ".json", ".md"]
+                    and "vendor" not in p.parts
+                ):
+                    files_to_check.append(p)
+
+        reports_dir = Path("reports")
+        if reports_dir.is_dir():
+            for p in reports_dir.rglob("*"):
+                if p.is_file() and p.suffix.lower() in [".html", ".md", ".json"]:
+                    files_to_check.append(p)
+
+        violations: list[str] = []
+        for file_path in files_to_check:
+            text = file_path.read_text(encoding="utf-8", errors="ignore")
+            matches = emoji_pattern.findall(text)
+            if matches:
+                violations.append(f"{file_path}: {matches}")
+
+        assert not violations, f"Emoji characters detected in repository files: {violations}"
+
+    def test_playwright_dashboard_smoke(self, tmp_path: Path) -> None:
+        """Playwright smoke test verifying empty and sample-data state at 360px and 1280px."""
+        try:
+            from playwright.sync_api import sync_playwright
+        except ImportError:
+            pytest.skip("Playwright not installed in environment")
+
+        artifact_dir = Path(
+            r"C:\Users\rdvpr\.gemini\antigravity\brain\fca563bf-a8e0-4789-a607-1cc538f72248\screenshots"
+        )
+        artifact_dir.mkdir(parents=True, exist_ok=True)
+
+        dashboard_path = Path("dashboard/index.html").resolve()
+        assert dashboard_path.exists(), "dashboard/index.html must exist"
+
+        with sync_playwright() as p:
+            browser = p.chromium.launch(
+                headless=True,
+                args=["--allow-file-access-from-files", "--disable-web-security"],
+            )
+
+            # Test configurations: (viewport, theme, is_sample)
+            configs = [
+                ({"width": 360, "height": 740}, "light", False, "empty_360_light"),
+                ({"width": 360, "height": 740}, "dark", True, "sample_360_dark"),
+                ({"width": 1280, "height": 800}, "light", True, "sample_1280_light"),
+                ({"width": 1280, "height": 800}, "dark", False, "empty_1280_dark"),
+            ]
+
+            for vp, theme, sample_mode, name in configs:
+                context = browser.new_context(
+                    viewport={"width": vp["width"], "height": vp["height"]}
+                )
+                page = context.new_page()
+
+                # Set theme in localStorage before navigating
+                page.add_init_script(f"localStorage.setItem('driftwatch_theme', '{theme}');")
+
+                url = f"file:///{dashboard_path.as_posix()}"
+                if sample_mode:
+                    url += "?sample=true"
+
+                page.goto(url, wait_until="load")
+                page.wait_for_timeout(300)
+
+                # Verify wordmark is visible
+                brand = page.locator(".wordmark")
+                assert brand.is_visible()
+
+                # Verify sample banner state
+                sample_banner = page.locator("#sample-banner")
+                if sample_mode:
+                    assert sample_banner.is_visible()
+
+                # Save screenshot to artifact directory (not committed to git)
+                screenshot_file = artifact_dir / f"dashboard_{name}.png"
+                page.screenshot(path=str(screenshot_file), full_page=False)
+                assert screenshot_file.exists()
+
+                context.close()
+
+            browser.close()
 
 
 class TestProviderEventsCLI:

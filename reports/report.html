@@ -13,19 +13,59 @@
       --header-navy: #0F2A43;
     }
     * { box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; margin: 0; padding: 40px 20px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      margin: 0;
+      padding: 40px 20px;
+    }
     .container { max-width: 900px; margin: 0 auto; }
-    header.report-header { border-bottom: 2px solid var(--accent); padding-bottom: 16px; margin-bottom: 28px; }
+    header.report-header {
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 16px;
+      margin-bottom: 28px;
+    }
     h1 { font-size: 1.85rem; color: var(--header-navy); margin-bottom: 8px; }
     .meta-bar { font-size: 0.88rem; color: var(--muted); }
-    h2 { font-size: 1.3rem; color: var(--header-navy); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-top: 32px; margin-bottom: 14px; }
+    h2 {
+      font-size: 1.3rem;
+      color: var(--header-navy);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+      margin-top: 32px;
+      margin-bottom: 14px;
+    }
     h3 { font-size: 1.05rem; margin-top: 20px; }
     p, li { font-size: 0.94rem; }
-    blockquote { background: #f8fafc; border-left: 4px solid var(--accent); padding: 12px 18px; margin: 18px 0; border-radius: 4px; font-size: 0.92rem; }
-    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.88rem; }
-    th, td { border: 1px solid var(--border); padding: 10px 12px; text-align: left; }
+    blockquote {
+      background: #f8fafc;
+      border-left: 4px solid var(--accent);
+      padding: 12px 18px;
+      margin: 18px 0;
+      border-radius: 4px;
+      font-size: 0.92rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.88rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+    }
     th { background: #f1f5f9; color: var(--text); font-weight: 600; }
-    code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.86em; }
+    code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.86em;
+    }
     /* Print Stylesheet for PDF Export */
     @media print {
       body { padding: 0; background: #fff; color: #000; font-size: 11pt; }
@@ -41,7 +81,7 @@
   <div class="container">
     <header class="report-header">
       <h1>DriftWatch-TE: Longitudinal Security Evaluation Report</h1>
-      <div class="meta-bar">Generated: 2026-10-17 12:36:22 UTC &bull; Git SHA: <code>9ac1042</code> &bull; Study Weeks: 0 of 12</div>
+      <div class="meta-bar">Generated: 2026-10-22 16:25:23 UTC &bull; Git SHA: <code>9a3c364</code> &bull; Study Weeks: 0 of 12</div>
     </header>
     <h2>1. Summary</h2>
     <blockquote><strong>NOTICE: Formal longitudinal results are not yet available.</strong><br>Minimum pre-registered threshold of 4 study weeks required for inferential drift tests. 0 week(s) recorded to date.</blockquote>
@@ -71,7 +111,7 @@
       <li>Black-box API access evaluates behavioral drift only without internal weight inspection.</li>
     </ul>
     <h2>7. Reproducibility &amp; Audit Trail</h2>
-    <p>Git Commit: <code>9ac1042</code></p>
+    <p>Git Commit: <code>9a3c364</code></p>
     <h3>Frozen Suite Hashes:</h3>
     <ul>
       <li><code>canary</code>: <code>1d80662673c97e047f501a5f50ef33ff8e10e7851154f927b1d243df6d113c8d</code></li>

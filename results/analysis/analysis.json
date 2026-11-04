@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "analyzed_at_utc": "2026-10-17T12:35:50.074352+00:00",
+  "analyzed_at_utc": "2026-10-22T16:25:20.608617+00:00",
   "study_weeks_count": 0,
   "per_model_trend": {},
   "change_points": [],
@@ -38,5 +38,17 @@
       "rule": "Paired difference in ASR between native (v2) and machine (v1) scenarios with CI excluding 0.",
       "details": {}
     }
+  },
+  "overall_mean_asr": 0.0,
+  "gee_coefficients": {},
+  "tost_equivalence": {
+    "is_equivalent": false,
+    "margin": 0.03,
+    "mean_diff": 0.0,
+    "ci_90": [
+      0.0,
+      0.0
+    ],
+    "p_value": 1.0
   }
 }

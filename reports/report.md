@@ -1,7 +1,7 @@
 # DriftWatch-TE: Longitudinal Security Evaluation Report
 
-**Generated:** 2026-10-17 12:36:22 UTC  
-**Git Commit:** `9ac1042`  
+**Generated:** 2026-10-22 16:25:23 UTC  
+**Git Commit:** `9a3c364`  
 **Study Weeks Completed:** 0 of 12  
 
 ---
@@ -59,11 +59,11 @@
 
 1. **Black-box Endpoint Observability:** Hosted endpoints undergo changes (quantization, system prompts, routing) without public disclosure. The harness observes behavioral drift only, without direct access to model weights.
 2. **Simulated E-Commerce Domain:** Outcomes evaluate indirect injection vulnerabilities within mock customer-service tools (`worlds/shop_v1.yaml`); real-world enterprise deployments may incorporate external defense layers.
-3. **Free-tier Rate Bounds:** Trial quotas are constrained by free-tier API rate limits.
+3. **Free-tier Rate Bounds:** Trial quotas are constrained by free-tier API limits.
 
 ## 10. Reproducibility & Audit Trail
 
-- **Git Commit SHA:** `9ac1042`
+- **Git Commit SHA:** `9a3c364`
 - **Software Environment:**
   - `python`: 3.13.2
   - `pydantic`: 2.13.5

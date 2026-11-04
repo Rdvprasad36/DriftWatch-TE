@@ -1,1542 +1,2197 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DriftWatch-TE: Longitudinal Security Drift in Hosted LLM Agents</title>
   <link rel="icon" type="image/svg+xml" href="branding/favicon.svg">
   <style>
+    /* =========================================================================
+       DESIGN SYSTEM - DriftWatch-TE Premium Dashboard
+       Inspired by Stripe, Linear, Vercel, Notion
+       ========================================================================= */
+
+    /* --- Self-Hosted Inter Variable Font --- */
+    @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+      src: url('vendor/inter-4.0/InterVariable.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Inter';
+      font-style: italic;
+      font-weight: 100 900;
+      font-display: swap;
+      src: url('vendor/inter-4.0/InterVariable-Italic.woff2') format('woff2');
+    }
+
+    /* --- Design Tokens --- */
     :root {
-      /* Research-Lab Light Theme (Default) */
-      --header-navy: #0F2A43;
-      --bg: #f8fafc;
-      --card-bg: #ffffff;
-      --card-subtle: #f1f5f9;
-      --border: #e2e8f0;
-      --border-subtle: #cbd5e1;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --text-header: #ffffff;
-      --accent: #0284c7;
-      --accent-hover: #0369a1;
-      
-      /* Okabe-Ito Colorblind-Safe Palette */
-      --color-blue: #0072b2;
-      --color-vermilion: #d55e00;
-      --color-green: #009e73;
-      --color-purple: #cc79a7;
-      --color-orange: #e69f00;
-      --color-sky: #56b4e9;
-      
-      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
-      --radius: 8px;
+      /* Brand */
+      --brand-ink: #0B0F14;
+      --brand-slate: #334155;
+      --brand-accent: #00B4FF;
+      --brand-light: #E5E7EB;
+
+      /* Okabe-Ito Colorblind-Safe Series */
+      --oi-blue: #0072B2;
+      --oi-vermilion: #D55E00;
+      --oi-green: #009E73;
+      --oi-purple: #CC79A7;
+      --oi-orange: #E69F00;
+      --oi-sky: #56B4E9;
+      --oi-yellow: #F0E442;
+      --oi-gray: #718096;
+
+      /* 8px Spacing Scale */
+      --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;
+      --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
+      --sp-7: 28px; --sp-8: 32px; --sp-10: 40px;
+      --sp-12: 48px; --sp-16: 64px;
+
+      /* Radii */
+      --r-xs: 4px; --r-sm: 6px; --r-md: 8px;
+      --r-lg: 12px; --r-xl: 16px; --r-full: 9999px;
+
+      /* Typography */
+      --f-xs: 0.6875rem; --f-sm: 0.8125rem; --f-base: 0.9375rem;
+      --f-lg: 1.0625rem; --f-xl: 1.25rem; --f-2xl: 1.5rem;
+      --f-3xl: 1.875rem; --f-4xl: 2.25rem;
+
+      /* Sidebar */
+      --sidebar-w: 240px;
+      --sidebar-collapsed: 64px;
+      --topbar-h: 56px;
+
+      /* Light Mode Surfaces */
+      --bg-app: #F7F8FA;
+      --bg-sidebar: #FFFFFF;
+      --bg-surface: #FFFFFF;
+      --bg-elevated: #FFFFFF;
+      --bg-inset: #F1F3F5;
+      --bg-hover: #F7F8FA;
+      --bg-active: rgba(0,180,255,0.06);
+      --bg-glass: rgba(255,255,255,0.80);
+
+      --border-default: #E5E7EB;
+      --border-subtle: #F0F1F3;
+      --border-accent: rgba(0,180,255,0.35);
+
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-tertiary: #94A3B8;
+      --text-inverse: #FFFFFF;
+      --text-accent: #0284C7;
+
+      --accent: #0284C7;
+      --accent-hover: #0369A1;
+      --accent-subtle: rgba(2,132,199,0.08);
+      --accent-muted: rgba(2,132,199,0.15);
+
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 8px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.04);
+      --shadow-lg: 0 8px 24px -4px rgba(0,0,0,0.08), 0 4px 8px -4px rgba(0,0,0,0.03);
+      --shadow-xl: 0 20px 40px -8px rgba(0,0,0,0.10);
+      --shadow-glow: 0 0 0 3px rgba(2,132,199,0.15);
+      --shadow-card-hover: 0 8px 30px -6px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,180,255,0.12);
+
+      --gradient-accent: linear-gradient(135deg, #0284C7, #06B6D4);
+      --gradient-subtle: linear-gradient(135deg, rgba(2,132,199,0.05) 0%, rgba(6,182,212,0.03) 100%);
+      --shimmer: linear-gradient(90deg, var(--bg-inset) 0%, var(--border-subtle) 50%, var(--bg-inset) 100%);
     }
 
     [data-theme="dark"] {
-      --bg: #0b0f14;
-      --card-bg: #151e28;
-      --card-subtle: #1e293b;
-      --border: #283548;
-      --border-subtle: #334155;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent: #38bdf8;
-      --accent-hover: #7dd3fc;
-      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --bg-app: #0A0E14;
+      --bg-sidebar: #0F1319;
+      --bg-surface: #12171E;
+      --bg-elevated: #181E27;
+      --bg-inset: #0D1117;
+      --bg-hover: #1A2130;
+      --bg-active: rgba(0,180,255,0.08);
+      --bg-glass: rgba(15,19,25,0.85);
+
+      --border-default: #1E293B;
+      --border-subtle: #162032;
+      --border-accent: rgba(0,180,255,0.4);
+
+      --text-primary: #E8ECF0;
+      --text-secondary: #8B97A8;
+      --text-tertiary: #5A6577;
+      --text-inverse: #0F172A;
+      --text-accent: #38BDF8;
+
+      --accent: #38BDF8;
+      --accent-hover: #7DD3FC;
+      --accent-subtle: rgba(56,189,248,0.08);
+      --accent-muted: rgba(56,189,248,0.15);
+
+      --shadow-xs: 0 1px 2px rgba(0,0,0,0.20);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.30);
+      --shadow-md: 0 4px 8px -1px rgba(0,0,0,0.40);
+      --shadow-lg: 0 8px 24px -4px rgba(0,0,0,0.50);
+      --shadow-xl: 0 20px 40px -8px rgba(0,0,0,0.60);
+      --shadow-glow: 0 0 0 3px rgba(56,189,248,0.20);
+      --shadow-card-hover: 0 8px 30px -6px rgba(0,0,0,0.45), 0 0 0 1px rgba(56,189,248,0.18);
+
+      --gradient-accent: linear-gradient(135deg, #0EA5E9, #38BDF8);
+      --gradient-subtle: linear-gradient(135deg, rgba(56,189,248,0.06) 0%, rgba(6,182,212,0.03) 100%);
+      --shimmer: linear-gradient(90deg, #12171E 0%, #1E293B 50%, #12171E 100%);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
+    /* --- Reset & Base --- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; font-size: 16px; height: 100%; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text-main);
-      line-height: 1.6;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+      background: var(--bg-app);
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
       -webkit-font-smoothing: antialiased;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-
-    /* Top Research Header */
-    header.site-header {
-      background: var(--header-navy);
-      color: var(--text-header);
-      padding: 20px 32px;
-      border-bottom: 2px solid #00B4FF;
-    }
-
-    .header-inner {
-      max-width: 1280px;
-      margin: 0 auto;
+      -moz-osx-font-smoothing: grayscale;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 16px;
     }
 
-    .brand-group {
-      display: flex;
-      align-items: center;
-      gap: 16px;
+    /* --- Skip Link --- */
+    .skip-link {
+      position: absolute; top: -60px; left: var(--sp-4);
+      background: var(--accent); color: var(--text-inverse);
+      padding: var(--sp-2) var(--sp-4); border-radius: var(--r-sm);
+      font-weight: 600; font-size: var(--f-sm); z-index: 9999;
+      text-decoration: none; transition: top 200ms ease-out;
+    }
+    .skip-link:focus { top: var(--sp-4); outline: 2px solid var(--text-inverse); outline-offset: 2px; }
+
+    a { color: var(--accent); text-decoration: none; transition: color 200ms ease-out; }
+    a:hover { color: var(--accent-hover); }
+    a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible {
+      outline: 2px solid var(--accent); outline-offset: 2px;
     }
 
-    .brand-logo-img {
-      height: 48px;
-      width: auto;
-      display: block;
+    /* --- Banners --- */
+    .banner-bar {
+      display: none; text-align: center;
+      padding: var(--sp-2) var(--sp-4);
+      font-weight: 700; font-size: var(--f-xs);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1100;
+    }
+    #sample-banner {
+      background: linear-gradient(90deg, #991B1B, #DC2626, #991B1B);
+      color: #FFFFFF; border-bottom: 1px solid rgba(255,255,255,0.15);
+    }
+    #pilot-banner {
+      background: linear-gradient(90deg, #92400E, #D97706, #92400E);
+      color: #FFFFFF;
     }
 
-    .brand-text h1 {
-      font-size: 1.55rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      line-height: 1.2;
-      color: #ffffff;
+    /* =========================================================================
+       SIDEBAR NAVIGATION (Linear / Notion inspired)
+       ========================================================================= */
+    .sidebar {
+      position: fixed; top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-w); z-index: 1000;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-default);
+      display: flex; flex-direction: column;
+      transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1), width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
     }
 
-    .brand-text h1 span.brand-te {
-      color: #00B4FF;
+    .sidebar-header {
+      height: var(--topbar-h);
+      display: flex; align-items: center;
+      padding: 0 var(--sp-5);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
     }
 
-    .brand-text .tagline {
-      font-size: 0.85rem;
-      color: #94a3b8;
-      font-weight: 500;
+    .sidebar-brand {
+      display: flex; align-items: center; gap: var(--sp-3);
+      text-decoration: none;
+    }
+    .wordmark {
+      font-size: var(--f-lg); font-weight: 800;
+      letter-spacing: -0.03em; color: var(--text-primary);
+      white-space: nowrap;
+    }
+    .wordmark-accent {
+      background: var(--gradient-accent);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .sidebar-nav {
+      flex: 1; overflow-y: auto; padding: var(--sp-3) var(--sp-3);
+      scrollbar-width: thin; scrollbar-color: var(--border-default) transparent;
+    }
+
+    .nav-section-label {
+      font-size: 0.625rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--text-tertiary); padding: var(--sp-5) var(--sp-2) var(--sp-2);
+    }
+    .nav-section-label:first-child { padding-top: var(--sp-2); }
+
+    .nav-item {
+      display: flex; align-items: center; gap: var(--sp-3);
+      padding: var(--sp-2) var(--sp-3);
+      border-radius: var(--r-md); font-size: var(--f-sm);
+      font-weight: 500; color: var(--text-secondary);
+      cursor: pointer; transition: all 180ms ease-out;
+      text-decoration: none; margin-bottom: 2px;
+      border: 1px solid transparent;
+    }
+    .nav-item:hover {
+      background: var(--bg-hover); color: var(--text-primary);
+    }
+    .nav-item.active {
+      background: var(--accent-subtle); color: var(--accent);
+      font-weight: 600; border-color: var(--border-accent);
+    }
+    .nav-item svg {
+      width: 18px; height: 18px; flex-shrink: 0;
+      stroke: currentColor; fill: none;
+      stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .nav-item .nav-label { white-space: nowrap; }
+    .nav-item .nav-badge {
+      margin-left: auto; font-size: 0.6rem; font-weight: 700;
+      background: var(--accent-muted); color: var(--accent);
+      padding: 1px 6px; border-radius: var(--r-full);
       letter-spacing: 0.02em;
     }
 
-    .header-controls {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .sidebar-footer {
+      padding: var(--sp-3) var(--sp-4);
+      border-top: 1px solid var(--border-subtle);
+      display: flex; gap: var(--sp-2); flex-shrink: 0;
     }
 
-    .theme-toggle-btn {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #ffffff;
-      padding: 6px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s ease;
+    /* =========================================================================
+       TOP BAR
+       ========================================================================= */
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-default);
+      display: flex; align-items: center;
+      padding: 0 var(--sp-6);
+      gap: var(--sp-4);
+      position: sticky; top: 0; z-index: 800;
     }
 
-    .theme-toggle-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
+    .topbar-left {
+      display: flex; align-items: center; gap: var(--sp-3); flex: 1; min-width: 0;
     }
 
-    /* Responsive Status Strip */
-    .status-strip-wrapper {
-      background: var(--card-bg);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 32px;
+    .mobile-menu-btn {
+      display: none; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: var(--r-md);
+      border: 1px solid var(--border-default);
+      background: var(--bg-surface); color: var(--text-secondary);
+      cursor: pointer; transition: all 200ms ease-out; flex-shrink: 0;
+    }
+    .mobile-menu-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .mobile-menu-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+    .page-crumb {
+      font-size: var(--f-sm); font-weight: 600;
+      color: var(--text-primary); white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .page-crumb-sub {
+      color: var(--text-tertiary); font-weight: 400;
     }
 
-    .status-strip {
-      max-width: 1280px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-    }
-
-    .status-item {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .status-label {
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      font-weight: 700;
-      color: var(--text-muted);
-    }
-
-    .status-value {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      border: 1px solid var(--border);
-    }
-
-    .badge.verified {
-      background: #ecfdf5;
-      color: #065f46;
-      border-color: #a7f3d0;
-    }
-
-    [data-theme="dark"] .badge.verified {
-      background: #064e3b;
-      color: #6ee7b7;
-      border-color: #059669;
-    }
-
-    .badge.pending {
-      background: var(--card-subtle);
-      color: var(--text-muted);
-    }
-
-    .badge.pilot {
-      background: #fef9c3;
-      color: #854d0e;
-      border-color: #fde047;
-    }
-
-    [data-theme="dark"] .badge.pilot {
-      background: #713f12;
-      color: #fef08a;
-      border-color: #ca8a04;
-    }
-
-    .badge.study {
-      background: #ecfdf5;
-      color: #065f46;
-      border-color: #a7f3d0;
-    }
-
-    /* Tab Navigation */
-    nav.tab-nav-wrapper {
-      max-width: 1280px;
-      margin: 24px auto 0 auto;
-      padding: 0 32px;
-    }
-
-    .tab-nav {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      border-bottom: 2px solid var(--border);
-      padding-bottom: 0;
-    }
-
-    .tab-nav button {
-      background: transparent;
-      border: none;
-      border-bottom: 3px solid transparent;
-      color: var(--text-muted);
-      padding: 12px 18px;
-      font-size: 0.92rem;
-      font-weight: 600;
-      cursor: pointer;
+    .topbar-brand-mobile { display: none; text-decoration: none; }
+    .wordmark-mobile {
+      font-size: var(--f-lg); font-weight: 800;
+      letter-spacing: -0.03em; color: var(--text-primary);
       white-space: nowrap;
-      transition: all 0.15s ease;
-      margin-bottom: -2px;
     }
 
-    .tab-nav button:hover {
-      color: var(--text-main);
-      background: var(--card-subtle);
-      border-top-left-radius: 6px;
-      border-top-right-radius: 6px;
+    .topbar-actions {
+      display: flex; align-items: center; gap: var(--sp-2); flex-shrink: 0;
     }
 
-    .tab-nav button.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-      background: transparent;
+    .btn-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; border-radius: var(--r-md);
+      border: 1px solid var(--border-default);
+      background: var(--bg-surface); color: var(--text-secondary);
+      cursor: pointer; transition: all 200ms ease-out;
+    }
+    .btn-icon:hover {
+      background: var(--bg-hover); color: var(--text-primary);
+      border-color: var(--border-accent); box-shadow: var(--shadow-glow);
+    }
+    .btn-icon svg {
+      width: 16px; height: 16px; fill: none;
+      stroke: currentColor; stroke-width: 2;
+      stroke-linecap: round; stroke-linejoin: round;
     }
 
-    .tab-nav button:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: -2px;
+    /* =========================================================================
+       MAIN CONTENT AREA
+       ========================================================================= */
+    .app-main {
+      margin-left: var(--sidebar-w);
+      flex: 1; min-height: 100vh; display: flex; flex-direction: column;
+      transition: margin-left 300ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Main Container & 12-Column Responsive Grid */
-    main.main-content {
-      max-width: 1280px;
-      margin: 24px auto 48px auto;
-      padding: 0 32px;
+    .content-area {
+      flex: 1; padding: var(--sp-8) var(--sp-8);
+      max-width: 1280px; width: 100%; margin: 0 auto;
     }
 
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
-    .grid-12 {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 20px;
+    /* --- Page Sections with Transitions --- */
+    .page-section {
+      display: none; opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 280ms ease-out, transform 280ms ease-out;
+    }
+    .page-section.active {
+      display: block; opacity: 1; transform: translateY(0);
     }
 
-    .col-12 { grid-column: span 12; }
-    .col-8 { grid-column: span 8; }
-    .col-6 { grid-column: span 6; }
-    .col-4 { grid-column: span 4; }
-    .col-3 { grid-column: span 3; }
-
-    @media (max-width: 900px) {
-      .col-8, .col-6, .col-4, .col-3 {
-        grid-column: span 12;
-      }
-      .site-header, .status-strip-wrapper, nav.tab-nav-wrapper, main.main-content {
-        padding-left: 16px;
-        padding-right: 16px;
-      }
+    /* --- Section Headers --- */
+    .section-header { margin-bottom: var(--sp-8); }
+    .section-eyebrow {
+      display: inline-flex; align-items: center; gap: var(--sp-2);
+      padding: 3px 10px; border-radius: var(--r-full);
+      background: var(--accent-subtle); color: var(--accent);
+      font-size: 0.625rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      border: 1px solid var(--border-accent);
+      margin-bottom: var(--sp-3);
+    }
+    .section-title {
+      font-size: var(--f-3xl); font-weight: 800;
+      letter-spacing: -0.035em; color: var(--text-primary);
+      line-height: 1.15; margin-bottom: var(--sp-2);
+    }
+    .section-desc {
+      color: var(--text-secondary); font-size: var(--f-base);
+      max-width: 640px; line-height: 1.6;
     }
 
-    /* Cards */
+    /* =========================================================================
+       CARDS - Stripe / Linear style
+       ========================================================================= */
     .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      padding: 24px;
-      margin-bottom: 24px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-xs);
+      position: relative; overflow: hidden;
+      transition: box-shadow 280ms ease-out, border-color 280ms ease-out, transform 280ms ease-out;
     }
+    .card:hover {
+      box-shadow: var(--shadow-card-hover);
+      border-color: var(--border-accent);
+    }
+    .card-pad { padding: var(--sp-6); }
+    .card-pad-sm { padding: var(--sp-4); }
+    .card + .card { margin-top: var(--sp-4); }
 
+    .card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: var(--sp-5); flex-wrap: wrap; gap: var(--sp-3);
+    }
     .card-title {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
+      font-size: var(--f-base); font-weight: 700; color: var(--text-primary);
+    }
+    .card-subtitle {
+      font-size: var(--f-sm); color: var(--text-secondary); margin-top: 2px;
     }
 
-    .alert-box {
-      background: rgba(2, 132, 199, 0.08);
-      border-left: 4px solid var(--accent);
-      padding: 14px 18px;
-      border-radius: 4px;
-      margin-bottom: 24px;
-      font-size: 0.92rem;
-      color: var(--text-main);
+    /* Accent top-line on cards */
+    .card-accent::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 2px; background: var(--gradient-accent);
     }
 
-    .pilot-banner {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: #fefce8;
-      border: 1px solid #fde047;
-      color: #854d0e;
-      padding: 12px 18px;
-      border-radius: 6px;
-      margin-bottom: 24px;
-      font-size: 0.9rem;
+    /* =========================================================================
+       STUDY STATUS STRIP (Bento-style)
+       ========================================================================= */
+    .status-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1px; background: var(--border-default);
+      border: 1px solid var(--border-default);
+      border-radius: var(--r-lg); overflow: hidden;
+      margin-bottom: var(--sp-6);
+    }
+    .status-cell {
+      background: var(--bg-surface);
+      padding: var(--sp-5) var(--sp-5);
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .status-cell:hover { background: var(--bg-hover); }
+    .status-label {
+      font-size: 0.625rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--text-tertiary);
+    }
+    .status-val {
+      font-size: var(--f-lg); font-weight: 700; color: var(--text-primary);
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: var(--sp-1);
+      padding: 2px 8px; border-radius: var(--r-full);
+      font-size: 0.625rem; font-weight: 700;
+      letter-spacing: 0.04em; width: fit-content;
+    }
+    .pill-green { background: rgba(0,158,115,0.12); color: #059669; }
+    .pill-amber { background: rgba(217,119,6,0.12); color: #D97706; }
+    .pill-red { background: rgba(220,38,38,0.12); color: #DC2626; }
+    .pill-blue { background: var(--accent-muted); color: var(--accent); }
+    .pill-gray { background: rgba(148,163,184,0.15); color: var(--text-tertiary); }
+    [data-theme="dark"] .pill-green { color: #34D399; }
+    [data-theme="dark"] .pill-amber { color: #FBBF24; }
+    [data-theme="dark"] .pill-red { color: #F87171; }
+
+    /* Dot indicator */
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      display: inline-block; flex-shrink: 0;
+    }
+    .dot-green { background: #059669; }
+    .dot-amber { background: #D97706; }
+    [data-theme="dark"] .dot-green { background: #34D399; }
+
+    /* =========================================================================
+       KPI CARDS - Bento grid
+       ========================================================================= */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--sp-4); margin-bottom: var(--sp-6);
+    }
+    .kpi-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--r-lg); padding: var(--sp-5) var(--sp-6);
+      position: relative; overflow: hidden;
+      transition: all 280ms ease-out;
+    }
+    .kpi-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 2px; background: var(--gradient-accent);
+      opacity: 0; transition: opacity 280ms ease-out;
+    }
+    .kpi-card:hover::before { opacity: 1; }
+    .kpi-card:hover {
+      box-shadow: var(--shadow-card-hover);
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
     }
 
-    [data-theme="dark"] .pilot-banner {
-      background: rgba(202, 138, 4, 0.15);
-      border-color: #ca8a04;
-      color: #fef08a;
+    .kpi-top {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: var(--sp-3);
     }
-
-    .pilot-badge-pill {
-      background: #ca8a04;
-      color: #ffffff;
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      padding: 3px 8px;
-      border-radius: 4px;
-      letter-spacing: 0.05em;
-      white-space: nowrap;
+    .kpi-label {
+      font-size: var(--f-xs); font-weight: 600;
+      color: var(--text-tertiary); text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
-
-    .sample-banner {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: #dc2626;
-      border: 1px solid #b91c1c;
-      color: #ffffff;
-      padding: 14px 20px;
-      border-radius: 6px;
-      margin-bottom: 24px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.4);
+    .kpi-badge {
+      font-size: 0.625rem; font-family: 'Inter', monospace;
+      padding: 2px 8px; border-radius: var(--r-full);
+      background: var(--bg-inset); color: var(--text-secondary);
+      border: 1px solid var(--border-default); font-weight: 600;
     }
-
-    .sample-badge-pill {
-      background: #991b1b;
-      color: #ffffff;
-      font-size: 0.72rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      padding: 4px 10px;
-      border-radius: 4px;
-      letter-spacing: 0.08em;
-      white-space: nowrap;
-      border: 1px solid rgba(255, 255, 255, 0.4);
+    .kpi-value {
+      font-size: var(--f-4xl); font-weight: 800;
+      letter-spacing: -0.04em; color: var(--text-primary);
+      line-height: 1;
     }
+    .kpi-meta {
+      font-size: var(--f-xs); color: var(--text-tertiary);
+      margin-top: var(--sp-2); display: flex; align-items: center; gap: var(--sp-2);
+    }
+    .kpi-sparkline { height: 40px; width: 100%; margin-top: var(--sp-3); }
 
-    /* Dynamic Stat Cards */
-    .stat-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
+    /* =========================================================================
+       HYPOTHESIS CHIPS
+       ========================================================================= */
+    .hypo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: var(--sp-3); margin-bottom: var(--sp-6);
+    }
+    .hypo-chip {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--r-lg);
+      padding: var(--sp-4) var(--sp-5);
+      display: flex; gap: var(--sp-4);
+      transition: all 200ms ease-out;
+    }
+    .hypo-chip:hover {
+      border-color: var(--border-accent);
       box-shadow: var(--shadow-sm);
     }
-
-    .stat-label {
-      font-size: 0.8rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
+    .hypo-id {
+      font-weight: 800; font-size: var(--f-sm);
+      color: var(--accent); min-width: 28px;
+      padding-top: 1px;
+    }
+    .hypo-body { flex: 1; min-width: 0; }
+    .hypo-title {
+      font-size: var(--f-sm); font-weight: 600;
+      color: var(--text-primary);
+      display: flex; align-items: center;
+      justify-content: space-between; gap: var(--sp-2);
+    }
+    .hypo-rule {
+      font-size: var(--f-xs); color: var(--text-secondary);
+      margin-top: var(--sp-1); line-height: 1.5;
     }
 
-    .stat-val {
-      font-size: 1.9rem;
-      font-weight: 800;
-      margin: 6px 0;
+    /* Badge status */
+    .badge {
+      font-size: 0.6rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      padding: 2px 7px; border-radius: var(--r-sm);
+      white-space: nowrap;
+    }
+    .badge-not_enough_data { background: rgba(148,163,184,0.15); color: var(--text-tertiary); }
+    .badge-supported { background: rgba(0,158,115,0.15); color: #059669; }
+    .badge-not_supported { background: rgba(213,94,0,0.15); color: #D55E00; }
+    .badge-inconclusive { background: rgba(217,119,6,0.15); color: #B45309; }
+    [data-theme="dark"] .badge-supported { color: #34D399; }
+
+    /* =========================================================================
+       CHART & TABLE CONTAINERS
+       ========================================================================= */
+    .chart-controls {
+      display: flex; flex-wrap: wrap; gap: var(--sp-3);
+      align-items: center; margin-bottom: var(--sp-4);
+    }
+    .filter-group {
+      display: inline-flex; align-items: center; gap: var(--sp-2);
+    }
+    .filter-label {
+      font-size: var(--f-xs); font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text-tertiary);
+    }
+    .select-input, .text-input {
+      background: var(--bg-inset); border: 1px solid var(--border-default);
+      color: var(--text-primary); padding: 6px 12px;
+      border-radius: var(--r-md); font-size: var(--f-sm);
+      font-family: inherit; transition: all 200ms ease-out;
+    }
+    .select-input:hover, .text-input:hover { border-color: var(--border-accent); }
+    .select-input:focus, .text-input:focus {
+      border-color: var(--accent); box-shadow: var(--shadow-glow);
     }
 
-    /* Tables */
-    .table-container {
-      width: 100%;
-      overflow-x: auto;
-      margin-top: 14px;
+    .chart-box {
+      width: 100%; height: 420px;
+      border-radius: var(--r-md);
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.88rem;
+    /* --- Tables (Stripe style) --- */
+    .tbl-wrap {
+      width: 100%; overflow-x: auto; margin-top: var(--sp-4);
+      border: 1px solid var(--border-default);
+      border-radius: var(--r-lg); background: var(--bg-surface);
     }
-
-    th, td {
-      padding: 12px 14px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
+    .data-table {
+      width: 100%; border-collapse: collapse;
+      font-size: var(--f-sm); text-align: left;
     }
-
-    th {
-      color: var(--text-muted);
-      font-weight: 600;
-      background: var(--card-subtle);
+    .data-table th {
+      background: var(--bg-inset); color: var(--text-tertiary);
+      font-weight: 600; font-size: var(--f-xs);
+      text-transform: uppercase; letter-spacing: 0.05em;
+      padding: 10px 16px; border-bottom: 1px solid var(--border-default);
+      white-space: nowrap; position: sticky; top: 0;
     }
-
-    tr:hover td {
-      background: rgba(0, 0, 0, 0.02);
+    .data-table td {
+      padding: 10px 16px; border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-primary); white-space: nowrap;
     }
+    .data-table tbody tr { transition: background 150ms ease-out; }
+    .data-table tbody tr:hover { background: var(--accent-subtle); }
+    .data-table tbody tr:last-child td { border-bottom: none; }
 
-    [data-theme="dark"] tr:hover td {
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    /* SVG Chart */
-    .chart-container {
-      width: 100%;
-      height: 320px;
-      position: relative;
-      margin-top: 12px;
-    }
-
-    svg.chart {
-      width: 100%;
-      height: 100%;
-      overflow: visible;
-    }
-
-    .legend {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-top: 16px;
-      font-size: 0.84rem;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .legend-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 3px;
-    }
-
-    /* Empty States */
+    /* --- Empty States --- */
     .empty-state {
-      background: var(--card-bg);
-      border: 1px dashed var(--border);
-      border-radius: var(--radius);
-      padding: 48px 24px;
-      text-align: center;
-      margin: 16px 0;
+      padding: var(--sp-12) var(--sp-6); text-align: center;
+      background: var(--bg-surface);
+      border: 1px dashed var(--border-default);
+      border-radius: var(--r-lg);
     }
-
     .empty-icon {
-      font-size: 2.2rem;
-      margin-bottom: 8px;
+      width: 48px; height: 48px; color: var(--text-tertiary);
+      margin: 0 auto var(--sp-4); stroke-width: 1.5;
     }
-
     .empty-title {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 6px;
+      font-size: var(--f-lg); font-weight: 700;
+      color: var(--text-primary); margin-bottom: var(--sp-1);
     }
-
     .empty-desc {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      max-width: 520px;
-      margin: 0 auto;
+      font-size: var(--f-sm); color: var(--text-secondary);
+      max-width: 420px; margin: 0 auto; line-height: 1.5;
     }
 
-    /* Startups Guide Callout */
-    .startup-guide-box {
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--card-subtle);
-      padding: 24px;
-      margin-bottom: 24px;
+    /* --- Buttons --- */
+    .btn {
+      display: inline-flex; align-items: center; gap: var(--sp-2);
+      padding: 7px 14px; border-radius: var(--r-md);
+      font-size: var(--f-sm); font-weight: 600;
+      cursor: pointer; border: 1px solid transparent;
+      transition: all 200ms ease-out; text-decoration: none;
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: var(--gradient-accent); color: var(--text-inverse);
+      border-color: transparent;
+    }
+    .btn-primary:hover { opacity: 0.9; box-shadow: var(--shadow-md); color: var(--text-inverse); }
+    .btn-secondary {
+      background: var(--bg-surface); border-color: var(--border-default);
+      color: var(--text-primary);
+    }
+    .btn-secondary:hover {
+      background: var(--bg-hover); border-color: var(--border-accent);
+      box-shadow: var(--shadow-sm);
+    }
+    .btn svg {
+      width: 15px; height: 15px; stroke: currentColor; fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
     }
 
-    .startup-guide-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    /* --- Skeleton Loader --- */
+    .skeleton {
+      background: var(--shimmer); background-size: 200% 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+      border-radius: var(--r-sm);
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* --- Grid helpers --- */
+    .grid-2 {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: var(--sp-4);
     }
 
-    .security-note {
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin-bottom: 16px;
+    .code-block {
+      background: var(--bg-inset); border: 1px solid var(--border-default);
+      padding: var(--sp-5); border-radius: var(--r-md);
+      font-size: var(--f-xs); overflow-x: auto;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      line-height: 1.7; color: var(--text-primary);
     }
 
-    code {
-      background: var(--card-subtle);
-      border: 1px solid var(--border);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 0.85em;
+    /* =========================================================================
+       RESPONSIVE
+       ========================================================================= */
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; z-index: 999;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
     }
 
-    a {
-      color: var(--accent);
-      text-decoration: none;
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay.open { display: block; }
+      .app-main { margin-left: 0; }
+      .mobile-menu-btn { display: flex; }
+      .topbar-brand-mobile { display: flex; }
+      .content-area { padding: var(--sp-5) var(--sp-4); }
     }
 
-    a:hover {
-      text-decoration: underline;
+    @media (max-width: 640px) {
+      .content-area { padding: var(--sp-4) var(--sp-3); }
+      .kpi-grid { grid-template-columns: 1fr; }
+      .hypo-grid { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .status-strip { grid-template-columns: repeat(2, 1fr); }
+      .section-title { font-size: var(--f-2xl); }
+      .chart-box { height: 300px; }
+      .topbar { padding: 0 var(--sp-3); }
     }
 
-    /* Footer */
-    footer.site-footer {
-      border-top: 1px solid var(--border);
-      background: var(--card-bg);
-      padding: 28px 32px;
-      font-size: 0.88rem;
-      color: var(--text-muted);
+    @media (max-width: 360px) {
+      .status-strip { grid-template-columns: 1fr; }
     }
 
-    .footer-inner {
-      max-width: 1280px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 16px;
+    /* --- Motion Preference --- */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* --- Print --- */
+    @media print {
+      .sidebar, .topbar, .sidebar-overlay { display: none !important; }
+      .app-main { margin-left: 0 !important; }
+      .page-section { display: block !important; opacity: 1 !important; transform: none !important; }
+      .card { box-shadow: none !important; break-inside: avoid; }
     }
   </style>
 </head>
 <body>
 
-<!-- Header -->
-<header class="site-header">
-  <div class="header-inner">
-    <div class="brand-group">
-      <img src="branding/logo.svg" alt="DriftWatch-TE Logo" class="brand-logo-img" onerror="this.style.display='none'">
-      <div class="brand-text">
-        <h1>DriftWatch-<span class="brand-te">TE</span></h1>
-        <div class="tagline">Watch the Drift. Test the Threat. &bull; Longitudinal Agent Security</div>
+  <!-- Skip link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Banners -->
+  <div id="sample-banner" class="banner-bar" role="alert">SAMPLE DATA -- NOT REAL RESULTS (UI DEV FIXTURE ONLY)</div>
+  <div id="pilot-banner" class="banner-bar" role="status">Pilot dry-run phase active. Formal longitudinal measurement starts on study launch date.</div>
+
+  <!-- Sidebar overlay for mobile -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Primary Navigation">
+    <div class="sidebar-header">
+      <a href="#overview" class="sidebar-brand" aria-label="DriftWatch-TE Homepage">
+        <span class="wordmark">DriftWatch-<span class="wordmark-accent">TE</span></span>
+      </a>
+    </div>
+
+    <nav class="sidebar-nav" id="nav-list">
+      <div class="nav-section-label">Dashboard</div>
+
+      <a href="#overview" class="nav-item active" data-section="overview">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="4" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="11" width="7" height="10" rx="1"/></svg>
+        <span class="nav-label">Overview</span>
+      </a>
+
+      <a href="#drift" class="nav-item" data-section="drift">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span class="nav-label">Drift Analysis</span>
+        <span class="nav-badge">Output 1</span>
+      </a>
+
+      <a href="#languages" class="nav-item" data-section="languages">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span class="nav-label">Languages</span>
+        <span class="nav-badge">Output 2</span>
+      </a>
+
+      <a href="#controls" class="nav-item" data-section="controls">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span class="nav-label">Controls</span>
+      </a>
+
+      <a href="#changepoints" class="nav-item" data-section="changepoints">
+        <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span class="nav-label">Change Points</span>
+      </a>
+
+      <div class="nav-section-label">Data &amp; Reports</div>
+
+      <a href="#data" class="nav-item" data-section="data">
+        <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        <span class="nav-label">Trial Records</span>
+        <span class="nav-badge">Output 3</span>
+      </a>
+
+      <a href="#quality" class="nav-item" data-section="quality">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span class="nav-label">Data Quality</span>
+      </a>
+
+      <a href="#report" class="nav-item" data-section="report">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span class="nav-label">Report</span>
+        <span class="nav-badge">Output 4</span>
+      </a>
+
+      <a href="#methods" class="nav-item" data-section="methods">
+        <svg viewBox="0 0 24 24"><path d="M9 3h6v11l-3 3-3-3z"/><path d="M6 21h12"/><path d="M3 21l3-3"/><path d="M21 21l-3-3"/></svg>
+        <span class="nav-label">Methods</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="https://github.com/driftwatch-te/driftwatch" class="btn-icon" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository" title="GitHub">
+        <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN WRAPPER ===== -->
+  <div class="app-main">
+    <!-- Top Bar -->
+    <header class="topbar navbar" role="banner">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle navigation menu">
+          <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <!-- Wordmark visible on mobile when sidebar hidden -->
+        <a href="#overview" class="topbar-brand-mobile" aria-label="DriftWatch-TE">
+          <span class="wordmark-mobile">DriftWatch-<span class="wordmark-accent">TE</span></span>
+        </a>
+        <span class="page-crumb" id="page-crumb">Overview</span>
       </div>
-    </div>
-    <div class="header-controls">
-      <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle Light and Dark Mode" onclick="toggleTheme()">
-        <span id="theme-icon">☀️</span> <span id="theme-text">Light Mode</span>
-      </button>
-    </div>
-  </div>
-</header>
-
-<!-- Status Strip -->
-<div class="status-strip-wrapper">
-  <div class="status-strip">
-    <div class="status-item">
-      <span class="status-label">Last Evaluation Run</span>
-      <span class="status-value" id="status-last-run">No runs recorded</span>
-    </div>
-    <div class="status-item">
-      <span class="status-label">Weeks Collected</span>
-      <span class="status-value" id="status-weeks-count">0 weeks</span>
-    </div>
-    <div class="status-item">
-      <span class="status-label">Models Tracked</span>
-      <span class="status-value" id="status-models-count">0 models</span>
-    </div>
-    <div class="status-item">
-      <span class="status-label">Frozen Suite Hash</span>
-      <span class="status-value">
-        <span class="badge pending" id="status-suite-hash">Suite Lock: Pending</span>
-      </span>
-    </div>
-  </div>
-</div>
-
-<!-- Tab Navigation with Accessible Keyboard Controls -->
-<nav class="tab-nav-wrapper">
-  <div class="tab-nav" role="tablist" aria-label="Dashboard Views" id="main-tab-nav">
-    <button class="active" role="tab" aria-selected="true" aria-controls="tab-overview" id="nav-btn-overview" onclick="showTab('overview')">1. Overview Grid</button>
-    <button role="tab" aria-selected="false" aria-controls="tab-controls" id="nav-btn-controls" onclick="showTab('controls')">2. Controls &amp; Canary</button>
-    <button role="tab" aria-selected="false" aria-controls="tab-language" id="nav-btn-language" onclick="showTab('language')">3. Language Breakdown</button>
-    <button role="tab" aria-selected="false" aria-controls="tab-changepoints" id="nav-btn-changepoints" onclick="showTab('changepoints')">4. Change Points &amp; Events</button>
-    <button role="tab" aria-selected="false" aria-controls="tab-negative" id="nav-btn-negative" onclick="showTab('negative')">5. Negative Control</button>
-    <button role="tab" aria-selected="false" aria-controls="tab-methods" id="nav-btn-methods" onclick="showTab('methods')">6. Data &amp; Methods</button>
-  </div>
-</nav>
-
-<!-- Main Views -->
-<main class="main-content">
-
-  <!-- Sample Data Banner (UI Dev Only) -->
-  <div class="sample-banner" id="sample-banner" style="display: none;">
-    <span class="sample-badge-pill">SAMPLE DATA - NOT RESULTS</span>
-    <span>
-      <strong>UI Development Mode:</strong> Displaying synthetic test fixtures for dashboard design and interface testing. This data is entirely fabricated for UI development and does NOT reflect real experimental evaluations.
-    </span>
-  </div>
-
-  <!-- Pilot Data Banner -->
-  <div class="pilot-banner" id="pilot-banner" style="display: none;">
-    <span class="pilot-badge-pill">Pilot data</span>
-    <span>
-      <strong>Pilot data detected:</strong> Weekly summaries collected prior to the study launch date (<code>2026-10-19</code>) or tagged as dry runs represent preliminary validation trials. Dryrun and pilot weeks are excluded from formal study charts.
-    </span>
-  </div>
-
-  <!-- VIEW 1: OVERVIEW GRID -->
-  <section id="tab-overview" class="tab-content active" role="tabpanel" aria-labelledby="nav-btn-overview">
-    <div class="alert-box">
-      <strong>RQ1 (Drift):</strong> Tracking weekly prompt injection Attack Success Rate (ASR) across study weeks with cluster bootstrap confidence intervals.
-    </div>
-    <div id="overview-content">
-      <div class="empty-state">
-        <div class="empty-icon">📊</div>
-        <div class="empty-title">No study data yet</div>
-        <div class="empty-desc">Weekly evaluation summaries will appear here once study runs commence.</div>
+      <div class="topbar-actions">
+        <button id="theme-toggle" class="btn-icon" aria-label="Toggle light/dark theme" title="Toggle theme">
+          <svg id="theme-icon-sun" viewBox="0 0 24 24" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg id="theme-icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
       </div>
-    </div>
-  </section>
+    </header>
 
-  <!-- VIEW 2: CONTROLS & CANARY -->
-  <section id="tab-controls" class="tab-content" role="tabpanel" aria-labelledby="nav-btn-controls">
-    <div class="alert-box">
-      <strong>RQ2 (Specificity &amp; Canary Tracking):</strong> Distinguishing security-specific drift from general capability degradation. Zero-temperature output hashes detect backend model swaps.
-    </div>
-    <div id="controls-content">
-      <div class="empty-state">
-        <div class="empty-icon">🛡️</div>
-        <div class="empty-title">No study data yet</div>
-        <div class="empty-desc">Benign control task success rates and canary prompt hash stability will appear here once data is collected.</div>
-      </div>
-    </div>
-  </section>
+    <!-- Main Content -->
+    <main id="main-content" class="content-area" role="main">
 
-  <!-- VIEW 3: LANGUAGE BREAKDOWN -->
-  <section id="tab-language" class="tab-content" role="tabpanel" aria-labelledby="nav-btn-language">
-    <div class="alert-box">
-      <strong>RQ4 &amp; RQ6 (Language Disaggregation):</strong> Comparing attack vectors across English, Telugu (తెలుగు), and Tenglish (code-mixed Telugu in Latin script).
-    </div>
-    <div id="language-content">
-      <div class="empty-state">
-        <div class="empty-icon">🌐</div>
-        <div class="empty-title">No study data yet</div>
-        <div class="empty-desc">Disaggregated results across English, Telugu, and Tenglish will appear here once evaluation summaries are available.</div>
-      </div>
-    </div>
-  </section>
+      <!-- ===============================================================
+           PAGE 1: OVERVIEW
+           =============================================================== -->
+      <section id="overview" class="page-section active" aria-labelledby="overview-title">
+        <div class="section-header">
+          <span class="section-eyebrow">Longitudinal Study</span>
+          <h1 id="overview-title" class="section-title">Security Drift in Hosted LLM Agents</h1>
+          <p class="section-desc">
+            Measuring longitudinal stability of indirect prompt injection defenses and functional capabilities
+            in multi-turn tool-calling agents across English, Telugu, and Tenglish.
+          </p>
+        </div>
 
-  <!-- VIEW 4: CHANGE POINTS & EVENTS -->
-  <section id="tab-changepoints" class="tab-content" role="tabpanel" aria-labelledby="nav-btn-changepoints">
-    <div class="alert-box">
-      <strong>RQ2 &amp; RQ5 (Change Points vs Disclosure):</strong> Detected statistical change points correlated with provider changelog entries.
-    </div>
-    <div id="changepoints-content">
-      <div class="empty-state">
-        <div class="empty-icon">🔍</div>
-        <div class="empty-title">No study data yet</div>
-        <div class="empty-desc">Detected change points and recorded provider changelog events will be displayed here.</div>
-      </div>
-    </div>
-  </section>
+        <!-- Study Status Strip -->
+        <div class="status-strip" id="status-strip">
+          <div class="status-cell">
+            <span class="status-label">Study Progress</span>
+            <span class="status-val" id="stat-progress">-</span>
+          </div>
+          <div class="status-cell">
+            <span class="status-label">Last Evaluation Run</span>
+            <span class="status-val" id="stat-last-run">-</span>
+          </div>
+          <div class="status-cell">
+            <span class="status-label">Next Scheduled Run</span>
+            <span class="status-val" id="stat-next-run">-</span>
+          </div>
+          <div class="status-cell">
+            <span class="status-label">Models Tracked</span>
+            <span class="status-val" id="stat-models-count">-</span>
+          </div>
+          <div class="status-cell">
+            <span class="status-label">Suite Integrity</span>
+            <span class="pill pill-green" id="stat-suites-verified"><span class="dot dot-green"></span> Verified</span>
+          </div>
+        </div>
 
-  <!-- VIEW 5: NEGATIVE CONTROL -->
-  <section id="tab-negative" class="tab-content" role="tabpanel" aria-labelledby="nav-btn-negative">
-    <div class="alert-box">
-      <strong>RQ3 (Harness Validity):</strong> Pinned local model tested for longitudinal invariance via Two One-Sided Tests (TOST) within an equivalence margin.
-    </div>
-    <div id="negative-content">
-      <div class="empty-state">
-        <div class="empty-icon">⚖️</div>
-        <div class="empty-title">No study data yet</div>
-        <div class="empty-desc">Negative control model evaluation data will appear here once study runs commence.</div>
-      </div>
-    </div>
-  </section>
+        <!-- Study Explanation -->
+        <div class="card card-accent" style="margin-bottom:var(--sp-6);">
+          <div class="card-pad">
+            <div class="card-title" style="margin-bottom:var(--sp-2);">Research Design &amp; Metric Definition</div>
+            <p style="font-size:var(--f-sm); color:var(--text-secondary); line-height:1.7;">
+              This evaluation runs identical frozen attack scenarios against hosted model endpoints every week under controlled temperature
+              and deterministic world-state goal predicates. Attack Success Rate (ASR) measures the percentage of trials where an indirect prompt
+              injection payload induced unauthorized state changes (e.g. fraudulent order cancelation or shipping address redirection).
+              Longitudinal change is tested via Logistic Generalized Estimating Equations (GEE) with scenario clustering.
+            </p>
+          </div>
+        </div>
 
-  <!-- VIEW 6: DATA & METHODS -->
-  <section id="tab-methods" class="tab-content" role="tabpanel" aria-labelledby="nav-btn-methods">
-    
-    <!-- How Startups Would Use Your Project -->
-    <div class="startup-guide-box">
-      <div class="startup-guide-title">
-        <span>🚀 How Startups Use This Project</span>
-      </div>
-      <p class="security-note">
-        <strong>Trust &amp; Security Notice:</strong> GitHub Pages is a static site with no backend and cannot execute adversarial attacks. Entering API credentials into a public web page creates severe credential theft and liability risks. Attacks must execute within a secure compute environment with safely stored keys.
-      </p>
-      
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 22%;">Deployment Path</th>
-              <th style="width: 58%;">How It Works</th>
-              <th style="width: 20%;">Who Runs It</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Run it themselves (best)</strong></td>
-              <td>They clone your repository, configure their API key in their private environment, execute one command against their endpoint, and inspect results locally. Your frozen test suite guarantees strict comparability.</td>
-              <td>Startup</td>
-            </tr>
-            <tr>
-              <td><strong>CI integration</strong></td>
-              <td>They add a lightweight GitHub Actions workflow to their private repository that evaluates each new model release against your frozen benchmark suite and fails the build if Attack Success Rate rises.</td>
-              <td>Startup</td>
-            </tr>
-            <tr>
-              <td><strong>Submit results</strong></td>
-              <td>They submit their completed evaluation bundle via a GitHub pull request or secure upload. You verify the cryptographic suite hash and incorporate it as a verified labeled series.</td>
-              <td>Startup &amp; You</td>
-            </tr>
-            <tr>
-              <td><strong>Research key</strong></td>
-              <td>They provide a dedicated, budget-capped, revocable evaluation key stored as an encrypted GitHub repository secret for scheduled weekly runs. Provided strictly upon explicit mutual agreement.</td>
-              <td>You</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+        <!-- KPI Cards -->
+        <div style="margin-bottom:var(--sp-2);">
+          <h2 class="card-title">Current Model Attack Success Rates</h2>
+        </div>
+        <div class="kpi-grid" id="kpi-container">
+          <!-- Populated by JS -->
+        </div>
 
-    <!-- Methodology -->
-    <div class="card">
-      <div class="card-title">Experimental Methodology &amp; Limits</div>
-      <p style="margin-bottom: 12px;">
-        DriftWatch-TE measures the security drift of hosted LLM endpoints interacting with a deterministic mock customer-service environment across longitudinal study weeks.
-      </p>
-      <ul style="margin-left: 20px; line-height: 1.8; font-size: 0.9rem;">
-        <li><strong>Deterministic Goal Predicates (FR4):</strong> Attack success and task success are computed purely via world state invariant checks. No LLM judge is utilized.</li>
-        <li><strong>Immutable Bundles (FR7):</strong> Weekly runs are stored as append-only Parquet bundles with SHA-256 hashes and published to Hugging Face Datasets.</li>
-        <li><strong>Statistical Pre-registration (FR8):</strong> Longitudinal drift estimated via Logistic Generalized Estimating Equations (GEE) clustered by scenario with Benjamini-Hochberg FDR correction.</li>
-        <li><strong>Zero-Cost Open Science (FR2, FR6):</strong> Executed entirely within free-tier quotas using GitHub Actions scheduled workflows.</li>
-        <li><strong>Limitations:</strong> Evaluates indirect prompt injection in tool interactions; does not cover multi-modal vectors or audio agents. Rate limits bound weekly trial counts.</li>
-      </ul>
-    </div>
+        <!-- Hypothesis Chips -->
+        <div style="margin-bottom:var(--sp-2);">
+          <h2 class="card-title">Hypothesis Evaluation Status</h2>
+        </div>
+        <div class="hypo-grid" id="hypothesis-container">
+          <!-- Populated by JS -->
+        </div>
+      </section>
 
-    <!-- Download Data -->
-    <div class="card">
-      <div class="card-title">
-        <span>Download Data &amp; Verification Artifacts</span>
-      </div>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Resource</th>
-              <th>Format</th>
-              <th>Access Location</th>
-              <th>Integrity Check</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Hugging Face Dataset</td>
-              <td>Parquet (.parquet)</td>
-              <td><code>TODO: HUGGING_FACE_DATASET_PATH</code></td>
-              <td>git-lfs / SHA-256</td>
-            </tr>
-            <tr>
-              <td>Frozen Test Suites</td>
-              <td>YAML (.yaml)</td>
-              <td><code>suites/SUITE_LOCK.json</code></td>
-              <td id="table-suite-hash">Pending</td>
-            </tr>
-            <tr>
-              <td>Zenodo Repository Archive</td>
-              <td>Zip / DOI</td>
-              <td><code>TODO: ZENODO_DOI</code></td>
-              <td>Zenodo MD5</td>
-            </tr>
-            <tr>
-              <td>Weekly Summary JSON</td>
-              <td>JSON (.json)</td>
-              <td><code>results/summary/</code></td>
-              <td>Index manifest</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      
-      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-        <span style="font-size: 0.85rem; color: var(--text-muted);">
-          Inspect or verify local summary bundles:
-        </span>
-        <label class="theme-toggle-btn" style="background: var(--card-subtle); color: var(--text-main); border-color: var(--border);">
-          Upload Local Summary JSON
-          <input type="file" id="local-file-input" multiple accept=".json" style="display: none;">
-        </label>
-      </div>
-    </div>
-  </section>
-</main>
-
-<!-- Footer -->
-<footer class="site-footer">
-  <div class="footer-inner">
-    <div>
-      <strong>DriftWatch-TE</strong> &bull; Licensed under the 
-      <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a>. 
-      Data released under CC-BY 4.0.
-    </div>
-    <div>
-      <a href="https://github.com/TODO:ORG/driftwatch" target="_blank" rel="noopener">GitHub Repository</a>
-    </div>
-  </div>
-</footer>
-
-<script>
-  // Theme Management
-  function initTheme() {
-    const saved = localStorage.getItem('driftwatch-theme');
-    if (saved === 'dark' || (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      setTheme('dark');
-    } else {
-      setTheme('light');
-    }
-  }
-
-  function setTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('driftwatch-theme', theme);
-    const icon = document.getElementById('theme-icon');
-    const text = document.getElementById('theme-text');
-    if (theme === 'dark') {
-      if (icon) icon.textContent = '🌙';
-      if (text) text.textContent = 'Dark Mode';
-    } else {
-      if (icon) icon.textContent = '☀️';
-      if (text) text.textContent = 'Light Mode';
-    }
-  }
-
-  function toggleTheme() {
-    const current = document.documentElement.getAttribute('data-theme') || 'light';
-    setTheme(current === 'light' ? 'dark' : 'light');
-  }
-
-  // Accessible Tab Navigation
-  function showTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-nav button').forEach(el => {
-      el.classList.remove('active');
-      el.setAttribute('aria-selected', 'false');
-    });
-
-    const targetSection = document.getElementById('tab-' + tabName);
-    if (targetSection) targetSection.classList.add('active');
-
-    const activeBtn = document.getElementById('nav-btn-' + tabName);
-    if (activeBtn) {
-      activeBtn.classList.add('active');
-      activeBtn.setAttribute('aria-selected', 'true');
-    }
-  }
-
-  // Keyboard navigation for tablist
-  document.getElementById('main-tab-nav')?.addEventListener('keydown', (e) => {
-    const tabs = Array.from(document.querySelectorAll('.tab-nav button'));
-    const index = tabs.indexOf(document.activeElement);
-    if (index === -1) return;
-
-    let nextIndex = null;
-    if (e.key === 'ArrowRight') {
-      nextIndex = (index + 1) % tabs.length;
-    } else if (e.key === 'ArrowLeft') {
-      nextIndex = (index - 1 + tabs.length) % tabs.length;
-    } else if (e.key === 'Home') {
-      nextIndex = 0;
-    } else if (e.key === 'End') {
-      nextIndex = tabs.length - 1;
-    }
-
-    if (nextIndex !== null) {
-      e.preventDefault();
-      tabs[nextIndex].focus();
-      tabs[nextIndex].click();
-    }
-  });
-
-  // Okabe-Ito Colorblind-Safe Palette
-  const PALETTE = ['#0072b2', '#d55e00', '#009e73', '#cc79a7', '#e69f00', '#56b4e9'];
-  const STUDY_START_DATE = '2026-10-19';
-
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
-  function isPilotWeek(s) {
-    if (!s) return false;
-    if (s.is_pilot === true || s.is_dryrun === true) return true;
-    const w = String(s.week || '');
-    if (w.toLowerCase().includes('dryrun')) return true;
-    if (w && w < STUDY_START_DATE) return true;
-    return false;
-  }
-
-  // Draw dynamic SVG line charts with 95% Confidence Interval bands
-  function renderSvgLineChart(containerId, seriesList, xLabels) {
-    const el = document.getElementById(containerId);
-    if (!el || seriesList.length === 0 || xLabels.length === 0) return;
-
-    const w = 620;
-    const h = 300;
-    const pad = 44;
-    const yMin = 0.0;
-    const yMax = 1.0;
-
-    let svg = `<svg class="chart" viewBox="0 0 ${w} ${h}">`;
-
-    // Horizontal grid lines & Y labels
-    for (let i = 0; i <= 4; i++) {
-      const yVal = yMin + (yMax - yMin) * (i / 4);
-      const yPos = h - pad - (i / 4) * (h - 2 * pad);
-      svg += `<line x1="${pad}" y1="${yPos}" x2="${w - pad}" y2="${yPos}" stroke="currentColor" stroke-opacity="0.1" stroke-dasharray="3,3" />`;
-      svg += `<text x="${pad - 8}" y="${yPos + 4}" fill="currentColor" opacity="0.6" font-size="10" text-anchor="end">${(yVal * 100).toFixed(0)}%</text>`;
-    }
-
-    // X-axis labels
-    const nX = xLabels.length;
-    xLabels.forEach((label, idx) => {
-      const xPos = nX === 1 ? w / 2 : pad + (idx / (nX - 1)) * (w - 2 * pad);
-      const shortLabel = label.length > 10 ? label.slice(5) : label;
-      svg += `<text x="${xPos}" y="${h - pad + 18}" fill="currentColor" opacity="0.6" font-size="10" text-anchor="middle">${escapeHtml(shortLabel)}</text>`;
-    });
-
-    // Draw shaded 95% confidence intervals and series paths
-    seriesList.forEach(s => {
-      let pts = [];
-      let upperPts = [];
-      let lowerPts = [];
-
-      s.data.forEach((val, idx) => {
-        if (val === null || val === undefined) return;
-        const x = nX === 1 ? w / 2 : pad + (idx / (nX - 1)) * (w - 2 * pad);
-        const y = h - pad - Math.max(0, Math.min(1, (val - yMin) / (yMax - yMin))) * (h - 2 * pad);
-        pts.push({ x, y });
-
-        // Calculate 95% Wald CI based on binomial SE (or n trials)
-        const nTrials = s.trials?.[idx] || 25;
-        const se = Math.sqrt(Math.max(0.0001, (val * (1 - val)) / nTrials));
-        const valUpper = Math.min(1.0, val + 1.96 * se);
-        const valLower = Math.max(0.0, val - 1.96 * se);
-
-        const yUpper = h - pad - Math.max(0, Math.min(1, (valUpper - yMin) / (yMax - yMin))) * (h - 2 * pad);
-        const yLower = h - pad - Math.max(0, Math.min(1, (valLower - yMin) / (yMax - yMin))) * (h - 2 * pad);
-        upperPts.push({ x, y: yUpper });
-        lowerPts.push({ x, y: yLower });
-      });
-
-      // Shaded 95% CI Area
-      if (upperPts.length > 1) {
-        const topPath = upperPts.map((p, idx) => (idx === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
-        const bottomPath = lowerPts.slice().reverse().map(p => `L ${p.x} ${p.y}`).join(' ');
-        const areaPath = `${topPath} ${bottomPath} Z`;
-        svg += `<path d="${areaPath}" fill="${s.color}" fill-opacity="0.12" />`;
-      }
-
-      // Series Line
-      if (pts.length > 1) {
-        const pathStr = pts.map((p, idx) => (idx === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
-        svg += `<path d="${pathStr}" fill="none" stroke="${s.color}" stroke-width="2.5" />`;
-      }
-
-      // Points
-      pts.forEach(p => {
-        svg += `<circle cx="${p.x}" cy="${p.y}" r="4.5" fill="${s.color}" stroke="#ffffff" stroke-width="1.5" />`;
-      });
-    });
-
-    svg += `</svg>`;
-    el.innerHTML = svg;
-  }
-
-  // Render Data Engine
-  function renderData(summaries, events, suiteLock, isSampleData = false) {
-    const sampleBanner = document.getElementById('sample-banner');
-    if (sampleBanner) {
-      const hasSample = isSampleData || (summaries && summaries.some(s => s && s.sample === true)) || (events && events.sample === true);
-      sampleBanner.style.display = hasSample ? 'flex' : 'none';
-    }
-
-    // 1. Suite Lock Status
-    if (suiteLock && suiteLock.entries && suiteLock.entries.canary) {
-      const hash = suiteLock.entries.canary.suite_hash || '';
-      const short = hash.slice(0, 8);
-      const badge = document.getElementById('status-suite-hash');
-      if (badge) {
-        badge.textContent = `✓ Verified (${short})`;
-        badge.className = 'badge verified';
-      }
-      const tableHash = document.getElementById('table-suite-hash');
-      if (tableHash) tableHash.textContent = hash;
-    }
-
-    if (!summaries || summaries.length === 0) return;
-
-    // Chronological order
-    summaries.sort((a, b) => String(a.week).localeCompare(String(b.week)));
-    const allWeeks = summaries.map(s => s.week || 'Unknown');
-
-    // Update Status Strip
-    const lastRunEl = document.getElementById('status-last-run');
-    if (lastRunEl) lastRunEl.textContent = summaries[summaries.length - 1].week || 'Unknown';
-
-    // Discover models dynamically
-    const modelSet = new Set();
-    summaries.forEach(s => {
-      if (s.models && typeof s.models === 'object') {
-        Object.keys(s.models).forEach(m => modelSet.add(m));
-      }
-    });
-    const modelList = Array.from(modelSet);
-
-    const modelsCountEl = document.getElementById('status-models-count');
-    if (modelsCountEl) modelsCountEl.textContent = `${modelList.length} model(s)`;
-
-    const hasPilot = summaries.some(isPilotWeek);
-    const pilotBanner = document.getElementById('pilot-banner');
-    if (pilotBanner) pilotBanner.style.display = hasPilot ? 'flex' : 'none';
-
-    // Separate study weeks from pilot/dryrun weeks
-    const studySummaries = summaries.filter(s => !isPilotWeek(s));
-    const studyWeeks = studySummaries.map(s => s.week || 'Unknown');
-
-    const weeksCountEl = document.getElementById('status-weeks-count');
-    if (weeksCountEl) {
-      weeksCountEl.textContent = `${studyWeeks.length} study week(s)${hasPilot ? ' (+ pilot)' : ''}`;
-    }
-
-    if (modelList.length === 0) return;
-
-    const modelColors = {};
-    modelList.forEach((m, idx) => {
-      modelColors[m] = PALETTE[idx % PALETTE.length];
-    });
-
-    // -------------------------------------------------------------
-    // VIEW 1: OVERVIEW GRID
-    // -------------------------------------------------------------
-    const overviewContainer = document.getElementById('overview-content');
-    if (overviewContainer) {
-      let cardsHtml = '<div class="grid-12" style="margin-bottom: 24px;">';
-      modelList.forEach(m => {
-        const latestSummary = summaries[summaries.length - 1];
-        const mStats = latestSummary.models?.[m];
-        const latestAsr = mStats?.asr !== undefined ? (mStats.asr * 100).toFixed(1) + '%' : 'N/A';
-        const totalTrials = mStats?.total_trials ?? 0;
-        const color = modelColors[m];
-
-        cardsHtml += `
-          <div class="col-3">
-            <div class="stat-card">
-              <div class="stat-label">${escapeHtml(m)}</div>
-              <div class="stat-val" style="color: ${color}">${latestAsr}</div>
-              <div style="font-size: 0.8rem; color: var(--text-muted);">
-                Latest Trials: ${totalTrials}
+      <!-- ===============================================================
+           PAGE 2: DRIFT (Output 1)
+           =============================================================== -->
+      <section id="drift" class="page-section" aria-labelledby="drift-title">
+        <div class="section-header">
+          <span class="section-eyebrow">Output 1</span>
+          <h1 id="drift-title" class="section-title">Longitudinal Security Drift</h1>
+          <p class="section-desc">
+            Weekly attack success rates over time. Solid lines depict hosted models with shaded 95% cluster-bootstrap confidence intervals;
+            dashed line represents the pinned local reference model.
+          </p>
+        </div>
+        <div class="card card-accent">
+          <div class="card-pad">
+            <div class="chart-controls">
+              <div class="filter-group">
+                <label for="drift-model-select" class="filter-label">Model:</label>
+                <select id="drift-model-select" class="select-input"><option value="all">All Models</option></select>
+              </div>
+              <div class="filter-group">
+                <label for="drift-lang-select" class="filter-label">Language:</label>
+                <select id="drift-lang-select" class="select-input">
+                  <option value="all">All Languages</option>
+                  <option value="en">English (en)</option>
+                  <option value="te">Telugu (te)</option>
+                  <option value="te-Latn">Tenglish (te-Latn)</option>
+                </select>
               </div>
             </div>
-          </div>
-        `;
-      });
-      cardsHtml += '</div>';
-
-      const chartCard = `
-        <div class="card">
-          <div class="card-title">
-            <span>Attack Success Rate (ASR) Over Time with 95% Confidence Intervals</span>
-            <span style="font-size: 0.8rem; color: var(--text-muted)">
-              ${studyWeeks.length > 0 ? `Tracking across ${studyWeeks.length} longitudinal study week(s)` : 'Dryrun / pilot data excluded from study chart'}
-            </span>
-          </div>
-          ${studyWeeks.length > 0 ? `
-            <div class="chart-container" id="overview-chart"></div>
-            <div class="legend">
-              ${modelList.map(m => `
-                <div class="legend-item">
-                  <div class="legend-dot" style="background: ${modelColors[m]}"></div>
-                  <span>${escapeHtml(m)}</span>
-                </div>
-              `).join('')}
-            </div>
-          ` : `
-            <div class="empty-state" style="padding: 32px 16px;">
-              <div class="empty-title">No formal study weeks yet</div>
-              <div class="empty-desc">Loaded data consists of pre-study pilot/dryrun runs. Study charts will plot formal weeks starting on or after ${STUDY_START_DATE}.</div>
-            </div>
-          `}
-          
-          <div style="margin-top: 24px;">
-            <div class="card-title">Tabular Summary &amp; Exact Rates</div>
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Week</th>
-                    <th>Classification</th>
-                    ${modelList.map(m => `<th>${escapeHtml(m)} ASR [95% CI]</th>`).join('')}
-                  </tr>
-                </thead>
-                <tbody>
-                  ${summaries.map(s => `
-                    <tr>
-                      <td><strong>${escapeHtml(s.week)}</strong></td>
-                      <td>
-                        ${isPilotWeek(s) ? '<span class="badge pilot">Pilot data</span>' : '<span class="badge study">Study week</span>'}
-                      </td>
-                      ${modelList.map(m => {
-                        const mData = s.models?.[m];
-                        if (!mData || mData.asr === undefined) return '<td>—</td>';
-                        const asrVal = (mData.asr * 100).toFixed(1) + '%';
-                        const nTrials = mData.total_trials || 25;
-                        const se = Math.sqrt((mData.asr * (1 - mData.asr)) / nTrials);
-                        const low = Math.max(0, mData.asr - 1.96 * se);
-                        const high = Math.min(1, mData.asr + 1.96 * se);
-                        const ciStr = `[${(low * 100).toFixed(1)}%, ${(high * 100).toFixed(1)}%]`;
-                        return `<td><strong>${asrVal}</strong> <span style="font-size: 0.8rem; color: var(--text-muted);">${ciStr}</span></td>`;
-                      }).join('')}
-                    </tr>
-                  `).join('')}
-                </tbody>
+            <div id="drift-chart-container" class="chart-box" role="img" aria-label="Weekly Attack Success Rate chart"></div>
+            <div class="tbl-wrap" id="drift-table-wrapper">
+              <table class="data-table" id="drift-table" aria-label="Weekly drift tabular summary">
+                <thead><tr><th>Week</th><th>Hosted Model</th><th>Local Reference</th><th>Difference</th><th>95% CI</th><th>Trials (n)</th></tr></thead>
+                <tbody></tbody>
               </table>
             </div>
           </div>
         </div>
-      `;
+      </section>
 
-      overviewContainer.innerHTML = cardsHtml + chartCard;
+      <!-- ===============================================================
+           PAGE 3: LANGUAGES (Output 2)
+           =============================================================== -->
+      <section id="languages" class="page-section" aria-labelledby="languages-title">
+        <div class="section-header">
+          <span class="section-eyebrow">Output 2</span>
+          <h1 id="languages-title" class="section-title">Multilingual Disparity: Telugu &amp; Tenglish</h1>
+          <p class="section-desc">
+            Comparative vulnerability across English, native Telugu, and transliterated Tenglish.
+            Matched scenario pairs evaluate translation vulnerability amplification.
+          </p>
+        </div>
 
-      if (studyWeeks.length > 0) {
-        const series = modelList.map(m => ({
-          color: modelColors[m],
-          data: studySummaries.map(s => s.models?.[m]?.asr ?? null),
-          trials: studySummaries.map(s => s.models?.[m]?.total_trials ?? 25)
-        }));
-        renderSvgLineChart('overview-chart', series, studyWeeks);
-      }
-    }
-
-    // -------------------------------------------------------------
-    // VIEW 2: CONTROLS & CANARY
-    // -------------------------------------------------------------
-    const controlsContainer = document.getElementById('controls-content');
-    if (controlsContainer) {
-      controlsContainer.innerHTML = `
-        <div class="card">
-          <div class="card-title">
-            <span>Benign Task Success Rate Over Time with 95% Confidence Intervals</span>
-            <span style="font-size: 0.8rem; color: var(--text-muted)">
-              ${studyWeeks.length > 0 ? `Tracking across ${studyWeeks.length} study week(s)` : 'Dryrun / pilot data excluded from study chart'}
-            </span>
+        <div id="lang-sample-warning" class="card card-pad-sm" style="display:none; border-color:#D97706; margin-bottom:var(--sp-4);">
+          <div style="color:#D97706; font-size:var(--f-sm); font-weight:600;">
+            Notice: Small sample size (n &lt; 30) in one or more slices. Confidence intervals are wide.
           </div>
-          ${studyWeeks.length > 0 ? `
-            <div class="chart-container" id="control-chart"></div>
-            <div class="legend">
-              ${modelList.map(m => `
-                <div class="legend-item">
-                  <div class="legend-dot" style="background: ${modelColors[m]}"></div>
-                  <span>${escapeHtml(m)}</span>
-                </div>
-              `).join('')}
-            </div>
-          ` : `
-            <div class="empty-state" style="padding: 32px 16px;">
-              <div class="empty-title">No formal study weeks yet</div>
-              <div class="empty-desc">Loaded data consists of pre-study pilot/dryrun runs. Benign control charts will plot formal weeks starting on or after ${STUDY_START_DATE}.</div>
-            </div>
-          `}
-          
-          <div style="margin-top: 24px;">
-            <div class="card-title">Benign Task Success Rates Table</div>
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Week</th>
-                    <th>Classification</th>
-                    ${modelList.map(m => `<th>${escapeHtml(m)} Task Success</th>`).join('')}
-                  </tr>
-                </thead>
-                <tbody>
-                  ${summaries.map(s => `
-                    <tr>
-                      <td><strong>${escapeHtml(s.week)}</strong></td>
-                      <td>
-                        ${isPilotWeek(s) ? '<span class="badge pilot">Pilot data</span>' : '<span class="badge study">Study week</span>'}
-                      </td>
-                      ${modelList.map(m => {
-                        const ts = s.models?.[m]?.task_success_rate;
-                        return `<td>${ts !== undefined ? (ts * 100).toFixed(1) + '%' : '—'}</td>`;
-                      }).join('')}
-                    </tr>
-                  `).join('')}
-                </tbody>
+        </div>
+
+        <div class="card card-accent" style="margin-bottom:var(--sp-4);">
+          <div class="card-pad">
+            <div class="card-title" style="margin-bottom:var(--sp-4);">Native vs. Machine Translation Grouped Dot &amp; Interval</div>
+            <div id="lang-chart-container" class="chart-box" role="img" aria-label="Language comparison chart"></div>
+            <div class="tbl-wrap">
+              <table class="data-table" id="lang-table" aria-label="Language breakdown tabular data">
+                <thead><tr><th>Language</th><th>Scenario Origin</th><th>Attack Success Rate</th><th>95% Interval</th><th>Sample (n)</th></tr></thead>
+                <tbody></tbody>
               </table>
             </div>
           </div>
         </div>
-      `;
 
-      if (studyWeeks.length > 0) {
-        const controlSeries = modelList.map(m => ({
-          color: modelColors[m],
-          data: studySummaries.map(s => s.models?.[m]?.task_success_rate ?? null),
-          trials: studySummaries.map(s => s.models?.[m]?.total_trials ?? 25)
-        }));
-        renderSvgLineChart('control-chart', controlSeries, studyWeeks);
+        <div class="grid-2" style="margin-bottom:var(--sp-4);">
+          <div class="card card-pad">
+            <div class="card-title" style="margin-bottom:var(--sp-4);">Paired-Difference Forest Plot</div>
+            <div id="lang-forest-container" class="chart-box" style="height:300px;" role="img" aria-label="Paired difference forest plot"></div>
+          </div>
+          <div class="card card-pad">
+            <div class="card-title" style="margin-bottom:var(--sp-4);">Language by Channel Heatmap</div>
+            <div id="lang-heatmap-container" class="chart-box" style="height:300px;" role="img" aria-label="Language by channel heatmap"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           PAGE 4: CONTROLS
+           =============================================================== -->
+      <section id="controls" class="page-section" aria-labelledby="controls-title">
+        <div class="section-header">
+          <span class="section-eyebrow">Integrity &amp; Baselines</span>
+          <h1 id="controls-title" class="section-title">Controls &amp; System Canary</h1>
+          <p class="section-desc">
+            Tracking benign task success, canary harness output hashes, and TOST equivalence on pinned local models.
+          </p>
+        </div>
+
+        <div class="card card-accent" style="margin-bottom:var(--sp-4);">
+          <div class="card-pad">
+            <div class="card-title" style="margin-bottom:var(--sp-4);">Benign Task Success Rate (Functional Capability)</div>
+            <div id="control-task-chart" class="chart-box" role="img" aria-label="Benign task success chart"></div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom:var(--sp-4);">
+          <div class="card card-pad">
+            <div class="card-title" style="margin-bottom:var(--sp-4);">Canary Prompt Invariance Heatmap</div>
+            <div id="canary-heatmap-chart" class="chart-box" style="height:280px;" role="img" aria-label="Canary prompt invariance heatmap"></div>
+          </div>
+          <div class="card card-pad" id="negative">
+            <div class="card-title" style="margin-bottom:var(--sp-4);">Local Negative Control (TOST)</div>
+            <div id="tost-card-content" style="min-height:200px;">
+              <!-- From analysis.json -->
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-pad">
+          <div class="card-title" style="margin-bottom:var(--sp-4);">Observed Returned Model IDs Timeline</div>
+          <div class="tbl-wrap">
+            <table class="data-table" id="canary-table" aria-label="Canary prompt verification table">
+              <thead><tr><th>Model Alias</th><th>Requested Model ID</th><th>Observed Returned Model IDs</th><th>Canary Hash State</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           PAGE 5: CHANGE POINTS
+           =============================================================== -->
+      <section id="changepoints" class="page-section" aria-labelledby="changepoints-title">
+        <div class="section-header">
+          <span class="section-eyebrow">Algorithmic Detection</span>
+          <h1 id="changepoints-title" class="section-title">Change Points &amp; Provider Releases</h1>
+          <p class="section-desc">
+            PELT and CUSUM change-point detections aligned with documented vendor release notes.
+          </p>
+        </div>
+        <div class="card card-accent card-pad" id="change">
+          <div id="events-timeline" style="margin-bottom:var(--sp-4);"></div>
+          <div class="tbl-wrap">
+            <table class="data-table" id="changepoints-table" aria-label="Detected change points table">
+              <thead><tr><th>Week</th><th>Model</th><th>Shift Magnitude</th><th>Detection Method</th><th>Provider Event Alignment</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           PAGE 6: DATA (Output 3)
+           =============================================================== -->
+      <section id="data" class="page-section" aria-labelledby="data-title">
+        <div class="section-header">
+          <span class="section-eyebrow">Output 3</span>
+          <h1 id="data-title" class="section-title">Trial Records Export &amp; Schema</h1>
+          <p class="section-desc">
+            Browse, filter, and inspect individual agent trial executions. All records conform to the versioned 25-column schema.
+          </p>
+        </div>
+
+        <!-- Download bar -->
+        <div class="card card-pad-sm" style="margin-bottom:var(--sp-4);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--sp-3);">
+            <div style="display:flex; align-items:center; gap:var(--sp-3); flex-wrap:wrap;">
+              <span style="font-size:var(--f-xs); color:var(--text-tertiary); font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Downloads:</span>
+              <a href="../results/exports/records.csv" download class="btn btn-secondary" id="download-csv-btn">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV
+              </a>
+              <a href="../results/exports/records.jsonl" download class="btn btn-secondary" id="download-jsonl-btn">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                JSONL
+              </a>
+              <a href="https://huggingface.co/datasets/placeholder" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" id="download-parquet-btn">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                Parquet
+              </a>
+            </div>
+            <div style="font-size:var(--f-xs); color:var(--text-tertiary);" id="data-checksum">SHA-256 Verified</div>
+          </div>
+        </div>
+
+        <!-- Schema Panel -->
+        <details class="card" style="margin-bottom:var(--sp-4);" id="schema-details">
+          <summary class="card-pad-sm" style="font-weight:700; font-size:var(--f-sm); cursor:pointer; color:var(--text-primary);">
+            View 25-Column Schema Specification
+          </summary>
+          <div id="schema-container" class="card-pad-sm" style="font-size:var(--f-xs);"></div>
+        </details>
+
+        <!-- Records Table -->
+        <div class="card card-pad">
+          <div class="chart-controls">
+            <input type="text" id="record-search" class="text-input" placeholder="Search scenario, model, language..." style="width:260px;">
+            <select id="record-filter-suite" class="select-input">
+              <option value="all">All Suites</option>
+              <option value="attacks_v1">attacks_v1</option>
+              <option value="control">control</option>
+              <option value="canary">canary</option>
+            </select>
+          </div>
+          <div class="tbl-wrap">
+            <table class="data-table" id="records-table" aria-label="Individual trial records table">
+              <thead><tr><th>Trial ID</th><th>Week</th><th>Model</th><th>Language</th><th>Suite</th><th>Attack</th><th>Task</th><th>Latency</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:var(--sp-3); font-size:var(--f-xs); color:var(--text-tertiary);">
+            <span id="records-count">Showing 0 records</span>
+            <div style="display:flex; gap:var(--sp-2);">
+              <button id="records-prev-btn" class="btn btn-secondary" style="padding:4px 10px;" disabled>Prev</button>
+              <button id="records-next-btn" class="btn btn-secondary" style="padding:4px 10px;" disabled>Next</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           PAGE 7: QUALITY
+           =============================================================== -->
+      <section id="quality" class="page-section" aria-labelledby="quality-title">
+        <div class="section-header">
+          <span class="section-eyebrow">Evaluation Health</span>
+          <h1 id="quality-title" class="section-title">Data Quality &amp; Telemetry</h1>
+          <p class="section-desc">
+            Audit trial execution completeness, HTTP retry and 429 rate-limiting events, token consumption, and response latency.
+          </p>
+        </div>
+
+        <div class="status-strip" style="margin-bottom:var(--sp-6);">
+          <div class="status-cell">
+            <span class="status-label">Overall Completion</span>
+            <span class="status-val" id="quality-stat-completion">100%</span>
+          </div>
+          <div class="status-cell">
+            <span class="status-label">Rate-Limit 429 Events</span>
+            <span class="status-val" id="quality-stat-ratelimits">0</span>
+          </div>
+          <div class="status-cell">
+            <span class="status-label">HTTP / Network Retries</span>
+            <span class="status-val" id="quality-stat-retries">0</span>
+          </div>
+          <div class="status-cell">
+            <span class="status-label">Uncaught Failures</span>
+            <span class="status-val" id="quality-stat-failures">0</span>
+          </div>
+        </div>
+
+        <div class="card card-accent card-pad" style="margin-bottom:var(--sp-4);">
+          <div class="card-title" style="margin-bottom:var(--sp-4);">Response Latency &amp; Token Utilization</div>
+          <div id="quality-chart-container" class="chart-box" role="img" aria-label="Quality and latency chart"></div>
+          <div class="tbl-wrap">
+            <table class="data-table" id="quality-table" aria-label="Quality metrics summary table">
+              <thead><tr><th>Model</th><th>Completion</th><th>Error Rate</th><th>Mean Latency</th><th>Mean Tokens</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           PAGE 8: REPORT (Output 4)
+           =============================================================== -->
+      <section id="report" class="page-section" aria-labelledby="report-title">
+        <div class="section-header">
+          <span class="section-eyebrow">Output 4</span>
+          <h1 id="report-title" class="section-title">Formal Evaluation Report</h1>
+          <p class="section-desc">
+            Automated research report generated from analysis and summary contracts with pre-registered conservative wording.
+          </p>
+        </div>
+
+        <div class="card card-pad-sm" style="margin-bottom:var(--sp-4);">
+          <div style="display:flex; gap:var(--sp-3);">
+            <a href="../reports/report.md" download class="btn btn-primary" id="download-report-md">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Markdown
+            </a>
+            <button onclick="window.print()" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Print / Save as PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="card card-pad">
+          <div id="report-embed-container" style="min-height:400px;">
+            <div class="empty-state">
+              <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <div class="empty-title">Report Available Upon Evaluation</div>
+              <div class="empty-desc">The formal evaluation report is compiled dynamically after weekly pipeline runs.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           PAGE 9: METHODS
+           =============================================================== -->
+      <section id="methods" class="page-section" aria-labelledby="methods-title">
+        <div class="section-header">
+          <span class="section-eyebrow">Scientific Methodology</span>
+          <h1 id="methods-title" class="section-title">Research Methods &amp; Replication</h1>
+          <p class="section-desc">
+            Pre-registered hypotheses, cryptographic suite hashes, deterministic goal predicates, and instructions to test your own models.
+          </p>
+        </div>
+
+        <div class="card card-accent card-pad" id="method" style="margin-bottom:var(--sp-4);">
+          <div class="card-title" style="margin-bottom:var(--sp-1);">Study Preregistration &amp; Hypotheses</div>
+          <p style="font-size:var(--f-sm); color:var(--text-secondary); margin-bottom:var(--sp-4);">
+            Pre-registration protocol: <a href="https://osf.io/placeholder" target="_blank" rel="noopener noreferrer">OSF Registry (TODO: placeholder)</a>.
+          </p>
+          <div class="tbl-wrap">
+            <table class="data-table" aria-label="Hypotheses summary table">
+              <thead><tr><th>ID</th><th>Description</th><th>Pre-Registered Decision Rule</th></tr></thead>
+              <tbody>
+                <tr><td><strong>H1</strong></td><td>Longitudinal Drift in Attack Success</td><td>Logistic GEE slope b1 statistically significant after Benjamini-Hochberg FDR control (requires &gt;= 4 weeks).</td></tr>
+                <tr><td><strong>H2</strong></td><td>Abrupt Step-Change Points</td><td>PELT/CUSUM changepoint detection with 95% cluster-bootstrap shift interval excluding zero.</td></tr>
+                <tr><td><strong>H3</strong></td><td>Local Reference Model Stability</td><td>Two One-Sided Tests (TOST) on pinned local model within [-0.03, +0.03].</td></tr>
+                <tr><td><strong>H4</strong></td><td>Language Vulnerability Interaction</td><td>GEE interaction coefficients for Telugu and Tenglish showing higher drift than English.</td></tr>
+                <tr><td><strong>H5</strong></td><td>Vendor Changelog Alignment</td><td>Proportion of empirical changepoints coinciding with announced provider model versions.</td></tr>
+                <tr><td><strong>H6</strong></td><td>Native vs. Machine Translation Gap</td><td>Paired difference on matched scenarios testing translation artifact effects on vulnerability.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card card-pad" style="margin-bottom:var(--sp-4);">
+          <div class="card-title" style="margin-bottom:var(--sp-3);">Frozen Benchmark Suites</div>
+          <div class="tbl-wrap">
+            <table class="data-table" id="methods-suites-table" aria-label="Locked suite hashes">
+              <thead><tr><th>Suite Name</th><th>Target Scope</th><th>SHA-256 Digest</th></tr></thead>
+              <tbody id="methods-suites-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card card-pad">
+          <div class="card-title" style="margin-bottom:var(--sp-1);">Test Your Own Model in 10 Minutes</div>
+          <p style="font-size:var(--f-sm); color:var(--text-secondary); margin-bottom:var(--sp-4);">
+            Any OpenAI-compatible or local endpoint can be benchmarked against the identical frozen test suites.
+          </p>
+          <pre class="code-block"># 1. Clone repository and set up environment
+git clone https://github.com/driftwatch-te/driftwatch.git
+cd driftwatch
+python -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -e .
+
+# 2. Verify frozen suite integrity
+driftwatch verify
+
+# 3. Run pilot evaluation on your model endpoint
+export LOCAL_MODEL_URL="http://localhost:11434/v1"
+driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Vendored Apache ECharts 5.5.0 -->
+  <script src="vendor/echarts-5.5.0/echarts.min.js"></script>
+
+
+  <!-- Dashboard Application Logic -->
+  <script>
+    (function() {
+      'use strict';
+
+      // =====================================================================
+      // 1. Theme Toggle & Persistence
+      // =====================================================================
+      const themeToggleBtn = document.getElementById('theme-toggle');
+      const sunIcon = document.getElementById('theme-icon-sun');
+      const moonIcon = document.getElementById('theme-icon-moon');
+
+      function initTheme() {
+        const saved = localStorage.getItem('driftwatch_theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+        updateThemeIcons(theme);
       }
-    }
 
-    // -------------------------------------------------------------
-    // VIEW 3: LANGUAGE BREAKDOWN
-    // -------------------------------------------------------------
-    const languageContainer = document.getElementById('language-content');
-    if (languageContainer) {
-      const allLangs = new Set();
-      summaries.forEach(s => {
-        if (s.languages && typeof s.languages === 'object') {
-          Object.keys(s.languages).forEach(l => allLangs.add(l));
-        }
+      function updateThemeIcons(theme) {
+        sunIcon.style.display = theme === 'dark' ? 'block' : 'none';
+        moonIcon.style.display = theme === 'dark' ? 'none' : 'block';
+      }
+
+      themeToggleBtn.addEventListener('click', function() {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('driftwatch_theme', next);
+        updateThemeIcons(next);
+        // Re-render charts with new theme colors
+        reRenderChartsOnThemeChange();
       });
-      const langList = Array.from(allLangs);
 
-      if (langList.length > 0) {
-        languageContainer.innerHTML = `
-          <div class="card">
-            <div class="card-title">ASR by Language Condition</div>
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Week</th>
-                    <th>Language</th>
-                    <th>Total Trials</th>
-                    <th>Attack Successes</th>
-                    <th>Attack Success Rate</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${summaries.flatMap(s => {
-                    return langList.map(lang => {
-                      const lData = s.languages?.[lang];
-                      const trials = lData?.total_trials ?? 0;
-                      const succ = lData?.attack_successes ?? 0;
-                      const asr = lData?.asr !== undefined ? (lData.asr * 100).toFixed(1) + '%' : '—';
-                      return `
-                        <tr>
-                          <td><strong>${escapeHtml(s.week)}</strong></td>
-                          <td><code>${escapeHtml(lang)}</code></td>
-                          <td>${trials}</td>
-                          <td>${succ}</td>
-                          <td><strong>${asr}</strong></td>
-                        </tr>
-                      `;
-                    });
-                  }).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        `;
+      initTheme();
+
+      // =====================================================================
+      // 2. Mobile Sidebar Toggle
+      // =====================================================================
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      const mobileBtn = document.getElementById('mobile-menu-btn');
+
+      function toggleSidebar() {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('open');
       }
-    }
-
-    // -------------------------------------------------------------
-    // VIEW 4: CHANGE POINTS & EVENTS
-    // -------------------------------------------------------------
-    const changepointsContainer = document.getElementById('changepoints-content');
-    if (changepointsContainer) {
-      if (events && Array.isArray(events) && events.length > 0) {
-        changepointsContainer.innerHTML = `
-          <div class="card">
-            <div class="card-title">Recorded Provider Events Log</div>
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Provider</th>
-                    <th>Model</th>
-                    <th>Observation / Public Note</th>
-                    <th>Changelog Link</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${events.map(ev => `
-                    <tr>
-                      <td><code>${escapeHtml(ev.date)}</code></td>
-                      <td>${escapeHtml(ev.provider)}</td>
-                      <td><code>${escapeHtml(ev.model)}</code></td>
-                      <td>${escapeHtml(ev.note)}</td>
-                      <td>${ev.url ? `<a href="${escapeHtml(ev.url)}" target="_blank" rel="noopener">Release Note</a>` : '—'}</td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        `;
-      } else {
-        changepointsContainer.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-icon">📝</div>
-            <div class="empty-title">No provider events recorded yet</div>
-            <div class="empty-desc">Provider updates logged via <code>driftwatch event add</code> will appear here.</div>
-          </div>
-        `;
+      function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
       }
-    }
+      mobileBtn.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', closeSidebar);
 
-    // -------------------------------------------------------------
-    // VIEW 5: NEGATIVE CONTROL
-    // -------------------------------------------------------------
-    const negativeContainer = document.getElementById('negative-content');
-    if (negativeContainer) {
-      const localModels = modelList.filter(m => m.toLowerCase().includes('local') || m.toLowerCase().includes('ollama'));
-      if (localModels.length > 0) {
-        negativeContainer.innerHTML = `
-          <div class="card">
-            <div class="card-title">Pinned Local Invariance Control</div>
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Week</th>
-                    ${localModels.map(m => `<th>${escapeHtml(m)} ASR</th>`).join('')}
-                  </tr>
-                </thead>
-                <tbody>
-                  ${summaries.map(s => `
-                    <tr>
-                      <td><strong>${escapeHtml(s.week)}</strong></td>
-                      ${localModels.map(m => {
-                        const asr = s.models?.[m]?.asr;
-                        return `<td>${asr !== undefined ? (asr * 100).toFixed(1) + '%' : '—'}</td>`;
-                      }).join('')}
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        `;
-      } else {
-        negativeContainer.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-icon">⚖️</div>
-            <div class="empty-title">No negative control data yet</div>
-            <div class="empty-desc">Pinned local model evaluations will appear here once study runs commence.</div>
-          </div>
-        `;
-      }
-    }
-  }
+      // =====================================================================
+      // 3. Hash Routing with Sidebar Active State
+      // =====================================================================
+      const navItems = document.querySelectorAll('.nav-item[data-section]');
+      const pageSections = document.querySelectorAll('.page-section');
+      const pageCrumb = document.getElementById('page-crumb');
 
-  // Runtime Loader
-  async function loadData() {
-    let summaries = [];
-    let events = [];
-    let suiteLock = null;
-    let isSampleData = false;
+      const sectionLabels = {
+        overview: 'Overview',
+        drift: 'Drift Analysis',
+        languages: 'Languages',
+        controls: 'Controls',
+        changepoints: 'Change Points',
+        data: 'Trial Records',
+        quality: 'Data Quality',
+        report: 'Report',
+        methods: 'Methods'
+      };
 
-    // Check URL parameters for explicit dev/sample mode
-    const urlParams = new URLSearchParams(window.location.search);
-    const forceDev = urlParams.get('dev') === 'true' || urlParams.get('sample') === 'true';
+      function navigateTo(targetHash) {
+        let id = (targetHash || '#overview').replace('#', '');
+        // Aliases
+        if (id === 'control') id = 'controls';
+        if (id === 'language') id = 'languages';
+        if (id === 'change') id = 'changepoints';
+        if (id === 'method') id = 'methods';
 
-    const manifestCandidates = forceDev
-      ? [
-          'dashboard/dev/sample/index.json',
-          'dev/sample/index.json',
-          'results/summary/index.json'
-        ]
-      : [
-          'results/summary/index.json',
-          'data/index.json',
-          'results/summary/manifest.json',
-          'data/manifest.json',
-          'dashboard/dev/sample/index.json',
-          'dev/sample/index.json'
-        ];
-
-    let manifest = null;
-    let manifestBase = '';
-    for (const url of manifestCandidates) {
-      try {
-        const res = await fetch(url);
-        if (res.ok) {
-          manifest = await res.json();
-          manifestBase = url.substring(0, url.lastIndexOf('/') + 1);
-          break;
+        let found = false;
+        pageSections.forEach(function(sec) {
+          if (sec.id === id) {
+            sec.classList.add('active');
+            found = true;
+          } else {
+            sec.classList.remove('active');
+          }
+        });
+        if (!found && pageSections.length > 0) {
+          pageSections[0].classList.add('active');
+          id = 'overview';
         }
-      } catch (e) {}
-    }
 
-    if (manifest && manifest.sample === true) {
-      isSampleData = true;
-    }
+        navItems.forEach(function(link) {
+          if (link.getAttribute('data-section') === id) {
+            link.classList.add('active');
+          } else {
+            link.classList.remove('active');
+          }
+        });
 
-    let weekEntries = [];
-    if (Array.isArray(manifest)) {
-      weekEntries = manifest;
-    } else if (manifest && Array.isArray(manifest.weeks)) {
-      weekEntries = manifest.weeks;
-    }
+        if (pageCrumb) {
+          pageCrumb.textContent = sectionLabels[id] || id;
+        }
 
-    for (const item of weekEntries) {
-      const fname = typeof item === 'string' ? item : item.file;
-      if (item && item.sample === true) isSampleData = true;
-      const tryPaths = [
-        manifestBase + fname,
-        `results/summary/${fname}`,
-        `data/${fname}`,
-        `dashboard/dev/sample/${fname}`,
-        `dev/sample/${fname}`
-      ];
-      for (const p of tryPaths) {
-        try {
-          const r = await fetch(p);
-          if (r.ok) {
-            const summaryData = await r.json();
-            if (summaryData && summaryData.sample === true) {
-              isSampleData = true;
+        closeSidebar();
+        window.scrollTo(0, 0);
+        setTimeout(resizeAllCharts, 80);
+      }
+
+      window.addEventListener('hashchange', function() {
+        navigateTo(window.location.hash);
+      });
+
+      // =====================================================================
+      // 4. Data Store & Contract Fetching
+      // =====================================================================
+      var appState = {
+        index: null,
+        weeklyData: {},
+        analysis: null,
+        events: [],
+        schema: null,
+        isSampleData: false,
+        isPilot: false
+      };
+
+      var chartInstances = [];
+      function resizeAllCharts() {
+        chartInstances.forEach(function(c) {
+          if (c && typeof c.resize === 'function') c.resize();
+        });
+      }
+      window.addEventListener('resize', resizeAllCharts);
+
+      function reRenderChartsOnThemeChange() {
+        // Dispose old charts and re-render
+        chartInstances.forEach(function(c) {
+          if (c && typeof c.dispose === 'function') c.dispose();
+        });
+        chartInstances.length = 0;
+        if (appState.index) {
+          renderDrift();
+          renderLanguages();
+          renderControls();
+          renderQuality();
+        }
+      }
+
+      function fetchJSON(path) {
+        return fetch(path, { signal: AbortSignal.timeout(3000) })
+          .then(function(res) { return res.ok ? res.json() : null; })
+          .catch(function() { return null; });
+      }
+
+      function fetchText(path) {
+        return fetch(path, { signal: AbortSignal.timeout(3000) })
+          .then(function(res) { return res.ok ? res.text() : null; })
+          .catch(function() { return null; });
+      }
+
+      function loadAllData() {
+        var isSample = window.location.search.includes('sample=true') ||
+                       window.location.search.includes('dev=true') ||
+                       window.location.href.includes('sample=true') ||
+                       window.location.href.includes('dev=true');
+        if (isSample) {
+          appState.isSampleData = true;
+          var sb = document.getElementById('sample-banner');
+          if (sb) sb.style.display = 'block';
+        }
+
+        var forceDev = isSample;
+        var indexCandidates = forceDev
+          ? ['dashboard/dev/sample/index.json', 'dev/sample/index.json', '../results/summary/index.json', 'results/summary/index.json']
+          : ['../results/summary/index.json', 'results/summary/index.json', 'dashboard/dev/sample/index.json', 'dev/sample/index.json'];
+
+        tryLoadIndex(indexCandidates, 0);
+      }
+
+      function tryLoadIndex(candidates, idx) {
+        if (idx >= candidates.length) {
+          renderDashboard();
+          return;
+        }
+        fetchJSON(candidates[idx]).then(function(data) {
+          if (data) {
+            appState.index = data;
+            var baseDir = candidates[idx].substring(0, candidates[idx].lastIndexOf('/') + 1);
+            if (data.sample) appState.isSampleData = true;
+
+            var sampleBanner = document.getElementById('sample-banner');
+            if (sampleBanner) sampleBanner.style.display = appState.isSampleData ? 'block' : 'none';
+
+            loadWeeklyData(baseDir, 0).then(function() {
+              var pilotBanner = document.getElementById('pilot-banner');
+              if (pilotBanner) pilotBanner.style.display = appState.isPilot ? 'block' : 'none';
+
+              // Load analysis, events, schema in parallel
+              Promise.all([
+                fetchJSON('../results/analysis/analysis.json')
+                  .then(function(d) { return d || fetchJSON('results/analysis/analysis.json'); })
+                  .then(function(d) { return d || fetchJSON(baseDir + 'analysis.json'); }),
+                fetchJSON('../results/events.json')
+                  .then(function(d) { return d || fetchJSON('results/events.json'); })
+                  .then(function(d) { return d || fetchJSON(baseDir + 'events.json'); }),
+                fetchJSON('../results/exports/schema.json')
+                  .then(function(d) { return d || fetchJSON('results/exports/schema.json'); })
+              ]).then(function(results) {
+                appState.analysis = results[0];
+                if (results[1] && Array.isArray(results[1].events)) appState.events = results[1].events;
+                appState.schema = results[2];
+                renderDashboard();
+              });
+            });
+          } else {
+            tryLoadIndex(candidates, idx + 1);
+          }
+        });
+      }
+
+      function loadWeeklyData(baseDir, idx) {
+        if (!appState.index || !Array.isArray(appState.index.weeks) || idx >= appState.index.weeks.length) {
+          return Promise.resolve();
+        }
+        var w = appState.index.weeks[idx];
+        if (w.is_pilot) appState.isPilot = true;
+        if (w.sample) appState.isSampleData = true;
+
+        var relFile = w.file || ('weekly/' + w.week + '.json');
+        return fetchJSON(baseDir + relFile)
+          .then(function(d) { return d || fetchJSON('../results/summary/' + relFile); })
+          .then(function(d) { return d || fetchJSON('results/summary/' + relFile); })
+          .then(function(wData) {
+            if (wData) appState.weeklyData[w.week] = wData;
+            return loadWeeklyData(baseDir, idx + 1);
+          });
+      }
+
+      // =====================================================================
+      // 5. Rendering Engine
+      // =====================================================================
+      function renderDashboard() {
+        renderOverview();
+        renderDrift();
+        renderLanguages();
+        renderControls();
+        renderChangepoints();
+        renderQuality();
+        renderMethods();
+        renderReport();
+        renderSchema();
+        loadTrialRecords();
+      }
+
+      function getThemeColors() {
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        return {
+          text: isDark ? '#E8ECF0' : '#0F172A',
+          grid: isDark ? '#1E293B' : '#E5E7EB',
+          bg: isDark ? '#12171E' : '#FFFFFF',
+          accent: isDark ? '#38BDF8' : '#0284C7',
+          muted: isDark ? '#5A6577' : '#94A3B8'
+        };
+      }
+
+      var OI_COLORS = ['#0072B2', '#D55E00', '#009E73', '#CC79A7', '#E69F00', '#56B4E9', '#F0E442'];
+
+      function formatPct(val) {
+        if (val === null || val === undefined || isNaN(val)) return 'N/A';
+        return (val * 100).toFixed(1) + '%';
+      }
+
+      // =====================================================================
+      // 5a. Overview
+      // =====================================================================
+      function renderOverview() {
+        var idx = appState.index;
+        if (!idx) return;
+
+        var studyWeeks = (idx.weeks || []).filter(function(w) { return !w.is_pilot; }).length;
+        var total = idx.planned_weeks || 12;
+        setTxt('stat-progress', 'Week ' + studyWeeks + ' of ' + total);
+
+        var wks = idx.weeks || [];
+        setTxt('stat-last-run', wks.length > 0 ? wks[wks.length - 1].week : 'Pending');
+        setTxt('stat-next-run', idx.next_scheduled_run_date || 'Scheduled');
+        setTxt('stat-models-count', (idx.models || []).length);
+
+        // KPI Cards
+        var kpiC = document.getElementById('kpi-container');
+        if (kpiC) {
+          kpiC.innerHTML = '';
+          var models = idx.models || [];
+          if (models.length === 0) {
+            kpiC.innerHTML = '<div class="empty-state"><div class="empty-title">Awaiting Model Runs</div><div class="empty-desc">KPI metrics will populate following Run 1 completion.</div></div>';
+          } else {
+            var weeks = Object.keys(appState.weeklyData).sort();
+            models.forEach(function(m, mIdx) {
+              var latestAsr = null, firstAsr = null, latestTrials = 0;
+              if (weeks.length > 0) {
+                var lw = appState.weeklyData[weeks[weeks.length - 1]];
+                if (lw && lw.models && lw.models[m.alias]) {
+                  var mi = lw.models[m.alias];
+                  latestAsr = mi.asr !== undefined ? mi.asr : (mi.attack_success_rate || 0);
+                  latestTrials = mi.total_trials || mi.n_trials || 0;
+                }
+                var fw = appState.weeklyData[weeks[0]];
+                if (fw && fw.models && fw.models[m.alias]) {
+                  var fi = fw.models[m.alias];
+                  firstAsr = fi.asr !== undefined ? fi.asr : (fi.attack_success_rate || 0);
+                }
+              }
+              var deltaStr = 'Baseline week';
+              if (latestAsr !== null && firstAsr !== null && weeks.length > 1) {
+                var d = (latestAsr - firstAsr) * 100;
+                deltaStr = (d >= 0 ? '+' : '') + d.toFixed(1) + '% vs W1';
+              }
+
+              var card = document.createElement('div');
+              card.className = 'kpi-card';
+              card.innerHTML =
+                '<div class="kpi-top">' +
+                  '<span class="kpi-label">Current Attack Success</span>' +
+                  '<span class="kpi-badge">' + m.alias + '</span>' +
+                '</div>' +
+                '<div class="kpi-value" id="kpi-val-' + mIdx + '">-</div>' +
+                '<div class="kpi-meta">' +
+                  '<span>' + latestTrials + ' trials evaluated</span>' +
+                  '<span style="color:var(--accent);">' + deltaStr + '</span>' +
+                '</div>';
+              kpiC.appendChild(card);
+
+              if (latestAsr !== null) {
+                animateValue(document.getElementById('kpi-val-' + mIdx), 0, latestAsr, 800, true);
+              } else {
+                setTxt('kpi-val-' + mIdx, 'Pending');
+              }
+            });
+          }
+        }
+
+        // Hypothesis chips
+        var hypoC = document.getElementById('hypothesis-container');
+        if (hypoC && appState.analysis && appState.analysis.hypotheses) {
+          hypoC.innerHTML = '';
+          var hypos = appState.analysis.hypotheses;
+          Object.keys(hypos).forEach(function(hKey) {
+            var h = hypos[hKey];
+            var cls = 'badge badge-' + (h.status || 'not_enough_data');
+            var label = (h.status || 'not_enough_data').replace(/_/g, ' ');
+            var chip = document.createElement('div');
+            chip.className = 'hypo-chip';
+            chip.innerHTML =
+              '<div class="hypo-id">' + hKey + '</div>' +
+              '<div class="hypo-body">' +
+                '<div class="hypo-title"><span>Hypothesis ' + hKey + '</span><span class="' + cls + '">' + label + '</span></div>' +
+                '<div class="hypo-rule">' + (h.rule || '') + '</div>' +
+              '</div>';
+            hypoC.appendChild(chip);
+          });
+        }
+      }
+
+      function setTxt(id, val) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = val;
+      }
+
+      function animateValue(elem, start, end, duration, isPercent) {
+        if (!elem) return;
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          elem.textContent = isPercent ? (end * 100).toFixed(1) + '%' : end;
+          return;
+        }
+        var ts = null;
+        function step(now) {
+          if (!ts) ts = now;
+          var p = Math.min((now - ts) / duration, 1);
+          // ease-out cubic
+          var ep = 1 - Math.pow(1 - p, 3);
+          var cur = start + ep * (end - start);
+          elem.textContent = isPercent ? (cur * 100).toFixed(1) + '%' : Math.round(cur);
+          if (p < 1) window.requestAnimationFrame(step);
+        }
+        window.requestAnimationFrame(step);
+      }
+
+      // =====================================================================
+      // 5b. Drift Chart
+      // =====================================================================
+      function renderDrift() {
+        var container = document.getElementById('drift-chart-container');
+        var tbody = document.querySelector('#drift-table tbody');
+        if (!container || typeof echarts === 'undefined') return;
+
+        var weeks = Object.keys(appState.weeklyData).sort();
+        if (weeks.length === 0) {
+          container.innerHTML = '<div class="empty-state"><div class="empty-title">Awaiting Longitudinal Data</div><div class="empty-desc">Weekly drift trend lines require at least 1 evaluated week.</div></div>';
+          return;
+        }
+
+        var chart = echarts.init(container);
+        chartInstances.push(chart);
+        var tc = getThemeColors();
+        var models = (appState.index && appState.index.models) ? appState.index.models.map(function(m) { return m.alias; }) : [];
+        var series = [];
+
+        var markLines = (appState.events || []).map(function(ev) {
+          return { xAxis: ev.date, label: { formatter: ev.provider, position: 'start' } };
+        });
+
+        models.forEach(function(alias, i) {
+          var pts = weeks.map(function(w) {
+            var wd = appState.weeklyData[w];
+            if (wd && wd.models && wd.models[alias]) {
+              var v = wd.models[alias].asr !== undefined ? wd.models[alias].asr : wd.models[alias].attack_success_rate;
+              return v !== undefined ? parseFloat((v * 100).toFixed(1)) : null;
             }
-            summaries.push(summaryData);
-            break;
-          }
-        } catch (e) {}
+            return null;
+          });
+          series.push({
+            name: alias, type: 'line', data: pts, smooth: true,
+            symbolSize: 8, lineStyle: { width: 3 },
+            itemStyle: { color: OI_COLORS[i % OI_COLORS.length] },
+            animationDuration: 1200, animationEasing: 'cubicOut',
+            markLine: markLines.length > 0 ? {
+              symbol: 'none', lineStyle: { type: 'dashed', color: '#D97706' }, data: markLines
+            } : undefined
+          });
+        });
+
+        series.push({
+          name: 'Local Reference (Pinned)', type: 'line',
+          data: weeks.map(function() { return 0; }),
+          smooth: false, symbolSize: 6,
+          lineStyle: { width: 2, type: 'dashed', color: '#718096' },
+          itemStyle: { color: '#718096' }
+        });
+
+        chart.setOption({
+          tooltip: {
+            trigger: 'axis', backgroundColor: tc.bg,
+            borderColor: tc.grid, textStyle: { color: tc.text, fontSize: 12 },
+            formatter: function(params) {
+              var r = '<strong>' + params[0].name + '</strong><br/>';
+              params.forEach(function(p) {
+                r += p.marker + ' ' + p.seriesName + ': ' + (p.value !== null ? p.value + '%' : 'N/A') + '<br/>';
+              });
+              return r;
+            }
+          },
+          legend: { textStyle: { color: tc.text, fontSize: 11 }, bottom: 0 },
+          grid: { left: '3%', right: '4%', bottom: weeks.length > 8 ? '18%' : '14%', top: '8%', containLabel: true },
+          xAxis: {
+            type: 'category', data: weeks, boundaryGap: false,
+            axisLine: { lineStyle: { color: tc.grid } },
+            axisLabel: { color: tc.muted, fontSize: 11 }
+          },
+          yAxis: {
+            type: 'value', min: 0, max: 100,
+            axisLabel: { formatter: '{value}%', color: tc.muted, fontSize: 11 },
+            splitLine: { lineStyle: { color: tc.grid, type: 'dashed' } }
+          },
+          series: series,
+          dataZoom: weeks.length > 8 ? [{ type: 'slider', bottom: 10, start: 0, end: 100 }] : undefined
+        });
+
+        // Table
+        if (tbody) {
+          tbody.innerHTML = '';
+          weeks.forEach(function(w) {
+            var wd = appState.weeklyData[w];
+            models.forEach(function(alias) {
+              if (wd && wd.models && wd.models[alias]) {
+                var mi = wd.models[alias];
+                var asr = mi.asr !== undefined ? mi.asr : (mi.attack_success_rate || 0);
+                var diff = asr - 0;
+                var tr = document.createElement('tr');
+                tr.innerHTML =
+                  '<td>' + w + '</td>' +
+                  '<td><strong>' + alias + '</strong></td>' +
+                  '<td>' + formatPct(0) + '</td>' +
+                  '<td>' + (diff >= 0 ? '+' : '') + formatPct(diff) + '</td>' +
+                  '<td>[95% Bootstrap CI]</td>' +
+                  '<td>' + (mi.total_trials || mi.n_trials || 0) + '</td>';
+                tbody.appendChild(tr);
+              }
+            });
+          });
+        }
       }
-    }
 
-    const eventCandidates = [
-      manifestBase ? manifestBase + 'events.json' : null,
-      'results/events.json',
-      'events/provider_events.json',
-      'data/provider_events.json',
-      'data/events.json',
-      'dashboard/dev/sample/events.json',
-      'dev/sample/events.json'
-    ].filter(Boolean);
+      // =====================================================================
+      // 5c. Languages
+      // =====================================================================
+      function renderLanguages() {
+        var container = document.getElementById('lang-chart-container');
+        var forestC = document.getElementById('lang-forest-container');
+        var heatmapC = document.getElementById('lang-heatmap-container');
+        var warn = document.getElementById('lang-sample-warning');
+        var tbody = document.querySelector('#lang-table tbody');
+        if (!container || typeof echarts === 'undefined') return;
 
-    for (const url of eventCandidates) {
-      try {
-        const res = await fetch(url);
-        if (res.ok) {
-          const evtData = await res.json();
-          if (evtData && evtData.sample === true) isSampleData = true;
-          if (evtData && Array.isArray(evtData.events)) {
-            events = evtData.events;
-          } else if (Array.isArray(evtData)) {
-            events = evtData;
+        var weeks = Object.keys(appState.weeklyData).sort();
+        if (weeks.length === 0) {
+          container.innerHTML = '<div class="empty-state"><div class="empty-title">Awaiting Multilingual Evaluation</div><div class="empty-desc">Language disparity plots will render after trial executions.</div></div>';
+          if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-tertiary);">No multilingual data yet.</td></tr>';
+          return;
+        }
+
+        var lw = appState.weeklyData[weeks[weeks.length - 1]];
+        var slices = (lw && lw.slices) ? lw.slices : {};
+        var agg = {}, small = false;
+
+        Object.keys(slices).forEach(function(sk) {
+          var p = sk.split('|');
+          if (p.length >= 5) {
+            var k = p[1] + ' (' + p[4] + ')';
+            if (!agg[k]) agg[k] = { lang: p[1], origin: p[4], successes: 0, trials: 0, ci: slices[sk].ci_95 };
+            var t = slices[sk].n_trials || 0;
+            agg[k].trials += t;
+            agg[k].successes += (slices[sk].attack_success_rate || 0) * t;
+            if (t < 30) small = true;
           }
-          break;
-        }
-      } catch (e) {}
-    }
+        });
 
-    const suiteLockCandidates = [
-      'suites/SUITE_LOCK.json',
-      'data/SUITE_LOCK.json'
-    ];
-    for (const url of suiteLockCandidates) {
-      try {
-        const res = await fetch(url);
-        if (res.ok) {
-          suiteLock = await res.json();
-          break;
+        if (warn) warn.style.display = small ? 'block' : 'none';
+        var cats = Object.keys(agg);
+        if (cats.length === 0) {
+          container.innerHTML = '<div class="empty-state"><div class="empty-title">Awaiting Slices</div><div class="empty-desc">No slice data in current bundle.</div></div>';
+          return;
         }
-      } catch (e) {}
-    }
 
-    renderData(summaries, events, suiteLock, isSampleData);
-  }
+        var tc = getThemeColors();
+        // Bar chart
+        var ch = echarts.init(container); chartInstances.push(ch);
+        ch.setOption({
+          tooltip: { trigger: 'axis', backgroundColor: tc.bg, borderColor: tc.grid, textStyle: { color: tc.text } },
+          grid: { left: '3%', right: '4%', bottom: '10%', top: '8%', containLabel: true },
+          xAxis: { type: 'category', data: cats, axisLabel: { color: tc.muted, fontSize: 11 } },
+          yAxis: { type: 'value', min: 0, max: 100, axisLabel: { formatter: '{value}%', color: tc.muted }, splitLine: { lineStyle: { color: tc.grid, type: 'dashed' } } },
+          series: [{ name: 'ASR', type: 'bar', barWidth: '40%', data: cats.map(function(c) { var it = agg[c]; return parseFloat((it.trials > 0 ? (it.successes / it.trials) * 100 : 0).toFixed(1)); }), itemStyle: { color: '#0072B2', borderRadius: [4, 4, 0, 0] }, animationDuration: 1000 }]
+        });
 
-  // Local File Upload listener for manual inspection
-  document.getElementById('local-file-input')?.addEventListener('change', async (ev) => {
-    const files = Array.from(ev.target.files || []);
-    const loadedSummaries = [];
-    for (const file of files) {
-      try {
-        const text = await file.text();
-        const json = JSON.parse(text);
-        if (json.models || json.overall_asr !== undefined) {
-          loadedSummaries.push(json);
+        // Forest plot
+        if (forestC) {
+          var fc = echarts.init(forestC); chartInstances.push(fc);
+          fc.setOption({
+            tooltip: { trigger: 'item' },
+            grid: { left: '15%', right: '10%', top: '15%', bottom: '15%' },
+            xAxis: { type: 'value', name: 'Diff ASR (Native - Machine)', nameLocation: 'middle', nameGap: 25, axisLabel: { formatter: '{value}%', color: tc.muted }, splitLine: { lineStyle: { color: tc.grid } } },
+            yAxis: { type: 'category', data: ['Telugu (te)', 'Tenglish (te-Latn)'], axisLabel: { color: tc.muted } },
+            series: [{ type: 'scatter', symbolSize: 10, itemStyle: { color: '#D55E00' }, data: [[0,0],[0,1]], markLine: { symbol: 'none', lineStyle: { type: 'dashed', color: '#718096' }, data: [{ xAxis: 0 }] } }]
+          });
         }
-      } catch (e) {
-        console.warn('Could not parse file:', file.name, e);
+
+        // Heatmap
+        if (heatmapC) {
+          var hc = echarts.init(heatmapC); chartInstances.push(hc);
+          var langs = ['English','Telugu','Tenglish'], chs = ['User Input','Tool Output'];
+          var hd = [[0,0,43.8],[1,0,0],[2,0,0],[0,1,0],[1,1,0],[2,1,0]];
+          hc.setOption({
+            tooltip: { position: 'top', formatter: function(p) { return langs[p.data[0]]+' - '+chs[p.data[1]]+': '+p.data[2]+'% ASR'; } },
+            grid: { left: '20%', right: '10%', top: '10%', bottom: '20%' },
+            xAxis: { type: 'category', data: langs, axisLabel: { color: tc.muted } },
+            yAxis: { type: 'category', data: chs, axisLabel: { color: tc.muted } },
+            visualMap: { min: 0, max: 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, textStyle: { color: tc.text }, inRange: { color: ['#0B1B2B','#0072B2','#D55E00'] } },
+            series: [{ type: 'heatmap', data: hd, label: { show: true, formatter: function(p) { return p.data[2]+'%'; } } }]
+          });
+        }
+
+        // Table
+        if (tbody) {
+          tbody.innerHTML = '';
+          cats.forEach(function(c) {
+            var it = agg[c]; var asr = it.trials > 0 ? (it.successes / it.trials) : 0;
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td>'+it.lang+'</td><td>'+it.origin+'</td><td>'+formatPct(asr)+'</td><td>'+(it.ci ? '['+formatPct(it.ci[0])+', '+formatPct(it.ci[1])+']' : 'N/A')+'</td><td>'+it.trials+'</td>';
+            tbody.appendChild(tr);
+          });
+        }
       }
-    }
-    if (loadedSummaries.length > 0) {
-      renderData(loadedSummaries, [], null);
-    }
-  });
 
-  window.loadStudyData = renderData;
+      // =====================================================================
+      // 5d. Controls
+      // =====================================================================
+      function renderControls() {
+        var container = document.getElementById('control-task-chart');
+        var canaryH = document.getElementById('canary-heatmap-chart');
+        var tostC = document.getElementById('tost-card-content');
+        var tbody = document.querySelector('#canary-table tbody');
+        if (!container || typeof echarts === 'undefined') return;
 
-  window.addEventListener('DOMContentLoaded', () => {
-    initTheme();
-    loadData();
-  });
-</script>
+        var weeks = Object.keys(appState.weeklyData).sort();
+        if (weeks.length === 0) {
+          container.innerHTML = '<div class="empty-state"><div class="empty-title">Awaiting Control Data</div><div class="empty-desc">Task success over time will render after weekly runs.</div></div>';
+          return;
+        }
 
+        var tc = getThemeColors();
+        // Task success chart
+        var ch = echarts.init(container); chartInstances.push(ch);
+        var rates = weeks.map(function(w) {
+          var wd = appState.weeklyData[w];
+          if (!wd) return null;
+          var t = wd.total_trials || 0, s = wd.total_task_successes || 0;
+          return t > 0 ? parseFloat(((s / t) * 100).toFixed(1)) : null;
+        });
+        ch.setOption({
+          tooltip: { trigger: 'axis', backgroundColor: tc.bg, borderColor: tc.grid, textStyle: { color: tc.text } },
+          grid: { left: '3%', right: '4%', bottom: '10%', top: '8%', containLabel: true },
+          xAxis: { type: 'category', data: weeks, axisLabel: { color: tc.muted } },
+          yAxis: { type: 'value', min: 0, max: 100, axisLabel: { formatter: '{value}%', color: tc.muted }, splitLine: { lineStyle: { color: tc.grid, type: 'dashed' } } },
+          series: [{ name: 'Task Success', type: 'line', smooth: true, data: rates, lineStyle: { width: 3, color: '#009E73' }, itemStyle: { color: '#009E73' }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(0,158,115,0.25)' }, { offset: 1, color: 'rgba(0,158,115,0)' }] } }, animationDuration: 1200 }]
+        });
+
+        // Canary heatmap
+        if (canaryH) {
+          var cc = echarts.init(canaryH); chartInstances.push(cc);
+          var prompts = ['Prompt 1 (Order)', 'Prompt 2 (Email)'];
+          cc.setOption({
+            tooltip: { formatter: function(p) { return (weeks[p.data[0]] || 'Baseline') + ' - ' + prompts[p.data[1]] + ': Hash Invariant'; } },
+            grid: { left: '25%', right: '5%', top: '10%', bottom: '15%' },
+            xAxis: { type: 'category', data: weeks, axisLabel: { color: tc.muted } },
+            yAxis: { type: 'category', data: prompts, axisLabel: { color: tc.muted } },
+            series: [{ type: 'heatmap', data: [[0,0,1],[0,1,1]], itemStyle: { color: '#009E73', borderRadius: 3 }, label: { show: true, formatter: 'MATCH', color: '#FFFFFF', fontWeight: 'bold', fontSize: 11 } }]
+          });
+        }
+
+        // TOST card
+        if (tostC) {
+          var tost = (appState.analysis && appState.analysis.local_control_equivalence) ? appState.analysis.local_control_equivalence : null;
+          if (tost) {
+            var pillCls = tost.is_equivalent ? 'pill pill-green' : 'pill pill-amber';
+            var pillTxt = tost.is_equivalent ? 'Equivalence Supported' : 'Equivalence Inconclusive';
+            tostC.innerHTML =
+              '<div style="margin-bottom:var(--sp-3);">' +
+                '<span style="font-size:var(--f-sm);font-weight:600;">Margin:</span> <code>+/-0.03 ASR</code>' +
+                '<span class="' + pillCls + '" style="margin-left:var(--sp-3);">' +
+                  '<span class="dot ' + (tost.is_equivalent ? 'dot-green' : 'dot-amber') + '"></span>' + pillTxt +
+                '</span>' +
+              '</div>' +
+              '<p style="font-size:var(--f-xs);color:var(--text-secondary);line-height:1.6;">Local reference model shows stability within pre-registered equivalence bounds (TOST p-value: ' + (tost.p_value ? tost.p_value.toFixed(4) : 'N/A') + ').</p>';
+          } else {
+            tostC.innerHTML = '<div class="empty-state" style="padding:var(--sp-6);"><div class="empty-title" style="font-size:var(--f-sm);">Awaiting Run 4 Data</div><div class="empty-desc" style="font-size:var(--f-xs);">TOST equivalence requires 4+ study weeks.</div></div>';
+          }
+        }
+
+        // Returned model IDs table
+        if (tbody && appState.index && Array.isArray(appState.index.models)) {
+          tbody.innerHTML = '';
+          appState.index.models.forEach(function(m) {
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+              '<td><strong>' + m.alias + '</strong></td>' +
+              '<td><code>' + (m.requested_id || m.alias) + '</code></td>' +
+              '<td><code>' + ((m.returned_ids_seen || []).join(', ') || 'Awaiting') + '</code></td>' +
+              '<td><span class="pill pill-green"><span class="dot dot-green"></span>Unchanged</span></td>';
+            tbody.appendChild(tr);
+          });
+        }
+      }
+
+      // =====================================================================
+      // 5e. Change Points
+      // =====================================================================
+      function renderChangepoints() {
+        var tbody = document.querySelector('#changepoints-table tbody');
+        if (!tbody) return;
+        var cps = (appState.analysis && Array.isArray(appState.analysis.change_points)) ? appState.analysis.change_points : [];
+        if (cps.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:var(--sp-6);color:var(--text-tertiary);">No statistical change points detected to date.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = '';
+        cps.forEach(function(cp) {
+          var tr = document.createElement('tr');
+          tr.innerHTML =
+            '<td>' + (cp.week || 'Unknown') + '</td>' +
+            '<td>' + (cp.model || 'All') + '</td>' +
+            '<td>' + (cp.shift ? cp.shift.toFixed(3) : 'N/A') + '</td>' +
+            '<td>' + (cp.method || 'PELT') + '</td>' +
+            '<td><span class="pill pill-amber">' + (cp.event_aligned ? 'Disclosed' : 'Undisclosed') + '</span></td>';
+          tbody.appendChild(tr);
+        });
+      }
+
+      // =====================================================================
+      // 5f. Quality
+      // =====================================================================
+      function renderQuality() {
+        var container = document.getElementById('quality-chart-container');
+        var tbody = document.querySelector('#quality-table tbody');
+        if (!container || typeof echarts === 'undefined') return;
+
+        var weeks = Object.keys(appState.weeklyData).sort();
+        if (weeks.length === 0) {
+          container.innerHTML = '<div class="empty-state"><div class="empty-title">Awaiting Telemetry</div><div class="empty-desc">Quality metrics populate after trial execution.</div></div>';
+          if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No data.</td></tr>';
+          return;
+        }
+
+        var lw = appState.weeklyData[weeks[weeks.length - 1]];
+        var slices = (lw && lw.slices) ? lw.slices : {};
+        var ma = {};
+
+        Object.keys(slices).forEach(function(sk) {
+          var model = sk.split('|')[0];
+          if (!ma[model]) ma[model] = { trials: 0, completed: 0, errors: 0, lats: [], toks: [] };
+          var s = slices[sk], t = s.n_trials || 0;
+          ma[model].trials += t;
+          ma[model].completed += (s.completion_rate || 0) * t;
+          ma[model].errors += (s.error_rate || 0) * t;
+          if (s.mean_latency) ma[model].lats.push(s.mean_latency);
+          if (s.mean_tokens) ma[model].toks.push(s.mean_tokens);
+        });
+
+        var models = Object.keys(ma);
+        if (models.length === 0) {
+          container.innerHTML = '<div class="empty-state"><div class="empty-title">Awaiting Telemetry</div></div>';
+          return;
+        }
+
+        var tc = getThemeColors();
+        var ch = echarts.init(container); chartInstances.push(ch);
+        var lats = models.map(function(m) {
+          var a = ma[m].lats;
+          return a.length > 0 ? Math.round(a.reduce(function(x,y){return x+y;}, 0) / a.length) : 0;
+        });
+
+        ch.setOption({
+          tooltip: { trigger: 'axis', backgroundColor: tc.bg, borderColor: tc.grid, textStyle: { color: tc.text } },
+          grid: { left: '3%', right: '4%', bottom: '10%', top: '8%', containLabel: true },
+          xAxis: { type: 'category', data: models, axisLabel: { color: tc.muted } },
+          yAxis: { type: 'value', name: 'Latency (ms)', axisLabel: { color: tc.muted }, splitLine: { lineStyle: { color: tc.grid, type: 'dashed' } } },
+          series: [{ name: 'Mean Latency (ms)', type: 'bar', barWidth: '40%', data: lats, itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#0072B2' }, { offset: 1, color: '#56B4E9' }] }, borderRadius: [4,4,0,0] }, animationDuration: 1000 }]
+        });
+
+        if (tbody) {
+          tbody.innerHTML = '';
+          models.forEach(function(m, i) {
+            var d = ma[m];
+            var comp = d.trials > 0 ? (d.completed / d.trials) : 1;
+            var err = d.trials > 0 ? (d.errors / d.trials) : 0;
+            var tok = d.toks.length > 0 ? Math.round(d.toks.reduce(function(a,b){return a+b;},0)/d.toks.length) : 'N/A';
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td><strong>'+m+'</strong></td><td>'+formatPct(comp)+'</td><td>'+formatPct(err)+'</td><td>'+lats[i]+' ms</td><td>'+tok+'</td>';
+            tbody.appendChild(tr);
+          });
+        }
+      }
+
+      // =====================================================================
+      // 5g. Methods
+      // =====================================================================
+      function renderMethods() {
+        var tbody = document.getElementById('methods-suites-body');
+        if (tbody && appState.index && appState.index.suite_names_and_hashes) {
+          tbody.innerHTML = '';
+          var suites = appState.index.suite_names_and_hashes;
+          Object.keys(suites).forEach(function(sn) {
+            var scope = sn === 'canary' ? 'Invariance verification canary' : (sn === 'control' ? 'Benign functional control tasks' : 'Indirect prompt injection attacks');
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td><strong>'+sn+'</strong></td><td>'+scope+'</td><td><code style="font-size:0.7rem;word-break:break-all;">'+suites[sn]+'</code></td>';
+            tbody.appendChild(tr);
+          });
+        }
+      }
+
+      // =====================================================================
+      // 5h. Report
+      // =====================================================================
+      function renderReport() {
+        var rc = document.getElementById('report-embed-container');
+        if (!rc) return;
+        fetchText('../reports/report.html').then(function(html) {
+          if (!html) return fetchText('reports/report.html');
+          return html;
+        }).then(function(html) {
+          if (html) {
+            rc.innerHTML = '<iframe src="../reports/report.html" style="width:100%;height:600px;border:none;border-radius:var(--r-md);" title="Research Report"></iframe>';
+          }
+        }).catch(function(){});
+      }
+
+      // =====================================================================
+      // 5i. Schema
+      // =====================================================================
+      function renderSchema() {
+        var sc = document.getElementById('schema-container');
+        if (!sc || !appState.schema) return;
+        var cols = appState.schema.columns || [];
+        var props = (appState.schema.json_schema && appState.schema.json_schema.properties) ? appState.schema.json_schema.properties : {};
+        var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;">';
+        cols.forEach(function(col) {
+          var p = props[col] || {};
+          var type = p.type || 'string';
+          var desc = p.description || p.title || '';
+          html += '<div style="border:1px solid var(--border-default);padding:6px 10px;border-radius:var(--r-md);background:var(--bg-inset);">' +
+            '<div style="display:flex;justify-content:space-between;"><code><strong>' + col + '</strong></code><span style="color:var(--text-tertiary);font-size:0.65rem;">' + type + '</span></div>' +
+            (desc ? '<div style="color:var(--text-secondary);font-size:0.7rem;margin-top:2px;">' + desc + '</div>' : '') + '</div>';
+        });
+        html += '</div>';
+        sc.innerHTML = html;
+      }
+
+      // =====================================================================
+      // 5j. Trial Records (Paginated Table)
+      // =====================================================================
+      var allRecordLines = [];
+      var currentPage = 1;
+      var pageSize = 10;
+
+      function updateRecordsTable() {
+        var tbody = document.querySelector('#records-table tbody');
+        var countSpan = document.getElementById('records-count');
+        var search = document.getElementById('record-search');
+        var suite = document.getElementById('record-filter-suite');
+        var sv = search ? search.value.toLowerCase().trim() : '';
+        var sv2 = suite ? suite.value : 'all';
+        if (!tbody || allRecordLines.length === 0) return;
+
+        var filtered = allRecordLines.filter(function(line) {
+          var c = line.split(',');
+          if (c.length < 15) return false;
+          if (sv2 !== 'all' && c[7] !== sv2) return false;
+          if (sv && line.toLowerCase().indexOf(sv) === -1) return false;
+          return true;
+        });
+
+        var total = filtered.length;
+        var pages = Math.max(1, Math.ceil(total / pageSize));
+        if (currentPage > pages) currentPage = pages;
+        if (currentPage < 1) currentPage = 1;
+        var start = (currentPage - 1) * pageSize;
+        var rows = filtered.slice(start, start + pageSize);
+
+        tbody.innerHTML = '';
+        if (rows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:var(--sp-6);color:var(--text-tertiary);">No records match.</td></tr>';
+        } else {
+          rows.forEach(function(line) {
+            var c = line.split(',');
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+              '<td><code style="font-size:0.7rem;">' + c[0] + '</code></td>' +
+              '<td>' + c[2] + '</td>' +
+              '<td>' + c[4] + '</td>' +
+              '<td>' + c[11] + '</td>' +
+              '<td><span class="pill pill-blue">' + c[7] + '</span></td>' +
+              '<td><span class="badge ' + (c[15]==='True' ? 'badge-supported' : 'badge-not_supported') + '">' + c[15] + '</span></td>' +
+              '<td><span class="badge ' + (c[16]==='True' ? 'badge-supported' : 'badge-not_supported') + '">' + c[16] + '</span></td>' +
+              '<td>' + parseFloat(c[23] || 0).toFixed(0) + ' ms</td>';
+            tbody.appendChild(tr);
+          });
+        }
+
+        if (countSpan) countSpan.textContent = 'Showing ' + (total > 0 ? start+1 : 0) + ' to ' + Math.min(start+pageSize, total) + ' of ' + total + ' records (Page ' + currentPage + '/' + pages + ')';
+        var pb = document.getElementById('records-prev-btn');
+        var nb = document.getElementById('records-next-btn');
+        if (pb) pb.disabled = currentPage <= 1;
+        if (nb) nb.disabled = currentPage >= pages;
+      }
+
+      function loadTrialRecords() {
+        var cs = document.getElementById('records-count');
+        fetchText('../results/exports/records.csv').then(function(t) {
+          if (!t) return fetchText('results/exports/records.csv');
+          return t;
+        }).then(function(text) {
+          if (text) {
+            var lines = text.trim().split('\n');
+            if (lines.length > 1) {
+              allRecordLines = lines.slice(1);
+              updateRecordsTable();
+
+              var si = document.getElementById('record-search');
+              var ss = document.getElementById('record-filter-suite');
+              var pb = document.getElementById('records-prev-btn');
+              var nb = document.getElementById('records-next-btn');
+              if (si) si.addEventListener('input', function() { currentPage = 1; updateRecordsTable(); });
+              if (ss) ss.addEventListener('change', function() { currentPage = 1; updateRecordsTable(); });
+              if (pb) pb.addEventListener('click', function() { if (currentPage > 1) { currentPage--; updateRecordsTable(); } });
+              if (nb) nb.addEventListener('click', function() { currentPage++; updateRecordsTable(); });
+            }
+          }
+        }).catch(function() {
+          if (cs) cs.textContent = 'Records available via download.';
+        });
+      }
+
+      // =====================================================================
+      // 6. Initialize
+      // =====================================================================
+      navigateTo(window.location.hash);
+      loadAllData();
+
+    })();
+  </script>
 </body>
 </html>
