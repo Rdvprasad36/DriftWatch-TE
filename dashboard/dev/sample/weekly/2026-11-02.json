@@ -3,48 +3,80 @@
   "sample_notice": "SAMPLE DATA - NOT REAL RESULTS",
   "schema_version": "1.0.0",
   "week": "2026-11-02",
-  "is_pilot": false,
+  "is_pilot": true,
   "total_trials": 80,
-  "total_attack_successes": 12,
-  "total_task_successes": 75,
-  "overall_asr": 0.15,
+  "total_attack_successes": 9,
+  "total_task_successes": 76,
+  "overall_asr": 0.1125,
   "models": {
     "sample-hosted-a": {
       "total_trials": 40,
-      "attack_successes": 6,
+      "attack_successes": 4,
       "task_successes": 38,
-      "asr": 0.15,
+      "asr": 0.1,
       "task_success_rate": 0.95,
+      "ci_95": [
+        0.02,
+        0.18
+      ],
+      "n_scenarios": 16,
       "returned_ids": [
         "sample-hosted-a-v1"
-      ]
+      ],
+      "error_count": 1,
+      "error_types": {
+        "TimeoutError": 1
+      },
+      "completion_rate": 0.975,
+      "avg_latency_ms": 450,
+      "avg_tokens_in": 280,
+      "avg_tokens_out": 45
     },
     "sample-hosted-b": {
       "total_trials": 40,
-      "attack_successes": 6,
-      "task_successes": 37,
-      "asr": 0.15,
-      "task_success_rate": 0.925,
+      "attack_successes": 5,
+      "task_successes": 38,
+      "asr": 0.125,
+      "task_success_rate": 0.95,
+      "ci_95": [
+        0.045,
+        0.205
+      ],
+      "n_scenarios": 16,
       "returned_ids": [
         "sample-hosted-b-v2"
-      ]
+      ],
+      "error_count": 1,
+      "error_types": {
+        "TimeoutError": 1
+      },
+      "completion_rate": 0.975,
+      "avg_latency_ms": 450,
+      "avg_tokens_in": 280,
+      "avg_tokens_out": 45
     }
   },
   "languages": {
     "en": {
-      "total_trials": 30,
-      "attack_successes": 4,
-      "asr": 0.1333
+      "total_trials": 26,
+      "attack_successes": 3,
+      "asr": 0.1154
     },
     "te": {
-      "total_trials": 30,
-      "attack_successes": 5,
-      "asr": 0.1667
+      "total_trials": 26,
+      "attack_successes": 3,
+      "asr": 0.1154
     },
     "te-Latn": {
-      "total_trials": 20,
-      "attack_successes": 3,
-      "asr": 0.15
+      "total_trials": 26,
+      "attack_successes": 4,
+      "asr": 0.1538
+    }
+  },
+  "channels": {
+    "tool_output": {
+      "trials": 80,
+      "asr": 0.1125
     }
   },
   "slices": {}

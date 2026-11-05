@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
 
-# Headers that contain credentials.  Values are redacted before persisting.
+# Headers that contain credentials. Values are redacted before persisting.
 # (AGENTS.md rule 4: "No secrets in the repo, logs or traces.")
 _SECRET_HEADER_NAMES: frozenset[str] = frozenset(
     {
@@ -31,7 +31,7 @@ _SECRET_HEADER_NAMES: frozenset[str] = frozenset(
 def redact_headers(headers: dict[str, str]) -> dict[str, str]:
     """Return a copy of *headers* with credential values replaced by ``[REDACTED]``.
 
-    Comparison is case-insensitive.  All other headers pass through unchanged.
+    Comparison is case-insensitive. All other headers pass through unchanged.
     """
     return {
         k: "[REDACTED]" if k.lower() in _SECRET_HEADER_NAMES else v
@@ -76,6 +76,7 @@ class ProviderResponse:
 
     # Error capture (AGENTS.md rule 7: never silently drop errors)
     error: str | None = None
+    error_type: str | None = None
 
     @property
     def ok(self) -> bool:
@@ -103,4 +104,3 @@ class BaseProvider(ABC):
         Must never raise on HTTP/network errors — return a ProviderResponse
         with ``error`` set instead (AGENTS.md rule 7).
         """
-

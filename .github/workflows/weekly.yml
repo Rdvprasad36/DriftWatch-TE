@@ -1,4 +1,4 @@
-name: Weekly Pipeline
+name: Weekly Evaluation Pipeline
 
 on:
   schedule:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       week:
-        description: "ISO week date (e.g. 2026-10-19). Defaults to current UTC date."
+        description: "ISO week date (e.g. 2026-11-09). Defaults to current UTC date."
         required: false
         default: ""
         type: string
@@ -21,20 +21,103 @@ on:
         required: false
         default: "canary,control,attacks_v1"
         type: string
+      dry_run:
+        description: "Run evaluation even before study start date"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "weekly-eval"
+  cancel-in-progress: false
 
 jobs:
-  run-model:
-    name: Run ${{ matrix.model }}
+  preflight:
+    name: Pre-flight Verification & Schedule Guard
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.gate.outputs.should_run }}
+      week: ${{ steps.gate.outputs.week }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Verify Suite Integrity (FR1)
+        run: |
+          python -m driftwatch.cli.main verify
+
+      - name: Check Study Schedule Gate
+        id: gate
+        run: |
+          python - << 'EOF'
+          import os
+          import sys
+          from datetime import UTC, datetime
+          from driftwatch.config import load_study_config
+
+          config = load_study_config()
+          start_date = config.study_start_date
+          now_utc = datetime.now(UTC).strftime("%Y-%m-%d")
+
+          input_week = "${{ inputs.week }}".strip()
+          week = input_week if input_week else now_utc
+
+          dry_run = "${{ inputs.dry_run }}".lower() == "true"
+          is_before_start = week < start_date
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"week={week}\n")
+
+          if is_before_start and not dry_run:
+              print(f"Current date {week} is prior to pre-registered STUDY_START_DATE ({start_date}).")
+              with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+                  summary.write(
+                      "### Pre-Study Schedule Gate\n"
+                      f"**Current UTC Date:** `{week}`  \n"
+                      f"**Study Start Date:** `{start_date}`  \n\n"
+                      "> **Before study start, no data collected**\n"
+                  )
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("should_run=false\n")
+          else:
+              print(f"Proceeding with evaluation run for week {week} (dry_run={dry_run}).")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("should_run=true\n")
+          EOF
+
+  evaluate-hosted:
+    name: Evaluate ${{ matrix.model }}
+    needs: preflight
+    if: needs.preflight.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         model: [groq, google, openrouter]
+    concurrency:
+      group: "provider-${{ matrix.model }}"
+      cancel-in-progress: false
     env:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY }}
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      WEEK: ${{ needs.preflight.outputs.week }}
 
     steps:
       - name: Checkout repository
@@ -51,33 +134,31 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Determine week date
-        id: set-week
-        run: |
-          INPUT_WEEK="${{ inputs.week }}"
-          if [ -n "$INPUT_WEEK" ]; then
-            WEEK="$INPUT_WEEK"
-          else
-            WEEK=$(date -u +%Y-%m-%d)
-          fi
-          echo "WEEK=$WEEK" >> $GITHUB_ENV
-          echo "week=$WEEK" >> $GITHUB_OUTPUT
+      - name: Run canary prompts (temperature 0) with retry
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 15
+          command: |
+            python -m driftwatch.cli.main canary \
+              --week "${{ env.WEEK }}" \
+              --models "${{ matrix.model }}" \
+              --results-dir "weekly"
 
-      - name: Run canary prompts (temperature 0)
-        run: |
-          python -m driftwatch.cli.main canary \
-            --week "${{ env.WEEK }}" \
-            --models "${{ matrix.model }}" \
-            --results-dir "weekly"
-
-      - name: Run evaluation trials
-        run: |
-          python -m driftwatch.cli.main run \
-            --week "${{ env.WEEK }}" \
-            --suites "${{ inputs.suites || 'canary,control,attacks_v1' }}" \
-            --models "${{ matrix.model }}" \
-            --trials ${{ inputs.trials || 5 }} \
-            --results-dir "weekly"
+      - name: Run evaluation trials with retry
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 25
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: |
+            python -m driftwatch.cli.main run \
+              --week "${{ env.WEEK }}" \
+              --suites "${{ inputs.suites || 'canary,control,attacks_v1' }}" \
+              --models "${{ matrix.model }}" \
+              --trials ${{ inputs.trials || 5 }} \
+              --results-dir "weekly"
 
       - name: Upload model bundle artifact
         uses: actions/upload-artifact@v4
@@ -86,13 +167,77 @@ jobs:
           path: weekly/${{ env.WEEK }}/
           retention-days: 7
 
-  finalize:
-    name: Finalize, Summarize, and Publish
-    needs: run-model
+  evaluate-local:
+    name: Evaluate local (Pinned Reference via Ollama)
+    needs: preflight
+    if: needs.preflight.outputs.should_run == 'true'
     runs-on: ubuntu-latest
-    if: always()
+    timeout-minutes: 30
+    env:
+      WEEK: ${{ needs.preflight.outputs.week }}
+      LOCAL_MODEL_URL: "http://localhost:11434/v1"
+      LOCAL_MODEL: "llama3.2:1b"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Install and launch Ollama
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          ollama serve > /tmp/ollama.log 2>&1 &
+          sleep 5
+
+      - name: Pull pinned local reference model and capture digest
+        run: |
+          ollama pull llama3.2:1b
+          echo "=== Pinned Model Digest ==="
+          ollama show llama3.2:1b --modelfile | tee /tmp/local_model_manifest.txt
+          DIGEST=$(ollama list | grep 'llama3.2:1b' | awk '{print $2}')
+          echo "LOCAL_MODEL_DIGEST=$DIGEST" >> $GITHUB_ENV
+
+      - name: Run canary prompts on local model
+        run: |
+          python -m driftwatch.cli.main canary \
+            --week "${{ env.WEEK }}" \
+            --models "local" \
+            --results-dir "weekly"
+
+      - name: Run evaluation trials on local model
+        run: |
+          python -m driftwatch.cli.main run \
+            --week "${{ env.WEEK }}" \
+            --suites "${{ inputs.suites || 'canary,control,attacks_v1' }}" \
+            --models "local" \
+            --trials ${{ inputs.trials || 5 }} \
+            --results-dir "weekly"
+
+      - name: Upload local bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-local
+          path: weekly/${{ env.WEEK }}/
+          retention-days: 7
+
+  finalize:
+    name: Finalize, Summarize, Report & Deploy
+    needs: [preflight, evaluate-hosted, evaluate-local]
+    if: always() && needs.preflight.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
     env:
       HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      WEEK: ${{ needs.preflight.outputs.week }}
 
     steps:
       - name: Checkout repository
@@ -104,21 +249,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
-
-      - name: Determine week date
-        run: |
-          INPUT_WEEK="${{ inputs.week }}"
-          if [ -n "$INPUT_WEEK" ]; then
-            WEEK="$INPUT_WEEK"
-          else
-            WEEK=$(date -u +%Y-%m-%d)
-          fi
-          echo "WEEK=$WEEK" >> $GITHUB_ENV
 
       - name: Download all model artifacts
         uses: actions/download-artifact@v4
@@ -131,22 +267,104 @@ jobs:
           find downloaded-artifacts/ -type f -exec cp -u {} "weekly/${{ env.WEEK }}/" \;
           ls -la "weekly/${{ env.WEEK }}/"
 
+      - name: Finalize Parquet bundle
+        run: |
+          python -c "from driftwatch.storage.bundle import finalize_bundle; from pathlib import Path; finalize_bundle(Path('weekly/${{ env.WEEK }}'), week='${{ env.WEEK }}', allow_overwrite=True)"
+
+      - name: Upload bundle to Hugging Face Dataset (FR7)
+        continue-on-error: true
+        run: |
+          python - << 'EOF'
+          import os
+          from pathlib import Path
+          from driftwatch.config import load_study_config
+          from driftwatch.storage.hf_upload import upload_weekly_bundle
+
+          config = load_study_config()
+          hf_repo = config.hf_dataset_repo
+          token = os.environ.get("HF_TOKEN")
+
+          if hf_repo and hf_repo != "TODO" and token:
+              print(f"Uploading weekly bundle to Hugging Face: {hf_repo}")
+              upload_weekly_bundle(
+                  repo_id=hf_repo,
+                  weekly_run_dir=Path("weekly/${{ env.WEEK }}"),
+                  week="${{ env.WEEK }}",
+                  token=token,
+              )
+          else:
+              print("HF dataset repo not configured (marked as TODO) or HF_TOKEN unset; skipping HF upload.")
+          EOF
+
       - name: Generate summary JSON
         run: |
-          if [ -f "weekly/${{ env.WEEK }}/trials.parquet" ]; then
-            python -m driftwatch.cli.main summarize \
-              --week "${{ env.WEEK }}" \
-              --results-dir "weekly" \
-              --output-dir "results/summary"
-          fi
+          python -m driftwatch.cli.main summarize \
+            --week "${{ env.WEEK }}" \
+            --results-dir "weekly" \
+            --output-dir "results/summary"
 
-      - name: Commit summary to git (FR7)
+      - name: Export trial records (CSV, JSONL, Schema)
+        run: |
+          python -m driftwatch.cli.main export \
+            --weekly-dir "weekly" \
+            --results-dir "results"
+
+      - name: Run statistical analysis pipeline (GEE, TOST, PELT)
+        run: |
+          python -m driftwatch.cli.main analyze \
+            --weekly-dir "weekly" \
+            --output-file "results/analysis/analysis.json"
+
+      - name: Generate weekly Markdown and HTML report
+        run: |
+          python -m driftwatch.cli.main weekly-report "${{ env.WEEK }}" \
+            --summary-dir "results/summary" \
+            --analysis-file "results/analysis/analysis.json" \
+            --weekly-dir "weekly" \
+            --output-dir "reports/weekly"
+
+      - name: Generate comprehensive scientific report
+        run: |
+          python -m driftwatch.cli.main report \
+            --analysis-file "results/analysis/analysis.json" \
+            --index-file "results/summary/index.json" \
+            --output-dir "reports"
+
+      - name: Commit generated results to main
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if [ -f "results/summary/${{ env.WEEK }}.json" ]; then
-            git add "results/summary/${{ env.WEEK }}.json"
-            git diff --staged --quiet || git commit -m "chore(data): summary for week ${{ env.WEEK }} (FR7)"
-            git push origin HEAD || echo "No changes or push failed"
+          git add results/ reports/
+          git diff --staged --quiet || git commit -m "chore(data): weekly evaluation for ${{ env.WEEK }} [skip ci]"
+          git push origin HEAD || echo "Push failed or branch protected"
+
+      - name: Build site directory
+        run: |
+          mkdir -p site
+          cp -r dashboard/* site/
+          mkdir -p site/results/summary site/results/analysis site/results/exports site/reports/weekly
+
+          cp -r results/summary/* site/results/summary/ 2>/dev/null || true
+          cp -r results/analysis/* site/results/analysis/ 2>/dev/null || true
+          cp -r results/exports/* site/results/exports/ 2>/dev/null || true
+          [ -f results/events.json ] && cp results/events.json site/results/ || true
+          cp -r reports/* site/reports/ 2>/dev/null || true
+
+          # Strict exclusions
+          rm -rf site/dev
+          if grep -rn '"sample": true' site/ 2>/dev/null; then
+            echo "ERROR: Sample data detected in site/"
+            exit 1
           fi
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "site"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

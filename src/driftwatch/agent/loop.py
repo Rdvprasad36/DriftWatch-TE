@@ -77,7 +77,7 @@ class AgentLoop:
         Mutates *world_state* in place (the caller must pass a fresh copy per
         trial via ``fresh_copy(load_world(scenario.world))``).
 
-        Never raises.  Any harness error is captured in ``TrialResult.error_type``.
+        Never raises. Any harness error is captured in ``TrialResult.error_type``.
         """
         # Accumulators
         tool_trace: list[ToolCall] = []
@@ -123,12 +123,15 @@ class AgentLoop:
             latency_ms += resp.latency_ms
             if not resp.ok:
                 http_errors += 1
-                error_type = f"provider_error:{resp.http_status}"
+                status_str = f"HTTPStatusError_{resp.http_status}"
+                fallback_err = status_str if resp.http_status is not None else "ProviderError"
+                error_type = resp.error_type or fallback_err
                 logger.warning(
-                    "Provider error at step %d: %s (HTTP %s)",
+                    "Provider error at step %d: %s (HTTP %s, type %s)",
                     step,
                     resp.error,
                     resp.http_status,
+                    error_type,
                 )
                 break
 
@@ -181,7 +184,8 @@ class AgentLoop:
         )
         if final_resp is None and responses:
             final_resp = responses[-1]
-        returned_model_id: str = final_resp.returned_model if final_resp else model_alias
+        # Only use returned model id if actually returned by the provider API (Item 2c)
+        returned_model_id: str = (final_resp.returned_model if final_resp else "") or ""
         fingerprint: str | None = final_resp.fingerprint if final_resp else None
 
         total_latency = latency_ms
@@ -212,7 +216,7 @@ class AgentLoop:
     ) -> tuple[str, ToolCall]:
         """Invoke the tool and return (result_json_str, ToolCall record).
 
-        ToolRegistry.call() returns (result_dict, ToolCall).  We serialize
+        ToolRegistry.call() returns (result_dict, ToolCall). We serialize
         the dict to a JSON string for inclusion in the OpenAI tool message.
         Errors from the tool are returned as text (not raised) so the agent
         can see and react to them — correct OpenAI function-calling behavior.

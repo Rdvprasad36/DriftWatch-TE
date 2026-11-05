@@ -40,7 +40,6 @@ class TestCIWorkflow:
     def test_ci_triggers_on_push_and_pr(self) -> None:
         """ci.yml triggers on push and pull_request to main/master."""
         wf = _load_workflow("ci.yml")
-        # In PyYAML, 'on' key can parse as boolean True or string 'on'
         triggers = wf.get(True) or wf.get("on")
         assert triggers is not None
         assert "push" in triggers or "pull_request" in triggers
@@ -49,7 +48,6 @@ class TestCIWorkflow:
         """ci.yml must include steps for ruff, mypy, and pytest."""
         wf = _load_workflow("ci.yml")
         jobs = wf["jobs"]
-        # Find test/build job
         all_steps: list[dict[str, Any]] = []
         for job in jobs.values():
             all_steps.extend(job.get("steps", []))
@@ -80,17 +78,14 @@ class TestWeeklyWorkflow:
         assert "schedule" in triggers
         assert "workflow_dispatch" in triggers
 
-        # Verify cron runs on Monday
         schedules = triggers["schedule"]
         cron_expr = schedules[0]["cron"]
-        # Standard cron: '0 0 * * 1' or similar for Monday
         assert "1" in cron_expr.split()[-1]
 
     def test_weekly_has_model_matrix(self) -> None:
         """weekly.yml must shard runs across models via matrix (architecture.md §6)."""
         wf = _load_workflow("weekly.yml")
         jobs = wf["jobs"]
-        # At least one job has a strategy matrix for models
         has_matrix = False
         for job in jobs.values():
             strategy = job.get("strategy", {})
@@ -124,7 +119,6 @@ class TestPagesWorkflow:
         """pages.yml must declare pages: write and id-token: write permissions."""
         wf = _load_workflow("pages.yml")
         perms = wf.get("permissions", {})
-        # Permissions can be at workflow root or job level
         if not perms:
             for job in wf.get("jobs", {}).values():
                 perms = job.get("permissions", {})
@@ -133,3 +127,25 @@ class TestPagesWorkflow:
         assert perms.get("pages") == "write"
         assert perms.get("id-token") == "write"
 
+
+# ---------------------------------------------------------------------------
+# Health Check & Keepalive Workflow Tests
+# ---------------------------------------------------------------------------
+
+
+class TestHealthCheckAndKeepaliveWorkflows:
+    def test_healthcheck_file_exists_and_valid_yaml(self) -> None:
+        """healthcheck.yml exists and has schedule and issues permission."""
+        wf = _load_workflow("healthcheck.yml")
+        assert "name" in wf
+        triggers = wf.get(True) or wf.get("on")
+        assert "schedule" in triggers
+        perms = wf.get("permissions", {})
+        assert perms.get("issues") == "write"
+
+    def test_keepalive_file_exists_and_valid_yaml(self) -> None:
+        """keepalive.yml exists and runs on schedule."""
+        wf = _load_workflow("keepalive.yml")
+        assert "name" in wf
+        triggers = wf.get(True) or wf.get("on")
+        assert "schedule" in triggers

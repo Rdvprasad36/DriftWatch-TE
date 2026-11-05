@@ -29,6 +29,7 @@ def wilson_score_interval(
 
     Returns:
         tuple of (p_hat, ci_lower, ci_upper) bounded in [0, 1].
+        Guaranteed to contain p_hat.
     """
     if total <= 0:
         return 0.0, 0.0, 0.0
@@ -45,8 +46,8 @@ def wilson_score_interval(
         z * math.sqrt((p_hat * (1 - p_hat) / total) + (z**2) / (4 * (total**2)))
     ) / denom
 
-    ci_lower = max(0.0, float(center - margin))
-    ci_upper = min(1.0, float(center + margin))
+    ci_lower = max(0.0, min(float(center - margin), p_hat))
+    ci_upper = min(1.0, max(float(center + margin), p_hat))
     return p_hat, ci_lower, ci_upper
 
 
@@ -58,11 +59,15 @@ def cluster_bootstrap_ci(
     n_resamples: int = 1000,
     alpha: float = 0.05,
     seed: int = 42,
-) -> tuple[float, float, float]:
+    min_clusters: int = 10,
+) -> tuple[float, float | None, float | None]:
     """Compute two-stage cluster bootstrap 95% CI (resample scenarios, then trials).
 
     Trials within a scenario are correlated; simple i.i.d. bootstrap understates
-    variance.  Resampling scenarios preserves intra-scenario correlation.
+    variance. Resampling scenarios preserves intra-scenario correlation.
+    When unique scenario clusters are under min_clusters (10), the bootstrap
+    is unreliable and returns (mean, None, None) ("not estimable").
+    Guarantees that when estimable, ci_lower <= empirical_mean <= ci_upper.
 
     Args:
         data: DataFrame containing trial results.
@@ -71,19 +76,21 @@ def cluster_bootstrap_ci(
         n_resamples: Number of bootstrap iterations.
         alpha: Significance level (default 0.05 for 95% CI).
         seed: Random seed.
+        min_clusters: Minimum scenario clusters required (default 10).
 
     Returns:
         tuple of (empirical_mean, ci_lower, ci_upper).
+        ci_lower and ci_upper are None if unique clusters < min_clusters.
     """
     if data.empty:
-        return 0.0, 0.0, 0.0
+        return 0.0, None, None
 
     empirical_mean = float(data[metric_col].mean())
 
     unique_clusters = data[cluster_col].unique()
     n_clusters = len(unique_clusters)
-    if n_clusters == 0:
-        return empirical_mean, empirical_mean, empirical_mean
+    if n_clusters < min_clusters:
+        return empirical_mean, None, None
 
     rng = np.random.default_rng(seed)
 
@@ -110,10 +117,9 @@ def cluster_bootstrap_ci(
             boot_means.append(float(np.mean(sample_vals)))
 
     if not boot_means:
-        return empirical_mean, empirical_mean, empirical_mean
+        return empirical_mean, None, None
 
-    ci_lower = float(np.percentile(boot_means, 100 * (alpha / 2)))
-    ci_upper = float(np.percentile(boot_means, 100 * (1 - alpha / 2)))
+    ci_lower = min(float(np.percentile(boot_means, 100 * (alpha / 2))), empirical_mean)
+    ci_upper = max(float(np.percentile(boot_means, 100 * (1 - alpha / 2))), empirical_mean)
 
     return empirical_mean, ci_lower, ci_upper
-

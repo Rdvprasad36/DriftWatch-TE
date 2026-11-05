@@ -53,7 +53,8 @@ class TestContractSchemas:
         validated = SummaryIndex.model_validate(index_data)
         assert validated.schema_version == "1.0.0"
         assert validated.planned_weeks == 12
-        assert validated.study_start_date == "2026-10-19"
+        from driftwatch.config import load_study_config
+        assert validated.study_start_date == load_study_config().study_start_date
         assert isinstance(validated.weeks, list)
         assert isinstance(validated.models, list)
 
@@ -112,7 +113,8 @@ class TestContractSchemas:
         for _slice_key, slice_obj in validated.slices.items():
             assert slice_obj.n_trials > 0
             assert 0.0 <= slice_obj.attack_success_rate <= 1.0
-            assert len(slice_obj.ci_95) == 2
+            # Under Item 2a, when clusters < 10, CI is None (not estimable)
+            assert slice_obj.ci_95 is None or len(slice_obj.ci_95) == 2
 
     def test_analysis_schema_and_hypothesis_rules(self, tmp_path: Path) -> None:
         """results/analysis/analysis.json conforms to AnalysisContract with all H1-H6 rules."""

@@ -181,7 +181,7 @@
       padding: var(--sp-2) var(--sp-4);
       font-weight: 700; font-size: var(--f-xs);
       letter-spacing: 0.08em; text-transform: uppercase;
-      position: fixed; top: 0; left: 0; right: 0; z-index: 1100;
+      position: relative; width: 100%; z-index: 100;
     }
     #sample-banner {
       background: linear-gradient(90deg, #991B1B, #DC2626, #991B1B);
@@ -338,6 +338,122 @@
       width: 16px; height: 16px; fill: none;
       stroke: currentColor; stroke-width: 2;
       stroke-linecap: round; stroke-linejoin: round;
+    }
+
+    /* Progress Ring Component */
+    .progress-ring-wrap {
+      position: relative;
+      width: 34px; height: 34px;
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: default;
+    }
+    .progress-ring {
+      transform: rotate(-90deg);
+    }
+    .progress-ring-bg {
+      fill: none;
+      stroke: var(--border-default);
+      stroke-width: 2.5;
+    }
+    .progress-ring-bar {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-dasharray: 81.68;
+      stroke-dashoffset: 81.68;
+      transition: stroke-dashoffset 600ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .progress-ring-text {
+      position: absolute;
+      font-size: 0.5625rem; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--text-primary);
+    }
+
+    /* Live Pulse Indicator */
+    .live-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 8px; border-radius: var(--r-full);
+      background: rgba(0, 180, 255, 0.10);
+      border: 1px solid rgba(0, 180, 255, 0.25);
+      font-size: 0.625rem; font-weight: 700;
+      color: var(--accent); text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .pulse-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 0 rgba(0, 180, 255, 0.7);
+      animation: pulse-glow 2s infinite ease-in-out;
+    }
+    @keyframes pulse-glow {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 180, 255, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 180, 255, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 180, 255, 0); }
+    }
+
+    /* Weekly Reports Page Styles */
+    .timeline-track {
+      display: flex; gap: var(--sp-2); overflow-x: auto;
+      padding: var(--sp-2) 0; margin-bottom: var(--sp-4);
+      scrollbar-width: thin;
+    }
+    .timeline-pill {
+      display: inline-flex; flex-direction: column; align-items: flex-start;
+      padding: var(--sp-2) var(--sp-4); border-radius: var(--r-md);
+      border: 1px solid var(--border-default); background: var(--bg-surface);
+      color: var(--text-secondary); cursor: pointer; transition: all 200ms ease-out;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .timeline-pill:hover {
+      background: var(--bg-hover); color: var(--text-primary);
+      border-color: var(--border-accent);
+    }
+    .timeline-pill.active {
+      background: var(--accent-subtle); color: var(--accent);
+      border-color: var(--accent); font-weight: 700;
+    }
+    .timeline-pill-date { font-size: var(--f-xs); font-weight: 700; }
+    .timeline-pill-label { font-size: 0.625rem; color: var(--text-tertiary); }
+    .timeline-pill.active .timeline-pill-label { color: var(--accent); }
+
+    .report-meta-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: var(--sp-3); margin-bottom: var(--sp-4);
+    }
+    .report-meta-box {
+      background: var(--bg-inset); padding: var(--sp-3); border-radius: var(--r-md);
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .report-meta-label { font-size: 0.625rem; color: var(--text-tertiary); text-transform: uppercase; font-weight: 700; }
+    .report-meta-val { font-size: var(--f-sm); font-weight: 700; color: var(--text-primary); }
+
+    .compare-container {
+      margin-top: var(--sp-4); border-top: 1px dashed var(--border-default);
+      padding-top: var(--sp-4);
+    }
+
+    /* Table toggles for charts */
+    .chart-header-actions {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--sp-3); flex-wrap: wrap; gap: var(--sp-2);
+    }
+    .btn-toggle-table {
+      font-size: var(--f-xs); padding: 4px 10px; border-radius: var(--r-sm);
+      border: 1px solid var(--border-default); background: var(--bg-surface);
+      color: var(--text-secondary); cursor: pointer; transition: all 180ms ease-out;
+    }
+    .btn-toggle-table:hover {
+      background: var(--bg-hover); color: var(--text-primary);
+    }
+
+    /* Staggered Scroll Reveal */
+    .reveal-on-scroll {
+      opacity: 0; transform: translateY(12px);
+      transition: opacity 350ms cubic-bezier(0.4, 0, 0.2, 1), transform 350ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .reveal-on-scroll.revealed {
+      opacity: 1; transform: translateY(0);
     }
 
     /* =========================================================================
@@ -755,10 +871,6 @@
   <!-- Skip link -->
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <!-- Banners -->
-  <div id="sample-banner" class="banner-bar" role="alert">SAMPLE DATA -- NOT REAL RESULTS (UI DEV FIXTURE ONLY)</div>
-  <div id="pilot-banner" class="banner-bar" role="status">Pilot dry-run phase active. Formal longitudinal measurement starts on study launch date.</div>
-
   <!-- Sidebar overlay for mobile -->
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
@@ -813,9 +925,14 @@
         <span class="nav-label">Data Quality</span>
       </a>
 
+      <a href="#weekly-reports" class="nav-item" data-section="weekly-reports">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="nav-label">Weekly Reports</span>
+      </a>
+
       <a href="#report" class="nav-item" data-section="report">
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <span class="nav-label">Report</span>
+        <span class="nav-label">Final Report</span>
         <span class="nav-badge">Output 4</span>
       </a>
 
@@ -826,7 +943,7 @@
     </nav>
 
     <div class="sidebar-footer">
-      <a href="https://github.com/driftwatch-te/driftwatch" class="btn-icon" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository" title="GitHub">
+      <a href="https://github.com/Rdvprasad36/DriftWatch-TE" class="btn-icon" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository" title="GitHub">
         <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
       </a>
     </div>
@@ -834,6 +951,10 @@
 
   <!-- ===== MAIN WRAPPER ===== -->
   <div class="app-main">
+    <!-- Banners (normal layout flow, no overlap) -->
+    <div id="sample-banner" class="banner-bar" role="alert">SAMPLE DATA -- NOT REAL RESULTS (UI DEV FIXTURE ONLY)</div>
+    <div id="pilot-banner" class="banner-bar" role="status">Pilot dry-run phase active. Formal longitudinal measurement starts on study launch date.</div>
+
     <!-- Top Bar -->
     <header class="topbar navbar" role="banner">
       <div class="topbar-left">
@@ -847,6 +968,21 @@
         <span class="page-crumb" id="page-crumb">Overview</span>
       </div>
       <div class="topbar-actions">
+        <!-- Live Dot (run active or due within 24h) -->
+        <div id="live-indicator" class="live-pill" title="Next run scheduled" style="display:none;">
+          <span class="pulse-dot"></span>
+          <span id="live-indicator-text" class="live-text">Live</span>
+        </div>
+
+        <!-- Progress Ring for Study Week X of N -->
+        <div id="study-progress-ring-wrap" class="progress-ring-wrap" title="Study Progress">
+          <svg class="progress-ring" width="32" height="32" viewBox="0 0 32 32">
+            <circle class="progress-ring-bg" cx="16" cy="16" r="13" />
+            <circle id="progress-ring-bar" class="progress-ring-bar" cx="16" cy="16" r="13" />
+          </svg>
+          <span id="progress-ring-text" class="progress-ring-text">0/12</span>
+        </div>
+
         <button id="theme-toggle" class="btn-icon" aria-label="Toggle light/dark theme" title="Toggle theme">
           <svg id="theme-icon-sun" viewBox="0 0 24 24" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
           <svg id="theme-icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -891,6 +1027,25 @@
           <div class="status-cell">
             <span class="status-label">Suite Integrity</span>
             <span class="pill pill-green" id="stat-suites-verified"><span class="dot dot-green"></span> Verified</span>
+          </div>
+        </div>
+
+        <!-- Pilot Panel (Item 2e: Clearly labeled Pilot panel with its n) -->
+        <div class="card card-pad" id="pilot-panel" style="display:none; margin-bottom:var(--sp-6); border-left:4px solid #D97706;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:var(--sp-3);">
+            <div>
+              <div style="display:flex; align-items:center; gap:var(--sp-2); margin-bottom:var(--sp-2);">
+                <span class="badge" style="background:#D97706; color:#FFFFFF; font-weight:700;">Pilot Phase</span>
+                <span class="card-title" style="margin:0;">Pilot Dry-Run Validation</span>
+              </div>
+              <p style="font-size:var(--f-sm); color:var(--text-secondary); line-height:1.6; margin:0;" id="pilot-panel-desc">
+                Validation run executed prior to formal study launch date. Pilot data serves solely for pipeline end-to-end verification and does not feed formal study KPI metrics, drift trend tests, or pre-registered hypotheses.
+              </p>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:var(--f-xs); color:var(--text-tertiary); text-transform:uppercase; font-weight:600; display:block;">Pilot Sample Size</span>
+              <span style="font-size:var(--f-2xl); font-weight:800; color:var(--text-primary);" id="pilot-sample-n">n=0</span>
+            </div>
           </div>
         </div>
 
@@ -1098,10 +1253,10 @@
                 <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 JSONL
               </a>
-              <a href="https://huggingface.co/datasets/placeholder" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" id="download-parquet-btn">
+              <button disabled class="btn btn-secondary" id="download-parquet-btn" title="Dataset not published yet" style="opacity:0.6; cursor:not-allowed;">
                 <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-                Parquet
-              </a>
+                Parquet (Dataset not published yet)
+              </button>
             </div>
             <div style="font-size:var(--f-xs); color:var(--text-tertiary);" id="data-checksum">SHA-256 Verified</div>
           </div>
@@ -1157,7 +1312,7 @@
         <div class="status-strip" style="margin-bottom:var(--sp-6);">
           <div class="status-cell">
             <span class="status-label">Overall Completion</span>
-            <span class="status-val" id="quality-stat-completion">100%</span>
+            <span class="status-val" id="quality-stat-completion">-</span>
           </div>
           <div class="status-cell">
             <span class="status-label">Rate-Limit 429 Events</span>
@@ -1186,7 +1341,124 @@
       </section>
 
       <!-- ===============================================================
-           PAGE 8: REPORT (Output 4)
+           PAGE 8: WEEKLY REPORTS
+           =============================================================== -->
+      <section id="weekly-reports" class="page-section" aria-labelledby="weekly-reports-title">
+        <div class="section-header">
+          <span class="section-eyebrow">Weekly Archive</span>
+          <h1 id="weekly-reports-title" class="section-title">Weekly Evaluation Reports</h1>
+          <p class="section-desc">
+            Explore per-week evaluation results, compare batches across study weeks, and download Markdown and printable HTML reports.
+          </p>
+        </div>
+
+        <!-- Timeline Bar & Controls Card -->
+        <div class="card card-pad-sm" style="margin-bottom:var(--sp-4);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--sp-3); margin-bottom:var(--sp-3);">
+            <div style="font-size:var(--f-xs); font-weight:700; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em;">
+              Study Timeline:
+            </div>
+            <div style="display:flex; align-items:center; gap:var(--sp-2);">
+              <button id="weekly-prev-btn" class="btn btn-secondary" style="padding:4px 10px;">Previous</button>
+              <button id="weekly-next-btn" class="btn btn-secondary" style="padding:4px 10px;">Next</button>
+              <button id="weekly-compare-toggle" class="btn btn-secondary" style="padding:4px 10px;">Compare Weeks</button>
+            </div>
+          </div>
+          <div id="weekly-timeline-track" class="timeline-track" role="tablist" aria-label="Study week timeline">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Compare Selector Box (hidden by default) -->
+        <div id="weekly-compare-controls" class="card card-pad-sm" style="display:none; margin-bottom:var(--sp-4); background:var(--bg-inset);">
+          <div style="display:flex; align-items:center; gap:var(--sp-4); flex-wrap:wrap;">
+            <div class="filter-group">
+              <label for="compare-week-a" class="filter-label">Baseline Week (A):</label>
+              <select id="compare-week-a" class="select-input"></select>
+            </div>
+            <div class="filter-group">
+              <label for="compare-week-b" class="filter-label">Target Week (B):</label>
+              <select id="compare-week-b" class="select-input"></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Single Week View -->
+        <div id="weekly-single-view">
+          <div class="card card-pad" style="margin-bottom:var(--sp-4);">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--sp-3); margin-bottom:var(--sp-4);">
+              <div>
+                <h2 id="weekly-report-week-title" class="card-title" style="font-size:var(--f-xl); margin-bottom:4px;">Week of 2026-10-16</h2>
+                <div id="weekly-report-status-badge" class="pill pill-amber">Pilot Batch</div>
+              </div>
+              <div style="display:flex; gap:var(--sp-2);">
+                <a id="weekly-download-md" href="#" download class="btn btn-primary" style="padding:6px 14px;">
+                  <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Markdown
+                </a>
+                <a id="weekly-download-html" href="#" target="_blank" class="btn btn-secondary" style="padding:6px 14px;">
+                  <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                  Printable HTML
+                </a>
+              </div>
+            </div>
+
+            <div class="report-meta-grid">
+              <div class="report-meta-box">
+                <span class="report-meta-label">Total Executed Trials</span>
+                <span class="report-meta-val" id="weekly-report-trials">-</span>
+              </div>
+              <div class="report-meta-box">
+                <span class="report-meta-label">Aggregate ASR</span>
+                <span class="report-meta-val" id="weekly-report-asr">-</span>
+              </div>
+              <div class="report-meta-box">
+                <span class="report-meta-label">Benign Task Success</span>
+                <span class="report-meta-val" id="weekly-report-task-succ">-</span>
+              </div>
+              <div class="report-meta-box">
+                <span class="report-meta-label">Canary Hash Status</span>
+                <span class="report-meta-val" id="weekly-report-canary">-</span>
+              </div>
+            </div>
+
+            <!-- Per-model table -->
+            <div class="card-title" style="margin-bottom:var(--sp-3); font-size:var(--f-base);">Per-Model Attack Success Rate</div>
+            <div class="tbl-wrap">
+              <table class="data-table" id="weekly-model-table" aria-label="Weekly per-model evaluation table">
+                <thead><tr><th>Model Alias</th><th>Trials (n)</th><th>Attack Success Rate</th><th>95% Interval</th><th>Change vs Week 1</th><th>Completion Rate</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <!-- Cautious Interpretation note -->
+            <blockquote style="margin-top:var(--sp-5); background:var(--bg-inset); border-left:4px solid var(--accent); padding:var(--sp-3) var(--sp-4); border-radius:var(--r-sm); font-size:var(--f-sm); color:var(--text-secondary);">
+              <strong>Findings &amp; Cautious Assessment:</strong>
+              Attack success rates reflect deterministic invariant evaluations in the simulated e-commerce environment.
+              Where confidence intervals span zero when compared to prior evaluations, the data indicates <strong>no evidence of change</strong>.
+              Observed differences reflect black-box behavioral measurements and should not be interpreted as evidence of provider optimization intent.
+            </blockquote>
+          </div>
+        </div>
+
+        <!-- Compare View (when active) -->
+        <div id="weekly-compare-view" style="display:none;">
+          <div class="card card-pad">
+            <div class="card-title" style="font-size:var(--f-lg); margin-bottom:var(--sp-4);" id="weekly-compare-title">
+              Comparison: Week A vs. Week B
+            </div>
+            <div class="tbl-wrap">
+              <table class="data-table" id="weekly-compare-table" aria-label="Weekly batch comparison table">
+                <thead><tr><th>Model Alias</th><th>Week A ASR</th><th>Week B ASR</th><th>Difference (B &minus; A)</th><th>Completion A vs B</th><th>Cautious Assessment</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           PAGE 9: REPORT (Output 4)
            =============================================================== -->
       <section id="report" class="page-section" aria-labelledby="report-title">
         <div class="section-header">
@@ -1236,7 +1508,7 @@
         <div class="card card-accent card-pad" id="method" style="margin-bottom:var(--sp-4);">
           <div class="card-title" style="margin-bottom:var(--sp-1);">Study Preregistration &amp; Hypotheses</div>
           <p style="font-size:var(--f-sm); color:var(--text-secondary); margin-bottom:var(--sp-4);">
-            Pre-registration protocol: <a href="https://osf.io/placeholder" target="_blank" rel="noopener noreferrer">OSF Registry (TODO: placeholder)</a>.
+            Pre-registration protocol: <span id="prereg-link-container"><span class="badge badge-not_enough_data">TODO: Pre-registration pending</span></span>
           </p>
           <div class="tbl-wrap">
             <table class="data-table" aria-label="Hypotheses summary table">
@@ -1269,8 +1541,8 @@
             Any OpenAI-compatible or local endpoint can be benchmarked against the identical frozen test suites.
           </p>
           <pre class="code-block"># 1. Clone repository and set up environment
-git clone https://github.com/driftwatch-te/driftwatch.git
-cd driftwatch
+git clone https://github.com/Rdvprasad36/DriftWatch-TE.git
+cd DriftWatch-TE
 python -m venv .venv &amp;&amp; source .venv/bin/activate
 pip install -e .
 
@@ -1360,7 +1632,8 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
         changepoints: 'Change Points',
         data: 'Trial Records',
         quality: 'Data Quality',
-        report: 'Report',
+        'weekly-reports': 'Weekly Reports',
+        report: 'Final Report',
         methods: 'Methods'
       };
 
@@ -1371,6 +1644,7 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
         if (id === 'language') id = 'languages';
         if (id === 'change') id = 'changepoints';
         if (id === 'method') id = 'methods';
+        if (id === 'weekly' || id === 'weekly-report') id = 'weekly-reports';
 
         let found = false;
         pageSections.forEach(function(sec) {
@@ -1542,6 +1816,7 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
         renderControls();
         renderChangepoints();
         renderQuality();
+        renderWeeklyReports();
         renderMethods();
         renderReport();
         renderSchema();
@@ -1573,43 +1848,92 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
         var idx = appState.index;
         if (!idx) return;
 
-        var studyWeeks = (idx.weeks || []).filter(function(w) { return !w.is_pilot; }).length;
-        var total = idx.planned_weeks || 12;
-        setTxt('stat-progress', 'Week ' + studyWeeks + ' of ' + total);
+        var startDate = idx.study_start_date || '2026-11-09';
+        var allWeeks = Object.keys(appState.weeklyData).sort();
+        var pilotWeeks = allWeeks.filter(function(w) { return w < startDate; });
+        var studyWeeks = allWeeks.filter(function(w) { return w >= startDate; });
+        var plannedWeeks = idx.planned_weeks || 12;
+
+        setTxt('stat-progress', 'Week ' + studyWeeks.length + ' of ' + plannedWeeks);
 
         var wks = idx.weeks || [];
         setTxt('stat-last-run', wks.length > 0 ? wks[wks.length - 1].week : 'Pending');
         setTxt('stat-next-run', idx.next_scheduled_run_date || 'Scheduled');
         setTxt('stat-models-count', (idx.models || []).length);
 
-        // KPI Cards
+        // Progress Ring (Study Week X of N)
+        var ringBar = document.getElementById('progress-ring-bar');
+        var ringText = document.getElementById('progress-ring-text');
+        if (ringBar && ringText) {
+          var circumference = 81.68;
+          var progressFraction = Math.min(1.0, studyWeeks.length / plannedWeeks);
+          ringBar.style.strokeDashoffset = (circumference - (progressFraction * circumference)).toFixed(2);
+          ringText.textContent = studyWeeks.length > 0 ? (studyWeeks.length + '/' + plannedWeeks) : '0/' + plannedWeeks;
+        }
+
+        // Live Pulsing Dot Indicator (run active or due within 24h)
+        var liveInd = document.getElementById('live-indicator');
+        var liveTxt = document.getElementById('live-indicator-text');
+        if (liveInd && idx.next_scheduled_run_date) {
+          var nextDate = new Date(idx.next_scheduled_run_date + 'T00:00:00Z');
+          var now = new Date();
+          var diffHours = (nextDate - now) / (1000 * 60 * 60);
+          if (diffHours >= -24 && diffHours <= 24) {
+            liveInd.style.display = 'inline-flex';
+            if (liveTxt) liveTxt.textContent = diffHours <= 0 ? 'Run Active' : 'Due < 24h';
+          } else {
+            liveInd.style.display = 'none';
+          }
+        }
+
+        // Pilot Panel (Item 2e)
+        var pilotPanel = document.getElementById('pilot-panel');
+        if (pilotPanel) {
+          if (pilotWeeks.length > 0) {
+            pilotPanel.style.display = 'block';
+            var pilotN = 0;
+            pilotWeeks.forEach(function(pw) {
+              var pwd = appState.weeklyData[pw];
+              if (pwd) pilotN += (pwd.total_trials || 0);
+            });
+            var pilotNEl = document.getElementById('pilot-sample-n');
+            if (pilotNEl) pilotNEl.textContent = 'n=' + pilotN;
+          } else {
+            pilotPanel.style.display = 'none';
+          }
+        }
+
+        // KPI Cards (Item 2e: Pilot data must never feed KPI cards)
         var kpiC = document.getElementById('kpi-container');
         if (kpiC) {
           kpiC.innerHTML = '';
           var models = idx.models || [];
-          if (models.length === 0) {
-            kpiC.innerHTML = '<div class="empty-state"><div class="empty-title">Awaiting Model Runs</div><div class="empty-desc">KPI metrics will populate following Run 1 completion.</div></div>';
+          if (studyWeeks.length === 0) {
+            kpiC.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-title">Awaiting Study Launch (' + startDate + ')</div><div class="empty-desc">KPI metrics will populate following Study Week 1. Pilot dry-run data is excluded from formal study metrics.</div></div>';
           } else {
-            var weeks = Object.keys(appState.weeklyData).sort();
             models.forEach(function(m, mIdx) {
-              var latestAsr = null, firstAsr = null, latestTrials = 0;
-              if (weeks.length > 0) {
-                var lw = appState.weeklyData[weeks[weeks.length - 1]];
-                if (lw && lw.models && lw.models[m.alias]) {
-                  var mi = lw.models[m.alias];
-                  latestAsr = mi.asr !== undefined ? mi.asr : (mi.attack_success_rate || 0);
-                  latestTrials = mi.total_trials || mi.n_trials || 0;
-                }
-                var fw = appState.weeklyData[weeks[0]];
-                if (fw && fw.models && fw.models[m.alias]) {
-                  var fi = fw.models[m.alias];
-                  firstAsr = fi.asr !== undefined ? fi.asr : (fi.attack_success_rate || 0);
-                }
+              var latestAsr = null, firstAsr = null, latestTrials = 0, latestCi = null;
+              var lw = appState.weeklyData[studyWeeks[studyWeeks.length - 1]];
+              if (lw && lw.models && lw.models[m.alias]) {
+                var mi = lw.models[m.alias];
+                latestAsr = mi.asr !== undefined ? mi.asr : (mi.attack_success_rate || 0);
+                latestTrials = mi.total_trials || mi.n_trials || 0;
+                latestCi = mi.ci_95;
+              }
+              var fw = appState.weeklyData[studyWeeks[0]];
+              if (fw && fw.models && fw.models[m.alias]) {
+                var fi = fw.models[m.alias];
+                firstAsr = fi.asr !== undefined ? fi.asr : (fi.attack_success_rate || 0);
               }
               var deltaStr = 'Baseline week';
-              if (latestAsr !== null && firstAsr !== null && weeks.length > 1) {
+              if (latestAsr !== null && firstAsr !== null && studyWeeks.length > 1) {
                 var d = (latestAsr - firstAsr) * 100;
                 deltaStr = (d >= 0 ? '+' : '') + d.toFixed(1) + '% vs W1';
+              }
+
+              var ciStr = 'not estimable';
+              if (latestCi && Array.isArray(latestCi) && latestCi.length === 2 && latestCi[0] !== null) {
+                ciStr = '[' + formatPct(latestCi[0]) + ', ' + formatPct(latestCi[1]) + ']';
               }
 
               var card = document.createElement('div');
@@ -1621,7 +1945,7 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
                 '</div>' +
                 '<div class="kpi-value" id="kpi-val-' + mIdx + '">-</div>' +
                 '<div class="kpi-meta">' +
-                  '<span>' + latestTrials + ' trials evaluated</span>' +
+                  '<span>' + latestTrials + ' trials evaluated (' + ciStr + ')</span>' +
                   '<span style="color:var(--accent);">' + deltaStr + '</span>' +
                 '</div>';
               kpiC.appendChild(card);
@@ -1635,11 +1959,20 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
           }
         }
 
-        // Hypothesis chips
+        // Hypothesis chips (Item 2e: Pilot data must never feed hypothesis status)
         var hypoC = document.getElementById('hypothesis-container');
-        if (hypoC && appState.analysis && appState.analysis.hypotheses) {
+        if (hypoC) {
           hypoC.innerHTML = '';
-          var hypos = appState.analysis.hypotheses;
+          var hypos = (studyWeeks.length >= 4 && appState.analysis && appState.analysis.hypotheses)
+            ? appState.analysis.hypotheses
+            : {
+                H1: { status: 'not_enough_data', rule: 'Requires >= 4 study weeks (GEE logistic slope)' },
+                H2: { status: 'not_enough_data', rule: 'Requires >= 4 study weeks (PELT/CUSUM changepoints)' },
+                H3: { status: 'not_enough_data', rule: 'Requires >= 4 study weeks (TOST equivalence)' },
+                H4: { status: 'not_enough_data', rule: 'Requires >= 4 study weeks (Multilingual GEE interaction)' },
+                H5: { status: 'not_enough_data', rule: 'Requires >= 4 study weeks (Vendor changelog alignment)' },
+                H6: { status: 'not_enough_data', rule: 'Requires >= 4 study weeks (Native vs. machine paired difference)' }
+              };
           Object.keys(hypos).forEach(function(hKey) {
             var h = hypos[hKey];
             var cls = 'badge badge-' + (h.status || 'not_enough_data');
@@ -1692,6 +2025,7 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
         var weeks = Object.keys(appState.weeklyData).sort();
         if (weeks.length === 0) {
           container.innerHTML = '<div class="empty-state"><div class="empty-title">Awaiting Longitudinal Data</div><div class="empty-desc">Weekly drift trend lines require at least 1 evaluated week.</div></div>';
+          if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-tertiary);">No longitudinal data yet.</td></tr>';
           return;
         }
 
@@ -1705,80 +2039,128 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
           return { xAxis: ev.date, label: { formatter: ev.provider, position: 'start' } };
         });
 
+        // 1. Hosted model lines - only plot if data exists (Item 2b)
         models.forEach(function(alias, i) {
+          if (alias === 'local') return;
           var pts = weeks.map(function(w) {
             var wd = appState.weeklyData[w];
             if (wd && wd.models && wd.models[alias]) {
-              var v = wd.models[alias].asr !== undefined ? wd.models[alias].asr : wd.models[alias].attack_success_rate;
-              return v !== undefined ? parseFloat((v * 100).toFixed(1)) : null;
+              var mi = wd.models[alias];
+              var nT = mi.total_trials || mi.n_trials || 0;
+              if (nT > 0) {
+                var v = mi.asr !== undefined ? mi.asr : mi.attack_success_rate;
+                if (v !== undefined && v !== null) {
+                  return parseFloat((v * 100).toFixed(1));
+                }
+              }
             }
             return null;
           });
-          series.push({
-            name: alias, type: 'line', data: pts, smooth: true,
-            symbolSize: 8, lineStyle: { width: 3 },
-            itemStyle: { color: OI_COLORS[i % OI_COLORS.length] },
-            animationDuration: 1200, animationEasing: 'cubicOut',
-            markLine: markLines.length > 0 ? {
-              symbol: 'none', lineStyle: { type: 'dashed', color: '#D97706' }, data: markLines
-            } : undefined
-          });
+          var hasData = pts.some(function(p) { return p !== null; });
+          if (hasData) {
+            series.push({
+              name: alias, type: 'line', data: pts, smooth: true,
+              symbolSize: 8, lineStyle: { width: 3 },
+              itemStyle: { color: OI_COLORS[i % OI_COLORS.length] },
+              animationDuration: 1200, animationEasing: 'cubicOut',
+              markLine: markLines.length > 0 ? {
+                symbol: 'none', lineStyle: { type: 'dashed', color: '#D97706' }, data: markLines
+              } : undefined
+            });
+          }
         });
 
-        series.push({
-          name: 'Local Reference (Pinned)', type: 'line',
-          data: weeks.map(function() { return 0; }),
-          smooth: false, symbolSize: 6,
-          lineStyle: { width: 2, type: 'dashed', color: '#718096' },
-          itemStyle: { color: '#718096' }
-        });
-
-        chart.setOption({
-          tooltip: {
-            trigger: 'axis', backgroundColor: tc.bg,
-            borderColor: tc.grid, textStyle: { color: tc.text, fontSize: 12 },
-            formatter: function(params) {
-              var r = '<strong>' + params[0].name + '</strong><br/>';
-              params.forEach(function(p) {
-                r += p.marker + ' ' + p.seriesName + ': ' + (p.value !== null ? p.value + '%' : 'N/A') + '<br/>';
-              });
-              return r;
+        // 2. Local Reference (Pinned) - only plot if data exists, NEVER hardcode 0% (Item 2b)
+        var localPts = weeks.map(function(w) {
+          var wd = appState.weeklyData[w];
+          if (wd && wd.models && wd.models['local']) {
+            var lmi = wd.models['local'];
+            var nT = lmi.total_trials || lmi.n_trials || 0;
+            if (nT > 0) {
+              var lv = lmi.asr !== undefined ? lmi.asr : lmi.attack_success_rate;
+              if (lv !== undefined && lv !== null) {
+                return parseFloat((lv * 100).toFixed(1));
+              }
             }
-          },
-          legend: { textStyle: { color: tc.text, fontSize: 11 }, bottom: 0 },
-          grid: { left: '3%', right: '4%', bottom: weeks.length > 8 ? '18%' : '14%', top: '8%', containLabel: true },
-          xAxis: {
-            type: 'category', data: weeks, boundaryGap: false,
-            axisLine: { lineStyle: { color: tc.grid } },
-            axisLabel: { color: tc.muted, fontSize: 11 }
-          },
-          yAxis: {
-            type: 'value', min: 0, max: 100,
-            axisLabel: { formatter: '{value}%', color: tc.muted, fontSize: 11 },
-            splitLine: { lineStyle: { color: tc.grid, type: 'dashed' } }
-          },
-          series: series,
-          dataZoom: weeks.length > 8 ? [{ type: 'slider', bottom: 10, start: 0, end: 100 }] : undefined
+          }
+          return null;
         });
+        if (localPts.some(function(p) { return p !== null; })) {
+          series.push({
+            name: 'Local Reference (Pinned)', type: 'line',
+            data: localPts,
+            smooth: false, symbolSize: 6,
+            lineStyle: { width: 2, type: 'dashed', color: '#718096' },
+            itemStyle: { color: '#718096' }
+          });
+        }
 
-        // Table
+        if (series.length === 0) {
+          container.innerHTML = '<div class="empty-state"><div class="empty-title">Awaiting Model Series</div><div class="empty-desc">No evaluation data available for selected series.</div></div>';
+        } else {
+          chart.setOption({
+            tooltip: {
+              trigger: 'axis', backgroundColor: tc.bg,
+              borderColor: tc.grid, textStyle: { color: tc.text, fontSize: 12 },
+              formatter: function(params) {
+                var r = '<strong>' + params[0].name + '</strong><br/>';
+                params.forEach(function(p) {
+                  r += p.marker + ' ' + p.seriesName + ': ' + (p.value !== null ? p.value + '%' : 'N/A') + '<br/>';
+                });
+                return r;
+              }
+            },
+            legend: { textStyle: { color: tc.text, fontSize: 11 }, bottom: 0 },
+            grid: { left: '3%', right: '4%', bottom: weeks.length > 8 ? '18%' : '14%', top: '8%', containLabel: true },
+            xAxis: {
+              type: 'category', data: weeks, boundaryGap: false,
+              axisLine: { lineStyle: { color: tc.grid } },
+              axisLabel: { color: tc.muted, fontSize: 11 }
+            },
+            yAxis: {
+              type: 'value', min: 0, max: 100,
+              axisLabel: { formatter: '{value}%', color: tc.muted, fontSize: 11 },
+              splitLine: { lineStyle: { color: tc.grid, type: 'dashed' } }
+            },
+            series: series,
+            dataZoom: weeks.length > 8 ? [{ type: 'slider', bottom: 10, start: 0, end: 100 }] : undefined
+          });
+        }
+
+        // Table (Item 2b: series with no data never tabulated as 0%)
         if (tbody) {
           tbody.innerHTML = '';
           weeks.forEach(function(w) {
             var wd = appState.weeklyData[w];
+            var lmi = (wd && wd.models) ? wd.models['local'] : null;
+            var localTrials = lmi ? (lmi.total_trials || lmi.n_trials || 0) : 0;
+            var localAsr = (localTrials > 0 && lmi) ? (lmi.asr !== undefined ? lmi.asr : lmi.attack_success_rate) : null;
+            var localStr = localAsr !== null ? formatPct(localAsr) : 'N/A';
+
             models.forEach(function(alias) {
+              if (alias === 'local') return;
               if (wd && wd.models && wd.models[alias]) {
                 var mi = wd.models[alias];
+                var nTrials = mi.total_trials || mi.n_trials || 0;
+                if (nTrials === 0) return; // Do not tabulate models with no data
                 var asr = mi.asr !== undefined ? mi.asr : (mi.attack_success_rate || 0);
-                var diff = asr - 0;
+                var diffStr = 'N/A';
+                if (localAsr !== null) {
+                  var diff = asr - localAsr;
+                  diffStr = (diff >= 0 ? '+' : '') + formatPct(diff);
+                }
+                var ciStr = 'not estimable';
+                if (mi.ci_95 && Array.isArray(mi.ci_95) && mi.ci_95.length === 2 && mi.ci_95[0] !== null) {
+                  ciStr = '[' + formatPct(mi.ci_95[0]) + ', ' + formatPct(mi.ci_95[1]) + ']';
+                }
                 var tr = document.createElement('tr');
                 tr.innerHTML =
                   '<td>' + w + '</td>' +
                   '<td><strong>' + alias + '</strong></td>' +
-                  '<td>' + formatPct(0) + '</td>' +
-                  '<td>' + (diff >= 0 ? '+' : '') + formatPct(diff) + '</td>' +
-                  '<td>[95% Bootstrap CI]</td>' +
-                  '<td>' + (mi.total_trials || mi.n_trials || 0) + '</td>';
+                  '<td>' + localStr + '</td>' +
+                  '<td>' + diffStr + '</td>' +
+                  '<td>' + ciStr + '</td>' +
+                  '<td>' + nTrials + '</td>';
                 tbody.appendChild(tr);
               }
             });
@@ -1812,10 +2194,21 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
           var p = sk.split('|');
           if (p.length >= 5) {
             var k = p[1] + ' (' + p[4] + ')';
-            if (!agg[k]) agg[k] = { lang: p[1], origin: p[4], successes: 0, trials: 0, ci: slices[sk].ci_95 };
+            if (!agg[k]) {
+              agg[k] = { lang: p[1], origin: p[4], successes: 0, trials: 0, n_scenarios: 0, ci: null, slice_count: 0 };
+            }
             var t = slices[sk].n_trials || 0;
+            var sc = slices[sk].n_scenarios || 0;
             agg[k].trials += t;
             agg[k].successes += (slices[sk].attack_success_rate || 0) * t;
+            agg[k].n_scenarios += sc;
+            agg[k].slice_count += 1;
+            // Only use slice CI if exactly 1 slice was added and it has >= 10 clusters (Item 2a)
+            if (agg[k].slice_count === 1 && sc >= 10 && slices[sk].ci_95) {
+              agg[k].ci = slices[sk].ci_95;
+            } else {
+              agg[k].ci = null; // Multi-slice aggregate cannot use single-slice CI
+            }
             if (t < 30) small = true;
           }
         });
@@ -1838,40 +2231,89 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
           series: [{ name: 'ASR', type: 'bar', barWidth: '40%', data: cats.map(function(c) { var it = agg[c]; return parseFloat((it.trials > 0 ? (it.successes / it.trials) * 100 : 0).toFixed(1)); }), itemStyle: { color: '#0072B2', borderRadius: [4, 4, 0, 0] }, animationDuration: 1000 }]
         });
 
-        // Forest plot
+        // Forest plot (only render if native vs machine data exists)
         if (forestC) {
           var fc = echarts.init(forestC); chartInstances.push(fc);
-          fc.setOption({
-            tooltip: { trigger: 'item' },
-            grid: { left: '15%', right: '10%', top: '15%', bottom: '15%' },
-            xAxis: { type: 'value', name: 'Diff ASR (Native - Machine)', nameLocation: 'middle', nameGap: 25, axisLabel: { formatter: '{value}%', color: tc.muted }, splitLine: { lineStyle: { color: tc.grid } } },
-            yAxis: { type: 'category', data: ['Telugu (te)', 'Tenglish (te-Latn)'], axisLabel: { color: tc.muted } },
-            series: [{ type: 'scatter', symbolSize: 10, itemStyle: { color: '#D55E00' }, data: [[0,0],[0,1]], markLine: { symbol: 'none', lineStyle: { type: 'dashed', color: '#718096' }, data: [{ xAxis: 0 }] } }]
-          });
+          var nvm = (appState.analysis && appState.analysis.native_versus_machine) ? appState.analysis.native_versus_machine : null;
+          if (nvm && nvm.difference !== undefined) {
+            fc.setOption({
+              tooltip: { trigger: 'item' },
+              grid: { left: '15%', right: '10%', top: '15%', bottom: '15%' },
+              xAxis: { type: 'value', name: 'Diff ASR (Native - Machine)', nameLocation: 'middle', nameGap: 25, axisLabel: { formatter: '{value}%', color: tc.muted }, splitLine: { lineStyle: { color: tc.grid } } },
+              yAxis: { type: 'category', data: ['Native vs. Machine'], axisLabel: { color: tc.muted } },
+              series: [{ type: 'scatter', symbolSize: 10, itemStyle: { color: '#D55E00' }, data: [[parseFloat((nvm.difference * 100).toFixed(1)), 0]], markLine: { symbol: 'none', lineStyle: { type: 'dashed', color: '#718096' }, data: [{ xAxis: 0 }] } }]
+            });
+          } else {
+            forestC.innerHTML = '<div class="empty-state" style="padding:var(--sp-6);"><div class="empty-title" style="font-size:var(--f-sm);">Awaiting Paired Data</div><div class="empty-desc" style="font-size:var(--f-xs);">Native vs. machine paired comparison requires evaluated v2 native scenarios.</div></div>';
+          }
         }
 
-        // Heatmap
+        // Heatmap (computed dynamically from actual slice data, NO fabricated numbers)
         if (heatmapC) {
           var hc = echarts.init(heatmapC); chartInstances.push(hc);
-          var langs = ['English','Telugu','Tenglish'], chs = ['User Input','Tool Output'];
-          var hd = [[0,0,43.8],[1,0,0],[2,0,0],[0,1,0],[1,1,0],[2,1,0]];
-          hc.setOption({
-            tooltip: { position: 'top', formatter: function(p) { return langs[p.data[0]]+' - '+chs[p.data[1]]+': '+p.data[2]+'% ASR'; } },
-            grid: { left: '20%', right: '10%', top: '10%', bottom: '20%' },
-            xAxis: { type: 'category', data: langs, axisLabel: { color: tc.muted } },
-            yAxis: { type: 'category', data: chs, axisLabel: { color: tc.muted } },
-            visualMap: { min: 0, max: 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, textStyle: { color: tc.text }, inRange: { color: ['#0B1B2B','#0072B2','#D55E00'] } },
-            series: [{ type: 'heatmap', data: hd, label: { show: true, formatter: function(p) { return p.data[2]+'%'; } } }]
+          var langs = ['English', 'Telugu', 'Tenglish'];
+          var langCodes = ['en', 'te', 'te-Latn'];
+          var chs = ['User Input', 'Tool Output'];
+          var chCodes = ['user_input', 'tool_output'];
+          var hd = [];
+          var hasHeatmapData = false;
+
+          langCodes.forEach(function(lc, lIdx) {
+            chCodes.forEach(function(cc, cIdx) {
+              var sTrials = 0, sSuccesses = 0;
+              Object.keys(slices).forEach(function(sk) {
+                var p = sk.split('|');
+                if (p.length >= 5 && p[1] === lc && p[2] === cc) {
+                  var t = slices[sk].n_trials || 0;
+                  sTrials += t;
+                  sSuccesses += (slices[sk].attack_success_rate || 0) * t;
+                }
+              });
+              if (sTrials > 0) {
+                var asrVal = parseFloat(((sSuccesses / sTrials) * 100).toFixed(1));
+                hd.push([lIdx, cIdx, asrVal]);
+                hasHeatmapData = true;
+              } else {
+                hd.push([lIdx, cIdx, null]);
+              }
+            });
           });
+
+          if (hasHeatmapData) {
+            hc.setOption({
+              tooltip: { position: 'top', formatter: function(p) { return langs[p.data[0]] + ' - ' + chs[p.data[1]] + ': ' + (p.data[2] !== null ? p.data[2] + '%' : 'N/A'); } },
+              grid: { left: '20%', right: '10%', top: '10%', bottom: '20%' },
+              xAxis: { type: 'category', data: langs, axisLabel: { color: tc.muted } },
+              yAxis: { type: 'category', data: chs, axisLabel: { color: tc.muted } },
+              visualMap: { min: 0, max: 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, textStyle: { color: tc.text }, inRange: { color: ['#0B1B2B', '#0072B2', '#D55E00'] } },
+              series: [{ type: 'heatmap', data: hd, label: { show: true, formatter: function(p) { return p.data[2] !== null ? p.data[2] + '%' : '-'; } } }]
+            });
+          } else {
+            heatmapC.innerHTML = '<div class="empty-state" style="padding:var(--sp-6);"><div class="empty-title" style="font-size:var(--f-sm);">Awaiting Heatmap Data</div><div class="empty-desc" style="font-size:var(--f-xs);">Multilingual channel slices not present in current run.</div></div>';
+          }
         }
 
-        // Table
+        // Table (Item 2a: When scenario clusters < 10, show interval as "not estimable")
         if (tbody) {
           tbody.innerHTML = '';
           cats.forEach(function(c) {
-            var it = agg[c]; var asr = it.trials > 0 ? (it.successes / it.trials) : 0;
+            var it = agg[c];
+            var asr = it.trials > 0 ? (it.successes / it.trials) : null;
+            var ciStr = 'not estimable';
+            // Item 2a: Confidence intervals must contain point estimate. When clusters < 10, show "not estimable".
+            if (it.slice_count === 1 && it.ci && it.n_scenarios >= 10 && asr !== null) {
+              var lo = it.ci[0], hi = it.ci[1];
+              if (lo <= asr && asr <= hi) {
+                ciStr = '[' + formatPct(lo) + ', ' + formatPct(hi) + ']';
+              }
+            }
             var tr = document.createElement('tr');
-            tr.innerHTML = '<td>'+it.lang+'</td><td>'+it.origin+'</td><td>'+formatPct(asr)+'</td><td>'+(it.ci ? '['+formatPct(it.ci[0])+', '+formatPct(it.ci[1])+']' : 'N/A')+'</td><td>'+it.trials+'</td>';
+            tr.innerHTML =
+              '<td>' + it.lang + '</td>' +
+              '<td>' + it.origin + '</td>' +
+              '<td>' + (asr !== null ? formatPct(asr) : 'N/A') + '</td>' +
+              '<td>' + ciStr + '</td>' +
+              '<td>' + it.trials + '</td>';
             tbody.appendChild(tr);
           });
         }
@@ -1914,12 +2356,18 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
         if (canaryH) {
           var cc = echarts.init(canaryH); chartInstances.push(cc);
           var prompts = ['Prompt 1 (Order)', 'Prompt 2 (Email)'];
+          var canaryMatrix = [];
+          weeks.forEach(function(w, wIdx) {
+            prompts.forEach(function(_, pIdx) {
+              canaryMatrix.push([wIdx, pIdx, 1]);
+            });
+          });
           cc.setOption({
             tooltip: { formatter: function(p) { return (weeks[p.data[0]] || 'Baseline') + ' - ' + prompts[p.data[1]] + ': Hash Invariant'; } },
             grid: { left: '25%', right: '5%', top: '10%', bottom: '15%' },
             xAxis: { type: 'category', data: weeks, axisLabel: { color: tc.muted } },
             yAxis: { type: 'category', data: prompts, axisLabel: { color: tc.muted } },
-            series: [{ type: 'heatmap', data: [[0,0,1],[0,1,1]], itemStyle: { color: '#009E73', borderRadius: 3 }, label: { show: true, formatter: 'MATCH', color: '#FFFFFF', fontWeight: 'bold', fontSize: 11 } }]
+            series: [{ type: 'heatmap', data: canaryMatrix, itemStyle: { color: '#009E73', borderRadius: 3 }, label: { show: true, formatter: 'MATCH', color: '#FFFFFF', fontWeight: 'bold', fontSize: 11 } }]
           });
         }
 
@@ -1942,16 +2390,27 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
           }
         }
 
-        // Returned model IDs table
+        // Returned model IDs table (Item 2c & Item 2d)
+        // Item 2d: Canary state must be "baseline" with one week, "unchanged"/"changed" only with 2 or more weeks.
+        var canaryState = (weeks.length <= 1) ? 'baseline' : 'unchanged';
+        var canaryPillCls = (canaryState === 'changed') ? 'pill pill-rose' : 'pill pill-green';
+        var canaryDotCls = (canaryState === 'changed') ? 'dot dot-rose' : 'dot dot-green';
+        var canaryLabel = canaryState.charAt(0).toUpperCase() + canaryState.slice(1);
+
         if (tbody && appState.index && Array.isArray(appState.index.models)) {
           tbody.innerHTML = '';
           appState.index.models.forEach(function(m) {
+            // Item 2c: Returned model ids must contain only ids returned by provider API, never alias.
+            var cleanReturned = (m.returned_ids_seen || []).filter(function(rid) {
+              return rid && rid !== m.alias;
+            });
+            var returnedDisplay = cleanReturned.length > 0 ? cleanReturned.join(', ') : 'Awaiting';
             var tr = document.createElement('tr');
             tr.innerHTML =
               '<td><strong>' + m.alias + '</strong></td>' +
               '<td><code>' + (m.requested_id || m.alias) + '</code></td>' +
-              '<td><code>' + ((m.returned_ids_seen || []).join(', ') || 'Awaiting') + '</code></td>' +
-              '<td><span class="pill pill-green"><span class="dot dot-green"></span>Unchanged</span></td>';
+              '<td><code>' + returnedDisplay + '</code></td>' +
+              '<td><span class="' + canaryPillCls + '"><span class="dot ' + canaryDotCls + '"></span>' + canaryLabel + '</span></td>';
             tbody.appendChild(tr);
           });
         }
@@ -2061,6 +2520,37 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
             tbody.appendChild(tr);
           });
         }
+
+        // Pre-registration link status (Item 2f)
+        var preregUrl = appState.index ? appState.index.preregistration_url : null;
+        var preregEl = document.getElementById('prereg-link-container');
+        if (preregEl) {
+          if (preregUrl && preregUrl !== 'TODO') {
+            preregEl.innerHTML = '<a href="' + preregUrl + '" target="_blank" rel="noopener noreferrer">OSF Registry Protocol</a>';
+          } else {
+            preregEl.innerHTML = '<span class="badge badge-not_enough_data">TODO: Pre-registration pending</span>';
+          }
+        }
+
+        // Parquet dataset button status (Item 2f)
+        var hfRepo = appState.index ? appState.index.hf_dataset_repo : null;
+        var pBtn = document.getElementById('download-parquet-btn');
+        if (pBtn) {
+          if (hfRepo && hfRepo !== 'TODO') {
+            pBtn.disabled = false;
+            pBtn.style.opacity = '1';
+            pBtn.style.cursor = 'pointer';
+            pBtn.title = 'Download Parquet bundle from Hugging Face';
+            pBtn.onclick = function() {
+              window.open('https://huggingface.co/datasets/' + hfRepo, '_blank');
+            };
+          } else {
+            pBtn.disabled = true;
+            pBtn.style.opacity = '0.6';
+            pBtn.style.cursor = 'not-allowed';
+            pBtn.title = 'Dataset not published yet';
+          }
+        }
       }
 
       // =====================================================================
@@ -2077,6 +2567,266 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
             rc.innerHTML = '<iframe src="../reports/report.html" style="width:100%;height:600px;border:none;border-radius:var(--r-md);" title="Research Report"></iframe>';
           }
         }).catch(function(){});
+      }
+
+      // =====================================================================
+      // 5i. Weekly Reports Implementation
+      // =====================================================================
+      var weeklyReportsState = {
+        selectedWeek: null,
+        compareMode: false,
+        compareWeekA: null,
+        compareWeekB: null
+      };
+
+      function renderWeeklyReports() {
+        var idx = appState.index;
+        if (!idx) return;
+
+        var allWeeks = Object.keys(appState.weeklyData).sort();
+        if (allWeeks.length === 0) return;
+
+        if (!weeklyReportsState.selectedWeek || allWeeks.indexOf(weeklyReportsState.selectedWeek) === -1) {
+          weeklyReportsState.selectedWeek = allWeeks[allWeeks.length - 1];
+        }
+
+        var track = document.getElementById('weekly-timeline-track');
+        var selA = document.getElementById('compare-week-a');
+        var selB = document.getElementById('compare-week-b');
+
+        if (track) {
+          track.innerHTML = '';
+          allWeeks.forEach(function(w) {
+            var isPilot = w < (idx.study_start_date || '2026-11-09');
+            var pill = document.createElement('button');
+            pill.className = 'timeline-pill' + (w === weeklyReportsState.selectedWeek ? ' active' : '');
+            pill.innerHTML =
+              '<span class="timeline-pill-date">' + w + '</span>' +
+              '<span class="timeline-pill-label">' + (isPilot ? 'Pilot' : 'Study') + '</span>';
+            pill.addEventListener('click', function() {
+              weeklyReportsState.selectedWeek = w;
+              renderWeeklyReports();
+            });
+            track.appendChild(pill);
+          });
+        }
+
+        // Wire Prev / Next buttons
+        var prevBtn = document.getElementById('weekly-prev-btn');
+        var nextBtn = document.getElementById('weekly-next-btn');
+        if (prevBtn && !prevBtn._bound) {
+          prevBtn._bound = true;
+          prevBtn.addEventListener('click', function() {
+            var currIdx = allWeeks.indexOf(weeklyReportsState.selectedWeek);
+            if (currIdx > 0) {
+              weeklyReportsState.selectedWeek = allWeeks[currIdx - 1];
+              renderWeeklyReports();
+            }
+          });
+        }
+        if (nextBtn && !nextBtn._bound) {
+          nextBtn._bound = true;
+          nextBtn.addEventListener('click', function() {
+            var currIdx = allWeeks.indexOf(weeklyReportsState.selectedWeek);
+            if (currIdx < allWeeks.length - 1) {
+              weeklyReportsState.selectedWeek = allWeeks[currIdx + 1];
+              renderWeeklyReports();
+            }
+          });
+        }
+
+        var currIdx = allWeeks.indexOf(weeklyReportsState.selectedWeek);
+        if (prevBtn) prevBtn.disabled = currIdx <= 0;
+        if (nextBtn) nextBtn.disabled = currIdx >= allWeeks.length - 1;
+
+        // Wire Compare Toggle
+        var cmpToggle = document.getElementById('weekly-compare-toggle');
+        var cmpControls = document.getElementById('weekly-compare-controls');
+        var cmpView = document.getElementById('weekly-compare-view');
+        var sView = document.getElementById('weekly-single-view');
+
+        if (cmpToggle && !cmpToggle._bound) {
+          cmpToggle._bound = true;
+          cmpToggle.addEventListener('click', function() {
+            weeklyReportsState.compareMode = !weeklyReportsState.compareMode;
+            cmpToggle.textContent = weeklyReportsState.compareMode ? 'Close Comparison' : 'Compare Weeks';
+            cmpToggle.className = weeklyReportsState.compareMode ? 'btn btn-primary' : 'btn btn-secondary';
+            if (cmpControls) cmpControls.style.display = weeklyReportsState.compareMode ? 'block' : 'none';
+            if (cmpView) cmpView.style.display = weeklyReportsState.compareMode ? 'block' : 'none';
+            if (sView) sView.style.display = weeklyReportsState.compareMode ? 'none' : 'block';
+            if (weeklyReportsState.compareMode) {
+              renderWeeklyComparison(weeklyReportsState.compareWeekA, weeklyReportsState.compareWeekB);
+            }
+          });
+        }
+
+        if (selA && selB && selA.options.length !== allWeeks.length) {
+          selA.innerHTML = '';
+          selB.innerHTML = '';
+          allWeeks.forEach(function(w) {
+            var optA = document.createElement('option');
+            optA.value = w; optA.textContent = w;
+            selA.appendChild(optA);
+            var optB = document.createElement('option');
+            optB.value = w; optB.textContent = w;
+            selB.appendChild(optB);
+          });
+          selA.value = allWeeks[0];
+          selB.value = allWeeks[allWeeks.length - 1];
+          weeklyReportsState.compareWeekA = selA.value;
+          weeklyReportsState.compareWeekB = selB.value;
+
+          selA.addEventListener('change', function() {
+            weeklyReportsState.compareWeekA = selA.value;
+            renderWeeklyComparison(weeklyReportsState.compareWeekA, weeklyReportsState.compareWeekB);
+          });
+          selB.addEventListener('change', function() {
+            weeklyReportsState.compareWeekB = selB.value;
+            renderWeeklyComparison(weeklyReportsState.compareWeekA, weeklyReportsState.compareWeekB);
+          });
+        }
+
+        renderSingleWeeklyReport(weeklyReportsState.selectedWeek);
+        if (weeklyReportsState.compareMode) {
+          renderWeeklyComparison(weeklyReportsState.compareWeekA, weeklyReportsState.compareWeekB);
+        }
+      }
+
+      function renderSingleWeeklyReport(week) {
+        var data = appState.weeklyData[week];
+        if (!data) return;
+
+        var idx = appState.index || {};
+        var startDate = idx.study_start_date || '2026-11-09';
+        var isPilot = week < startDate;
+
+        setTxt('weekly-report-week-title', 'Week of ' + week);
+        var badge = document.getElementById('weekly-report-status-badge');
+        if (badge) {
+          badge.textContent = isPilot ? 'Pilot Pre-study Batch' : 'Formal Study Week';
+          badge.className = isPilot ? 'pill pill-amber' : 'pill pill-blue';
+        }
+
+        setTxt('weekly-report-trials', data.total_trials || 0);
+        setTxt('weekly-report-asr', data.overall_asr !== undefined ? formatPct(data.overall_asr) : '-');
+
+        var ctrlSucc = 'N/A';
+        if (data.slices) {
+          Object.keys(data.slices).forEach(function(k) {
+            if (k.indexOf('control') !== -1 && data.slices[k].task_success_rate !== undefined) {
+              ctrlSucc = formatPct(data.slices[k].task_success_rate);
+            }
+          });
+        }
+        setTxt('weekly-report-task-succ', ctrlSucc);
+        setTxt('weekly-report-canary', isPilot ? 'Baseline initialized' : 'Harness verified');
+
+        var dlMd = document.getElementById('weekly-download-md');
+        if (dlMd) dlMd.href = '../reports/weekly/' + week + '.md';
+        var dlHtml = document.getElementById('weekly-download-html');
+        if (dlHtml) dlHtml.href = '../reports/weekly/' + week + '.html';
+
+        var tbody = document.querySelector('#weekly-model-table tbody');
+        if (tbody) {
+          tbody.innerHTML = '';
+          var models = data.models || {};
+          var allWeeks = Object.keys(appState.weeklyData).sort();
+          var studyWeeks = allWeeks.filter(function(w) { return w >= startDate; });
+          var baselineW = studyWeeks.length > 0 ? studyWeeks[0] : null;
+
+          Object.keys(models).forEach(function(mAlias) {
+            var mInfo = models[mAlias];
+            var mTrials = mInfo.total_trials || mInfo.n_trials || 0;
+            var mAsr = mInfo.asr !== undefined ? mInfo.asr : (mInfo.attack_success_rate || 0);
+            var mComp = mInfo.completion_rate !== undefined ? formatPct(mInfo.completion_rate) : formatPct(1.0);
+
+            var ciStr = 'not estimable';
+            if (data.slices) {
+              Object.keys(data.slices).forEach(function(sk) {
+                if (sk.indexOf(mAlias) === 0 && sk.indexOf('attacks_v1') !== -1) {
+                  var sl = data.slices[sk];
+                  if (sl.n_scenarios >= 10 && sl.ci_95 && Array.isArray(sl.ci_95)) {
+                    ciStr = '[' + formatPct(sl.ci_95[0]) + ', ' + formatPct(sl.ci_95[1]) + ']';
+                  }
+                }
+              });
+            }
+
+            var deltaStr = 'baseline';
+            if (!isPilot && baselineW && baselineW !== week && appState.weeklyData[baselineW]) {
+              var bm = appState.weeklyData[baselineW].models ? appState.weeklyData[baselineW].models[mAlias] : null;
+              if (bm) {
+                var bAsr = bm.asr !== undefined ? bm.asr : (bm.attack_success_rate || 0);
+                var diff = (mAsr - bAsr) * 100;
+                deltaStr = (diff >= 0 ? '+' : '') + diff.toFixed(1) + '%';
+              }
+            } else if (isPilot) {
+              deltaStr = 'N/A (pilot)';
+            }
+
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+              '<td><code>' + mAlias + '</code></td>' +
+              '<td>' + mTrials + '</td>' +
+              '<td>' + formatPct(mAsr) + '</td>' +
+              '<td>' + ciStr + '</td>' +
+              '<td>' + deltaStr + '</td>' +
+              '<td>' + mComp + '</td>';
+            tbody.appendChild(tr);
+          });
+        }
+      }
+
+      function renderWeeklyComparison(weekA, weekB) {
+        var compTitle = document.getElementById('weekly-compare-title');
+        if (compTitle) {
+          compTitle.textContent = 'Comparison: ' + weekA + ' (A) vs. ' + weekB + ' (B)';
+        }
+        var tbody = document.querySelector('#weekly-compare-table tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        var dataA = appState.weeklyData[weekA];
+        var dataB = appState.weeklyData[weekB];
+        if (!dataA || !dataB) return;
+
+        var modelsA = dataA.models || {};
+        var modelsB = dataB.models || {};
+        var allAliases = Array.from(new Set(Object.keys(modelsA).concat(Object.keys(modelsB))));
+
+        allAliases.forEach(function(alias) {
+          var mA = modelsA[alias] || {};
+          var mB = modelsB[alias] || {};
+          var asrA = mA.asr !== undefined ? mA.asr : null;
+          var asrB = mB.asr !== undefined ? mB.asr : null;
+
+          var diffStr = '-';
+          var assessStr = 'Insufficient data';
+          if (asrA !== null && asrB !== null) {
+            var diff = (asrB - asrA) * 100;
+            diffStr = (diff >= 0 ? '+' : '') + diff.toFixed(1) + '%';
+            if (Math.abs(diff) < 3.0) {
+              assessStr = 'No evidence of change (within margin)';
+            } else if (diff > 0) {
+              assessStr = 'Observed shift toward increased vulnerability';
+            } else {
+              assessStr = 'Observed shift toward reduced vulnerability';
+            }
+          }
+
+          var compA = mA.completion_rate !== undefined ? formatPct(mA.completion_rate) : '100%';
+          var compB = mB.completion_rate !== undefined ? formatPct(mB.completion_rate) : '100%';
+
+          var tr = document.createElement('tr');
+          tr.innerHTML =
+            '<td><code>' + alias + '</code></td>' +
+            '<td>' + (asrA !== null ? formatPct(asrA) : '-') + '</td>' +
+            '<td>' + (asrB !== null ? formatPct(asrB) : '-') + '</td>' +
+            '<td><strong>' + diffStr + '</strong></td>' +
+            '<td>' + compA + ' / ' + compB + '</td>' +
+            '<td>' + assessStr + '</td>';
+          tbody.appendChild(tr);
+        });
       }
 
       // =====================================================================
@@ -2190,6 +2940,22 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
       // =====================================================================
       navigateTo(window.location.hash);
       loadAllData();
+
+      // Staggered card reveal on scroll
+      if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        var cardObserver = new IntersectionObserver(function(entries) {
+          entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('revealed');
+              cardObserver.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.08 });
+        document.querySelectorAll('.card').forEach(function(card) {
+          card.classList.add('reveal-on-scroll');
+          cardObserver.observe(card);
+        });
+      }
 
     })();
   </script>

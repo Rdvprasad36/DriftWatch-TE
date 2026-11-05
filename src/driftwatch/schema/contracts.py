@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 
 SCHEMA_VERSION: str = "1.0.0"
 
@@ -42,6 +42,9 @@ class SummaryIndex(BaseModel):
     study_start_date: str
     planned_weeks: int = 12
     next_scheduled_run_date: str
+    github_repo: str = "https://github.com/Rdvprasad36/DriftWatch-TE"
+    hf_dataset_repo: str = "TODO"
+    preregistration_url: str = "TODO"
     weeks: list[WeekIndexEntry] = Field(default_factory=list)
     models: list[ModelSummaryInfo] = Field(default_factory=list)
     suite_names_and_hashes: dict[str, str] = Field(default_factory=dict)
@@ -60,7 +63,10 @@ class SliceStats(BaseModel):
     n_scenarios: int
     attack_success_rate: float
     task_success_rate: float
-    ci_95: list[float] = Field(description="[lower, upper] 95% cluster-bootstrap or binomial CI")
+    ci_95: list[float] | None = Field(
+        default=None,
+        description="[lower, upper] 95% CI or None if not estimable (< 10 clusters)",
+    )
     error_rate: float
     completion_rate: float
     mean_latency: float
@@ -200,7 +206,9 @@ class ExportRowSchema(BaseModel):
     run_week: str
     timestamp_utc: str
     model_alias: str
-    requested_model: str
+    requested_model_id: str = Field(
+        validation_alias=AliasChoices("requested_model_id", "requested_model")
+    )
     returned_model_id: str
     suite: str
     suite_hash: str
@@ -222,3 +230,10 @@ class ExportRowSchema(BaseModel):
     tokens_out: int
     latency_ms: float
     git_sha: str
+
+
+RECORD_SCHEMA_COLUMNS: list[str] = list(ExportRowSchema.model_fields.keys())
+EXPORT_SCHEMA_PROPERTIES: dict[str, Any] = (
+    ExportRowSchema.model_json_schema().get("properties", {})
+)
+

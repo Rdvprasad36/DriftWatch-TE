@@ -1,0 +1,124 @@
+name: Pipeline Health Check
+
+on:
+  schedule:
+    # Run every Tuesday at 12:00 UTC (36 hours after scheduled Monday 00:00 UTC run)
+    - cron: "0 12 * * 2"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  check-health:
+    name: Check Evaluation Health & Completeness
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Audit Weekly Data Completeness
+        id: audit
+        run: |
+          python - << 'EOF'
+          import json
+          import os
+          import sys
+          from datetime import UTC, datetime, timedelta
+          from pathlib import Path
+          from driftwatch.config import load_study_config
+
+          config = load_study_config()
+          start_date = config.study_start_date
+          now = datetime.now(UTC)
+          today_str = now.strftime("%Y-%m-%d")
+
+          # Find the Monday of the current week
+          monday = now - timedelta(days=now.weekday())
+          current_week_str = monday.strftime("%Y-%m-%d")
+
+          issues = []
+
+          # Check if study has started
+          if current_week_str < start_date:
+              print(f"Current week {current_week_str} is before study start {start_date}. Health check passed (pre-study).")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("has_issue=false\n")
+              sys.exit(0)
+
+          index_path = Path("results/summary/index.json")
+          if not index_path.is_file():
+              issues.append("results/summary/index.json is missing entirely.")
+          else:
+              data = json.loads(index_path.read_text(encoding="utf-8"))
+              recorded_weeks = {w["week"]: w for w in data.get("weeks", []) if not w.get("is_pilot")}
+
+              # 1. Check if run is > 36 hours late
+              if current_week_str not in recorded_weeks:
+                  hours_since_monday = (now - monday).total_seconds() / 3600
+                  if hours_since_monday > 36:
+                      issues.append(
+                          f"Evaluation run for study week `{current_week_str}` is overdue by "
+                          f"{hours_since_monday:.1f} hours (threshold: 36h). No bundle found in index."
+                      )
+
+              # 2. Check if any model produced 0 trials in latest recorded study week
+              if recorded_weeks:
+                  latest_study_week = sorted(recorded_weeks.keys())[-1]
+                  summary_file = Path(f"results/summary/weekly/{latest_study_week}.json")
+                  if not summary_file.is_file():
+                      summary_file = Path(f"results/summary/{latest_study_week}.json")
+
+                  if summary_file.is_file():
+                      summary_data = json.loads(summary_file.read_text(encoding="utf-8"))
+                      models_data = summary_data.get("models", {})
+                      for m in config.models:
+                          alias = m.alias
+                          if alias == "local":
+                              continue  # Local model evaluated separately
+                          m_info = models_data.get(alias)
+                          if not m_info or (m_info.get("total_trials", 0) == 0):
+                              issues.append(
+                                  f"Model `{alias}` produced 0 trial records in latest study week `{latest_study_week}`."
+                              )
+
+          if issues:
+              print(f"Found {len(issues)} health check issue(s).")
+              issue_body = "### DriftWatch-TE Pipeline Health Alert\n\n"
+              for iss in issues:
+                  issue_body += f"- {iss}\n"
+              issue_body += f"\n**Reported at:** {today_str} UTC\n"
+
+              with open("/tmp/issue_body.md", "w", encoding="utf-8") as f:
+                  f.write(issue_body)
+
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("has_issue=true\n")
+          else:
+              print("All health checks passed.")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("has_issue=false\n")
+          EOF
+
+      - name: Create GitHub Issue if Health Check Failed
+        if: steps.audit.outputs.has_issue == 'true'
+        run: |
+          gh issue create \
+            --title "[Health Check] Pipeline failure or missing evaluation data" \
+            --body-file /tmp/issue_body.md \
+            --label "bug" || echo "Issue creation skipped or already logged."
+

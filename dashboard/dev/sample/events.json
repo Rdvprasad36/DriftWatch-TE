@@ -3,11 +3,18 @@
   "schema_version": "1.0.0",
   "events": [
     {
-      "date": "2026-11-05",
+      "date": "2026-11-12",
       "provider": "sample-cloud",
       "model": "sample-hosted-a",
-      "note": "Sample fixture event: infrastructure tuning",
-      "url": "https://example.com/changelog"
+      "note": "Sample fixture event: model version update",
+      "url": ""
+    },
+    {
+      "date": "2026-11-20",
+      "provider": "sample-fast",
+      "model": "sample-hosted-b",
+      "note": "Sample fixture event: latency improvement",
+      "url": ""
     }
   ]
 }

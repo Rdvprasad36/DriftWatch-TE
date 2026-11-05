@@ -97,16 +97,9 @@ class OpenAICompatProvider(BaseProvider):
     ) -> ProviderResponse:
         """Send a chat-completion request with retry on transient errors.
 
-        Never raises.  Returns a ProviderResponse with ``error`` set on failure.
+        Never raises. Returns a ProviderResponse with ``error`` set on failure.
         """
-        is_generic_alias = model in {
-            "groq",
-            "groq-llama3",
-            "google",
-            "openrouter",
-            "local",
-        }
-        target_model = self._default_model if (self._default_model and is_generic_alias) else model
+        target_model = self._default_model or model
         body: dict[str, Any] = {
             "model": target_model,
             "messages": messages,
@@ -120,6 +113,7 @@ class OpenAICompatProvider(BaseProvider):
 
         last_status: int | None = None
         last_error: str | None = None
+        last_exc_class: str | None = None
         latency_ms: float = 0.0
 
         for attempt in range(self._max_retries + 1):
@@ -128,8 +122,9 @@ class OpenAICompatProvider(BaseProvider):
                 http_resp = await self._post("/v1/chat/completions", body)
             except httpx.RequestError as exc:
                 latency_ms = (time.monotonic() - t0) * 1000
-                last_error = f"Network error on attempt {attempt}: {exc}"
-                logger.warning(last_error)
+                last_exc_class = type(exc).__name__
+                last_error = f"{last_exc_class}: {exc}"
+                logger.warning("Network error on attempt %d: %s", attempt, last_error)
                 break  # network errors are not retried (may be config issue)
 
             latency_ms = (time.monotonic() - t0) * 1000
@@ -151,9 +146,11 @@ class OpenAICompatProvider(BaseProvider):
             return self._parse_response(http_resp, model, latency_ms)
 
         # All attempts exhausted
+        fallback_err = f"HTTPStatusError_{last_status}" if last_status else "RequestError"
+        err_type = last_exc_class or fallback_err
         return ProviderResponse(
             requested_model=model,
-            returned_model=model,
+            returned_model="",
             fingerprint=None,
             content=None,
             tool_calls=[],
@@ -163,10 +160,11 @@ class OpenAICompatProvider(BaseProvider):
             http_status=last_status,
             redacted_headers=self._safe_request_headers(),
             error=last_error or f"Max retries exceeded (last HTTP {last_status})",
+            error_type=err_type,
         )
 
     # ------------------------------------------------------------------
-    # Private helpers (small methods → easy to mock in tests)
+    # Private helpers (small methods -> easy to mock in tests)
     # ------------------------------------------------------------------
 
     async def _post(self, path: str, body: dict[str, Any]) -> httpx.Response:
@@ -186,8 +184,6 @@ class OpenAICompatProvider(BaseProvider):
         self, resp: httpx.Response, model: str, latency_ms: float
     ) -> ProviderResponse:
         """Parse an httpx.Response into a ProviderResponse."""
-        # Capture a subset of response headers (no auth headers in response,
-        # but redact anyway for safety)
         captured: dict[str, str] = {}
         for name in _CAPTURE_RESPONSE_HEADERS:
             val = resp.headers.get(name)
@@ -198,7 +194,7 @@ class OpenAICompatProvider(BaseProvider):
         if resp.status_code != 200:
             return ProviderResponse(
                 requested_model=model,
-                returned_model=model,
+                returned_model="",
                 fingerprint=None,
                 content=None,
                 tool_calls=[],
@@ -208,6 +204,7 @@ class OpenAICompatProvider(BaseProvider):
                 http_status=resp.status_code,
                 redacted_headers=rh,
                 error=f"HTTP {resp.status_code}: {resp.text[:300]}",
+                error_type=f"HTTPStatusError_{resp.status_code}",
             )
 
         try:
@@ -215,7 +212,7 @@ class OpenAICompatProvider(BaseProvider):
         except Exception as exc:
             return ProviderResponse(
                 requested_model=model,
-                returned_model=model,
+                returned_model="",
                 fingerprint=None,
                 content=None,
                 tool_calls=[],
@@ -225,9 +222,11 @@ class OpenAICompatProvider(BaseProvider):
                 http_status=resp.status_code,
                 redacted_headers=rh,
                 error=f"JSON parse error: {exc}",
+                error_type=type(exc).__name__,
             )
 
-        returned_model: str = data.get("model") or model
+        # Only use returned model id if returned by the provider API (Item 2c)
+        returned_model: str = str(data.get("model") or "")
         fingerprint: str | None = data.get("system_fingerprint")
         usage: dict[str, Any] = data.get("usage") or {}
         tokens_in: int = int(usage.get("prompt_tokens") or 0)
@@ -264,14 +263,11 @@ class OpenAICompatProvider(BaseProvider):
             http_status=resp.status_code,
             redacted_headers=rh,
             error=None,
+            error_type=None,
         )
 
     def _backoff(self, attempt: int) -> float:
-        """Exponential backoff with uniform jitter.
-
-        Formula: ``min(base_delay * 2^attempt + U(0, base_delay), max_delay)``
-        Setting ``base_delay=0`` in tests eliminates all sleep time.
-        """
+        """Exponential backoff with uniform jitter."""
         base: float = self._base_delay * (2**attempt)
         jitter: float = random.uniform(0, self._base_delay)  # noqa: S311 (not crypto)
         return float(min(base + jitter, self._max_delay))

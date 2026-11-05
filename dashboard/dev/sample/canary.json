@@ -1,0 +1,16 @@
+{
+  "sample": true,
+  "schema_version": "1.0.0",
+  "weeks": {
+    "2026-11-09": {
+      "sample-hosted-a": {
+        "hash": "canary_hash_sample-hosted-a_w1",
+        "state": "baseline"
+      },
+      "sample-hosted-b": {
+        "hash": "canary_hash_sample-hosted-b_w1",
+        "state": "baseline"
+      }
+    }
+  }
+}

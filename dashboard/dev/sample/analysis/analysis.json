@@ -1,0 +1,49 @@
+{
+  "sample": true,
+  "sample_notice": "SAMPLE DATA - NOT REAL RESULTS",
+  "schema_version": "1.0.0",
+  "study_weeks_count": 5,
+  "hypotheses": {
+    "H1": {
+      "status": "not_enough_data",
+      "rule": "GEE week coefficient p < 0.05",
+      "detail": "Sample data only"
+    },
+    "H2": {
+      "status": "not_enough_data",
+      "rule": "PELT change point detected",
+      "detail": "Sample data only"
+    },
+    "H3": {
+      "status": "not_enough_data",
+      "rule": "TOST equivalence p < 0.05",
+      "detail": "Sample data only"
+    },
+    "H4": {
+      "status": "not_enough_data",
+      "rule": "GEE language interaction p < 0.05",
+      "detail": "Sample data only"
+    },
+    "H5": {
+      "status": "not_enough_data",
+      "rule": "Native vs machine paired diff CI",
+      "detail": "Sample data only"
+    },
+    "H6": {
+      "status": "not_enough_data",
+      "rule": "Canary hash change detected",
+      "detail": "Sample data only"
+    }
+  },
+  "per_model_trend": {},
+  "change_points": [],
+  "language_interactions": {},
+  "local_control_equivalence": {
+    "status": "not_enough_data",
+    "tost_p": null
+  },
+  "native_vs_machine": {
+    "paired_diff": null,
+    "matched_n": 0
+  }
+}

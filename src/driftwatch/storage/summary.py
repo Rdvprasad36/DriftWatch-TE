@@ -14,13 +14,17 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from driftwatch.analysis.bootstrap import wilson_score_interval
+import pandas as pd
+
+from driftwatch.analysis.bootstrap import cluster_bootstrap_ci
+from driftwatch.config import load_study_config
 from driftwatch.schema.contracts import SCHEMA_VERSION
 from driftwatch.storage.parquet import load_parquet_rows
 
 logger = logging.getLogger(__name__)
 
-STUDY_START_DATE = "2026-10-19"
+_cfg = load_study_config()
+STUDY_START_DATE = _cfg.study_start_date
 
 
 def _infer_origin(suite: str) -> str:
@@ -40,7 +44,7 @@ def compute_slice_stats(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "n_scenarios": 0,
             "attack_success_rate": 0.0,
             "task_success_rate": 0.0,
-            "ci_95": [0.0, 0.0],
+            "ci_95": None,
             "error_rate": 0.0,
             "completion_rate": 0.0,
             "mean_latency": 0.0,
@@ -56,14 +60,29 @@ def compute_slice_stats(rows: list[dict[str, Any]]) -> dict[str, Any]:
     latencies = [float(r.get("latency_ms", 0.0)) for r in rows]
     tokens = [int(r.get("tokens_in", 0) or 0) + int(r.get("tokens_out", 0) or 0) for r in rows]
 
-    _p, ci_low, ci_high = wilson_score_interval(atk_count, n_trials, alpha=0.05)
+    asr = round(atk_count / n_trials, 4)
+    # Cluster bootstrap requires >= 10 scenario clusters (Item 2a)
+    if len(scenarios) >= 10:
+        df = pd.DataFrame(rows)
+        _mean, ci_low, ci_high = cluster_bootstrap_ci(
+            df,
+            metric_col="attack_success",
+            cluster_col="scenario_id",
+            min_clusters=10,
+        )
+        if ci_low is not None and ci_high is not None:
+            ci_95: list[float] | None = [round(ci_low, 4), round(ci_high, 4)]
+        else:
+            ci_95 = None
+    else:
+        ci_95 = None
 
     return {
         "n_trials": n_trials,
         "n_scenarios": len(scenarios),
-        "attack_success_rate": round(atk_count / n_trials, 4),
+        "attack_success_rate": asr,
         "task_success_rate": round(task_count / n_trials, 4),
-        "ci_95": [round(ci_low, 4), round(ci_high, 4)],
+        "ci_95": ci_95,
         "error_rate": round(err_count / n_trials, 4),
         "completion_rate": round((n_trials - err_count) / n_trials, 4),
         "mean_latency": round(sum(latencies) / n_trials, 2),
@@ -104,7 +123,8 @@ def generate_summary(
     total_attacks = sum(1 for r in rows if r.get("attack_success"))
     total_task = sum(1 for r in rows if r.get("task_success"))
 
-    is_pilot = week < STUDY_START_DATE or "dryrun" in week.lower()
+    cfg = load_study_config()
+    is_pilot = week < cfg.study_start_date or "dryrun" in week.lower()
 
     # Detailed dimensional slices
     slices_data: dict[str, list[dict[str, Any]]] = {}
@@ -139,13 +159,14 @@ def generate_summary(
             models[alias]["attack_successes"] += 1
         if r.get("task_success"):
             models[alias]["task_successes"] += 1
-        if r.get("returned_model_id"):
-            models[alias]["returned_ids"].add(str(r["returned_model_id"]))
+        rid = r.get("returned_model_id")
+        if rid and str(rid) != alias:
+            models[alias]["returned_ids"].add(str(rid))
 
     for stats in models.values():
         n = stats["total_trials"]
-        stats["asr"] = round(stats["attack_successes"] / n, 4) if n > 0 else 0.0
-        stats["task_success_rate"] = round(stats["task_successes"] / n, 4) if n > 0 else 0.0
+        stats["asr"] = round(stats["attack_successes"] / n, 4) if n > 0 else None
+        stats["task_success_rate"] = round(stats["task_successes"] / n, 4) if n > 0 else None
         stats["returned_ids"] = sorted(list(stats["returned_ids"]))
 
     # Language-level aggregate
@@ -163,7 +184,7 @@ def generate_summary(
 
     for stats in languages.values():
         n = stats["total_trials"]
-        stats["asr"] = round(stats["attack_successes"] / n, 4) if n > 0 else 0.0
+        stats["asr"] = round(stats["attack_successes"] / n, 4) if n > 0 else None
 
     summary: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -191,10 +212,21 @@ def update_summary_index(output_dir: Path, repo_root: Path | None = None) -> Pat
     """Regenerate results/summary/index.json according to data contract."""
     output_dir.mkdir(parents=True, exist_ok=True)
     weekly_dir = output_dir / "weekly"
+    root = repo_root or Path.cwd()
+    cfg = load_study_config(root / "config" / "study.yaml")
 
     # Collect all weekly summary files
     weeks_entries: list[dict[str, Any]] = []
     models_seen: dict[str, dict[str, Any]] = {}
+
+    # Seed models from config/study.yaml
+    for m in cfg.models:
+        models_seen[m.alias] = {
+            "alias": m.alias,
+            "provider": m.provider,
+            "requested_id": m.requested_id,
+            "returned_ids_seen": set(),
+        }
 
     candidate_files: list[Path] = []
     if weekly_dir.is_dir():
@@ -216,7 +248,7 @@ def update_summary_index(output_dir: Path, repo_root: Path | None = None) -> Pat
         f = weeks_by_date[date_str]
         try:
             data = json.loads(f.read_text(encoding="utf-8"))
-            is_pilot = data.get("is_pilot", date_str < STUDY_START_DATE)
+            is_pilot = data.get("is_pilot", date_str < cfg.study_start_date)
             total_trials = data.get("total_trials", 0)
 
             weeks_entries.append(
@@ -241,7 +273,9 @@ def update_summary_index(output_dir: Path, repo_root: Path | None = None) -> Pat
                         "returned_ids_seen": set(),
                     }
                 for rid in m_info.get("returned_ids", []):
-                    models_seen[alias]["returned_ids_seen"].add(rid)
+                    # Only record returned IDs returned by API, never alias (Item 2c)
+                    if rid and rid != alias:
+                        models_seen[alias]["returned_ids_seen"].add(rid)
         except Exception as exc:
             logger.warning("Error reading summary %s: %s", f, exc)
 
@@ -252,13 +286,12 @@ def update_summary_index(output_dir: Path, repo_root: Path | None = None) -> Pat
             nxt = cur + timedelta(days=7)
             next_run_date = nxt.strftime("%Y-%m-%d")
         except Exception:
-            next_run_date = "2026-10-26"
+            next_run_date = cfg.study_start_date
     else:
-        next_run_date = STUDY_START_DATE
+        next_run_date = cfg.study_start_date
 
     # Load suite hashes from SUITE_LOCK.json
     suite_hashes: dict[str, str] = {}
-    root = repo_root or Path.cwd()
     lock_file = root / "suites" / "SUITE_LOCK.json"
     if lock_file.is_file():
         try:
@@ -280,9 +313,12 @@ def update_summary_index(output_dir: Path, repo_root: Path | None = None) -> Pat
 
     index_data: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
-        "study_start_date": STUDY_START_DATE,
-        "planned_weeks": 12,
+        "study_start_date": cfg.study_start_date,
+        "planned_weeks": cfg.planned_weeks,
         "next_scheduled_run_date": next_run_date,
+        "github_repo": cfg.github_repo,
+        "hf_dataset_repo": cfg.hf_dataset_repo,
+        "preregistration_url": cfg.preregistration_url,
         "weeks": weeks_entries,
         "models": models_list,
         "suite_names_and_hashes": suite_hashes,
@@ -317,25 +353,16 @@ def write_summary(
         Path to the written JSON file.
     """
     summary = generate_summary(run_dir, week=week)
-
     output_dir.mkdir(parents=True, exist_ok=True)
     weekly_dir = output_dir / "weekly"
     weekly_dir.mkdir(parents=True, exist_ok=True)
 
-    weekly_path = weekly_dir / f"{week}.json"
-    content = json.dumps(summary, indent=2, ensure_ascii=False)
-    weekly_path.write_text(content, encoding="utf-8")
+    dest = weekly_dir / f"{week}.json"
+    dest.write_text(
+        json.dumps(summary, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    logger.info("Wrote weekly summary to %s", dest)
 
-    # Also write to output_dir/<week>.json for backward compatibility
-    compat_path = output_dir / f"{week}.json"
-    compat_path.write_text(content, encoding="utf-8")
-
-    logger.info("Wrote weekly summary: %s", weekly_path)
-
-    # Maintain index.json
-    try:
-        update_summary_index(output_dir, repo_root=repo_root)
-    except Exception as exc:
-        logger.warning("Could not update summary index.json: %s", exc)
-
-    return weekly_path
+    update_summary_index(output_dir, repo_root=repo_root)
+    return dest

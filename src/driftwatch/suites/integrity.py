@@ -138,11 +138,11 @@ def verify_suites(suites_root: Path) -> VerifyResult:
 
         if manifest.suite_hash == entry.suite_hash:
             result.ok.append(name)
-            logger.info("✓ Suite '%s' hash verified.", name)
+            logger.info("[OK] Suite '%s' hash verified.", name)
         else:
             result.mismatched.append((name, entry.suite_hash, manifest.suite_hash))
             logger.error(
-                "✗ Suite '%s' hash MISMATCH! Locked: %s, Current: %s",
+                "[FAIL] Suite '%s' hash MISMATCH! Locked: %s, Current: %s",
                 name,
                 entry.suite_hash[:16],
                 manifest.suite_hash[:16],

@@ -1,8 +1,11 @@
 {
   "schema_version": "1.0.0",
-  "study_start_date": "2026-10-19",
+  "study_start_date": "2026-11-09",
   "planned_weeks": 12,
-  "next_scheduled_run_date": "2026-10-19",
+  "next_scheduled_run_date": "2026-11-09",
+  "github_repo": "https://github.com/Rdvprasad36/DriftWatch-TE",
+  "hf_dataset_repo": "TODO",
+  "preregistration_url": "TODO",
   "weeks": [
     {
       "week": "2026-10-16",
@@ -15,7 +18,7 @@
     {
       "alias": "groq",
       "provider": "groq",
-      "requested_id": "groq",
+      "requested_id": "openai/gpt-oss-20b",
       "returned_ids_seen": [
         "openai/gpt-oss-20b"
       ]
@@ -23,11 +26,22 @@
     {
       "alias": "openrouter",
       "provider": "openrouter",
-      "requested_id": "openrouter",
+      "requested_id": "dots-studio/dots-3-note-preview:free",
       "returned_ids_seen": [
-        "dots-studio/dots-3-note-preview:free",
-        "openrouter"
+        "dots-studio/dots-3-note-preview:free"
       ]
+    },
+    {
+      "alias": "google",
+      "provider": "google",
+      "requested_id": "gemini-flash-latest",
+      "returned_ids_seen": []
+    },
+    {
+      "alias": "local",
+      "provider": "local",
+      "requested_id": "llama3.2:1b",
+      "returned_ids_seen": []
     }
   ],
   "suite_names_and_hashes": {
@@ -35,5 +49,5 @@
     "attacks_v1": "dafc0338875444212e4c07a414e1a7d902f7a89b5cab8f943791bb6a1df114b4",
     "control": "1ae8f9e419a98dee801cb5f4c59d7a8b178d012b161dac5e48a57c578b1e93cd"
   },
-  "last_updated_utc": "2026-10-22T16:25:39.109077+00:00"
+  "last_updated_utc": "2026-11-05T11:17:40.844281+00:00"
 }

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DriftWatch-TE Weekly Report - 2026-10-16</title>
+  <style>
+    :root {
+      --text: #0B0F14;
+      --bg: #ffffff;
+      --muted: #475569;
+      --border: #E2E8F0;
+      --accent: #00B4FF;
+      --navy: #0F2A43;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      margin: 0;
+      padding: 32px 20px;
+    }
+    .container { max-width: 860px; margin: 0 auto; }
+    header { border-bottom: 2px solid var(--accent); padding-bottom: 12px; }
+    h1 { font-size: 1.65rem; color: var(--navy); margin-bottom: 6px; }
+    .meta { font-size: 0.88rem; color: var(--muted); }
+    h2 { font-size: 1.25rem; color: var(--navy); margin-top: 28px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+    th { background: #f8fafc; font-weight: 600; }
+    code { background: #f1f5f9; padding: 2px 4px; border-radius: 4px; }
+    blockquote { background: #f8fafc; border-left: 4px solid var(--accent); }
+    @media print { body { padding: 0; } .container { max-width: 100%; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>DriftWatch-TE Weekly Report: 2026-10-16</h1>
+      <div class="meta">Status: <strong>Pilot</strong> &bull; Generated: 2026-11-05 12:21:03 UTC &bull; Git: <code>614f7a3</code></div>
+    </header>
+    <blockquote><strong>Pilot Run:</strong> Pre-study validation run. Excluded from longitudinal drift conclusions.</blockquote>
+    <h2>1. Per-Model Attack Success Rate</h2>
+    <table>
+      <thead><tr><th>Model</th><th>Trials</th><th>ASR</th><th>95% CI</th><th>Change vs Week 1</th><th>Completion</th></tr></thead>
+      <tbody>
+        <tr><td><code>groq</code></td><td>8</td><td>50.0%</td><td>not estimable</td><td>N/A (pilot)</td><td>100.0%</td></tr>
+        <tr><td><code>openrouter</code></td><td>8</td><td>37.5%</td><td>not estimable</td><td>N/A (pilot)</td><td>100.0%</td></tr>
+      </tbody>
+    </table>
+    <h2>2. Findings &amp; Cautious Assessment</h2>
+    <p>Attack success rates reflect deterministic invariant evaluations in the simulated e-commerce environment. Where confidence intervals span zero when compared to prior evaluations, the data indicates <strong>no evidence of change</strong>. Observed differences reflect black-box behavioral measurements and should not be interpreted as evidence of provider optimization intent.</p>
+  </div>
+</body>
+</html>

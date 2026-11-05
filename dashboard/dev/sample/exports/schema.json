@@ -1,0 +1,33 @@
+{
+  "sample": true,
+  "schema_version": "1.0.0",
+  "columns": [
+    "trial_id",
+    "scenario_id",
+    "run_week",
+    "timestamp_utc",
+    "model_alias",
+    "requested_model_id",
+    "returned_model_id",
+    "suite",
+    "suite_hash",
+    "attack_class",
+    "channel",
+    "language",
+    "origin",
+    "trial_index",
+    "tool_calls",
+    "attack_success",
+    "task_success",
+    "steps",
+    "stop_reason",
+    "error_type",
+    "http_errors",
+    "tokens_in",
+    "tokens_out",
+    "latency_ms",
+    "git_sha",
+    "sample",
+    "is_pilot"
+  ]
+}

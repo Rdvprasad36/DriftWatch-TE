@@ -183,7 +183,7 @@ def _error_result(job: Job, error_type: str) -> TrialResult:
         language=str(job.scenario.language.value),
         channel=str(job.scenario.channel.value),
         model_alias=job.model_alias,
-        returned_model_id=job.model_alias,
+        returned_model_id="",
         fingerprint=None,
         attack_success=False,
         task_success=False,
@@ -192,4 +192,3 @@ def _error_result(job: Job, error_type: str) -> TrialResult:
         steps=0,
         error_type=error_type,
     )
-

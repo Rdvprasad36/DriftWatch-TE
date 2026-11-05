@@ -1,0 +1,24 @@
+# DriftWatch-TE Study Configuration
+# Central configuration file for study schedule, models, and endpoints.
+# All pipeline scripts, reports, and dashboards derive configuration from this file.
+
+study_start_date: "2026-11-09"
+planned_weeks: 12
+github_repo: "https://github.com/Rdvprasad36/DriftWatch-TE"
+hf_dataset_repo: "TODO"
+preregistration_url: "TODO"
+
+models:
+  - alias: "groq"
+    provider: "groq"
+    requested_id: "openai/gpt-oss-20b"
+  - alias: "openrouter"
+    provider: "openrouter"
+    requested_id: "dots-studio/dots-3-note-preview:free"
+  - alias: "google"
+    provider: "google"
+    requested_id: "gemini-flash-latest"
+  - alias: "local"
+    provider: "local"
+    requested_id: "llama3.2:1b"
+

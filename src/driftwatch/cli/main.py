@@ -188,6 +188,41 @@ def _build_fake_provider_registry() -> ProviderRegistry:
     return registry
 
 
+def _build_custom_provider_registry(
+    base_url: str | None,
+    model_id: str | None,
+    api_key_env: str | None,
+) -> ProviderRegistry:
+    """Build a ProviderRegistry containing a custom OpenAICompatProvider."""
+    from driftwatch.providers.registry import (
+        ProviderRegistry,
+        build_openai_compat_from_env,
+    )
+
+    if not base_url or not model_id or not api_key_env:
+        click.echo(
+            "ERROR: When using --models custom, --base-url, --model, and "
+            "--api-key-env are required.",
+            err=True,
+        )
+        sys.exit(EXIT_HARNESS_ERROR)
+
+    try:
+        provider = build_openai_compat_from_env(
+            alias="custom",
+            base_url=base_url,
+            api_key_env=api_key_env,
+            default_model=model_id,
+        )
+    except ValueError as exc:
+        click.echo(f"ERROR: {exc}", err=True)
+        sys.exit(EXIT_HARNESS_ERROR)
+
+    registry = ProviderRegistry()
+    registry.register("custom", provider)
+    return registry
+
+
 @cli.command()
 @click.option("--week", required=True, help="ISO week date, e.g. 2026-10-19.")
 @click.option("--suites", required=True, help="Comma-separated suite names to run.")
@@ -209,6 +244,22 @@ def _build_fake_provider_registry() -> ProviderRegistry:
     type=int,
     help="Max simultaneous LLM calls.",
 )
+@click.option(
+    "--base-url",
+    default=None,
+    help="Base URL for custom model endpoint (required when --models=custom).",
+)
+@click.option(
+    "--model",
+    "model_id",
+    default=None,
+    help="Model identifier for custom endpoint (required when --models=custom).",
+)
+@click.option(
+    "--api-key-env",
+    default=None,
+    help="Env var name holding the API key (required when --models=custom).",
+)
 def run(
     week: str,
     suites: str,
@@ -217,11 +268,19 @@ def run(
     results_dir: str,
     suite_root: str,
     concurrency: int,
+    base_url: str | None,
+    model_id: str | None,
+    api_key_env: str | None,
 ) -> None:
     """Execute a weekly trial run (FR2, FR7).
 
     Loads requested suites, expands jobs, runs them with bounded
     concurrency, writes NDJSON results, and finalizes the bundle.
+
+    When ``--models custom`` is specified, ``--base-url``, ``--model``,
+    and ``--api-key-env`` are required. The harness builds an
+    OpenAI-compatible provider from those values and runs trials
+    against it under the alias "custom".
     """
     from driftwatch.orchestrator.jobs import expand_jobs
     from driftwatch.orchestrator.runner import run_jobs
@@ -237,7 +296,10 @@ def run(
     for name in requested:
         suite_dir = suite_root_path / name
         if not suite_dir.is_dir():
-            click.echo(f"ERROR: suite '{name}' not found in {suite_root_path}", err=True)
+            click.echo(
+                f"ERROR: suite '{name}' not found in {suite_root_path}",
+                err=True,
+            )
             sys.exit(EXIT_HARNESS_ERROR)
         try:
             loaded_suites.append(load_suite(suite_dir))
@@ -246,7 +308,14 @@ def run(
             sys.exit(EXIT_HARNESS_ERROR)
 
     # Build provider registry
-    if model_list == ["fake"]:
+    if model_list == ["custom"]:
+        registry = _build_custom_provider_registry(
+            base_url=base_url,
+            model_id=model_id,
+            api_key_env=api_key_env,
+        )
+        model_list = ["custom"]
+    elif model_list == ["fake"]:
         registry = _build_fake_provider_registry()
     else:
         from driftwatch.providers.registry import build_from_env
@@ -535,6 +604,63 @@ def report(analysis_file: str, index_file: str, output_dir: str) -> None:
     )
     click.echo(f"Reports generated: {out_paths['report_md']} and {out_paths['report_html']}")
     sys.exit(EXIT_OK)
+
+
+# ---------------------------------------------------------------------------
+# driftwatch weekly-report
+# ---------------------------------------------------------------------------
+
+
+@cli.command(name="weekly-report")
+@click.argument("date")
+@click.option(
+    "--summary-dir",
+    default="results/summary",
+    help="Directory containing weekly summary files.",
+)
+@click.option(
+    "--analysis-file",
+    default="results/analysis/analysis.json",
+    help="Path to analysis.json file.",
+)
+@click.option(
+    "--weekly-dir",
+    default="weekly",
+    help="Directory containing weekly run bundles.",
+)
+@click.option(
+    "--output-dir",
+    default="reports/weekly",
+    help="Directory to write weekly report files.",
+)
+def weekly_report(
+    date: str,
+    summary_dir: str,
+    analysis_file: str,
+    weekly_dir: str,
+    output_dir: str,
+) -> None:
+    """Generate Markdown and HTML reports for a specific study week (Item 2)."""
+    from driftwatch.reporting.weekly import generate_weekly_report
+
+    click.echo(f"Generating weekly report for {date}...")
+    try:
+        out_paths = generate_weekly_report(
+            week=date,
+            summary_dir=Path(summary_dir),
+            analysis_file=Path(analysis_file),
+            weekly_bundles_dir=Path(weekly_dir),
+            output_dir=Path(output_dir),
+        )
+        click.echo(
+            f"Weekly report generated: {out_paths['report_md']} and "
+            f"{out_paths['report_html']}"
+        )
+        click.echo(f"Manifest index updated: {out_paths['manifest']}")
+        sys.exit(EXIT_OK)
+    except Exception as exc:
+        click.echo(f"ERROR: {exc}", err=True)
+        sys.exit(EXIT_HARNESS_ERROR)
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,31 @@
+{
+  "sample": true,
+  "schema_version": "1.0.0",
+  "weeks": [
+    {
+      "week": "2026-11-09",
+      "file_md": "2026-11-09.md",
+      "file_html": "2026-11-09.html"
+    },
+    {
+      "week": "2026-11-16",
+      "file_md": "2026-11-16.md",
+      "file_html": "2026-11-16.html"
+    },
+    {
+      "week": "2026-11-23",
+      "file_md": "2026-11-23.md",
+      "file_html": "2026-11-23.html"
+    },
+    {
+      "week": "2026-11-30",
+      "file_md": "2026-11-30.md",
+      "file_html": "2026-11-30.html"
+    },
+    {
+      "week": "2026-12-07",
+      "file_md": "2026-12-07.md",
+      "file_html": "2026-12-07.html"
+    }
+  ]
+}

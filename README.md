@@ -1,7 +1,7 @@
 # DriftWatch-TE
 
-[![CI](https://github.com/driftwatch-te/driftwatch/actions/workflows/ci.yml/badge.svg)](https://github.com/driftwatch-te/driftwatch/actions/workflows/ci.yml)
-[![Pages](https://github.com/driftwatch-te/driftwatch/actions/workflows/pages.yml/badge.svg)](https://github.com/driftwatch-te/driftwatch/actions/workflows/pages.yml)
+[![CI](https://github.com/Rdvprasad36/DriftWatch-TE/actions/workflows/ci.yml/badge.svg)](https://github.com/Rdvprasad36/DriftWatch-TE/actions/workflows/ci.yml)
+[![Pages](https://github.com/Rdvprasad36/DriftWatch-TE/actions/workflows/pages.yml/badge.svg)](https://github.com/Rdvprasad36/DriftWatch-TE/actions/workflows/pages.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![DOI](https://img.shields.io/badge/DOI-TODO%3A%2010.5281%2Fzenodo.TODO-blue.svg)](#citation)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
@@ -72,8 +72,8 @@ Requires **Python 3.12+**.
 
 ```bash
 # Clone repository
-git clone https://github.com/driftwatch-te/driftwatch.git
-cd driftwatch
+git clone https://github.com/Rdvprasad36/DriftWatch-TE.git
+cd DriftWatch-TE
 
 # Set up virtual environment
 python -m venv .venv
@@ -142,11 +142,67 @@ driftwatch event add --provider openrouter --model llama-3.1-8b \
 
 # List recorded provider events
 driftwatch event list
+
+# Generate weekly report for a specific date
+driftwatch weekly-report 2026-11-09
+
+# Export trial records (CSV, JSONL, schema)
+driftwatch export
+
+# Generate final comprehensive research reports
+driftwatch report
 ```
 
 ---
 
-## 7. Interactive Dashboard
+## 7. Test Your Own Model in 10 Minutes
+
+You can evaluate any OpenAI-compatible LLM endpoint (local or remote) against the frozen DriftWatch-TE attack suites using the `--models custom` option without modifying harness code.
+
+### Step 1: Set your API key environment variable
+```bash
+# Example for a custom provider or local proxy
+export MY_API_KEY="your-secret-key-here"  # On Windows: set MY_API_KEY="your-secret-key-here"
+```
+
+### Step 2: Run evaluation trials
+```bash
+driftwatch run \
+  --week 2026-11-09 \
+  --suites attacks_v1 \
+  --models custom \
+  --base-url "https://api.together.xyz/v1" \
+  --model "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo" \
+  --api-key-env "MY_API_KEY" \
+  --trials 3
+```
+
+For a local Ollama instance (no API key required, set any dummy value):
+```bash
+export OLLAMA_KEY="ollama"
+driftwatch run \
+  --week 2026-11-09 \
+  --suites attacks_v1 \
+  --models custom \
+  --base-url "http://localhost:11434/v1" \
+  --model "llama3.2:1b" \
+  --api-key-env "OLLAMA_KEY" \
+  --trials 3
+```
+
+### Step 3: Summarize and inspect results
+```bash
+# Generate weekly summary JSON
+driftwatch summarize --week 2026-11-09
+
+# Generate Markdown and HTML reports
+driftwatch weekly-report 2026-11-09
+```
+The summary report will be available at `reports/weekly/2026-11-09.md` and `reports/weekly/2026-11-09.html`.
+
+---
+
+## 8. Interactive Dashboard
 
 The results dashboard is deployed to GitHub Pages and can also be viewed locally without running a local web server:
 
@@ -155,17 +211,76 @@ The results dashboard is deployed to GitHub Pages and can also be viewed locally
 # Open dashboard/index.html in any modern browser
 ```
 
-The dashboard includes 6 interactive views:
-1. **Overview Grid:** Longitudinal ASR time series per model with 95% cluster bootstrap intervals.
-2. **Controls & Canary:** Benign task success rates alongside zero-temperature output hash stability.
-3. **Language Breakdown:** Disaggregated results across English, Telugu, and Tenglish, comparing native vs. synthetic attack performance.
-4. **Change Points & Events:** PELT/CUSUM changepoint markers overlaid with provider changelog entries.
-5. **Negative Control:** Pinned local model stability evaluated against $\pm 3\%$ TOST equivalence bands.
-6. **Data & Methods:** Methodology, pre-registration details, and Parquet download links.
+The dashboard includes 10 interactive views:
+1. **Overview Grid:** Longitudinal ASR time series per model with 95% cluster bootstrap intervals, status strip, circular progress ring, and pilot panel.
+2. **Drift Analysis (Output 1):** Hosted model curves with shaded 95% confidence bands and pinned local reference line.
+3. **Language Breakdown (Output 2):** Disaggregated results across English, Telugu, and Tenglish, comparing native vs. synthetic attack performance.
+4. **Controls & Canary:** Benign task success rates alongside zero-temperature output hash stability and observed returned model IDs timeline.
+5. **Change Points & Events:** PELT/CUSUM changepoint markers overlaid with provider changelog entries.
+6. **Trial Records (Output 3):** Virtualized, filterable table of trial records with 25-column schema viewer and CSV/JSONL/Parquet downloads.
+7. **Data Quality & Telemetry:** Audit trial execution completeness, HTTP retry and 429 rate-limiting events, token consumption, and response latency.
+8. **Weekly Evaluation Reports:** Historical archive of weekly batches with previous/next controls, side-by-side comparison, and Markdown/HTML report downloads.
+9. **Final Evaluation Report (Output 4):** Embedded research report viewer rendering `reports/report.html` with download and print options.
+10. **Scientific Methodology:** Pre-registered hypotheses (H1 to H6), suite verification digests, and replication commands.
 
 ---
 
-## 8. Responsible Research & Ethics
+## 9. Automation & GitHub Actions Setup
+
+DriftWatch-TE runs fully automated longitudinal evaluations via GitHub Actions on a zero-dollar budget.
+
+### Repository Secrets & Variables
+To enable automated evaluation runs, configure the following repository secrets under **Settings > Secrets and variables > Actions**:
+
+| Secret Name | Required For | Description |
+|---|---|---|
+| `GROQ_API_KEY` | Hosted evaluation | Groq Cloud API key for evaluating `openai/gpt-oss-20b` |
+| `GOOGLE_AI_API_KEY` | Hosted evaluation | Google AI Studio API key for evaluating `gemini-flash-latest` |
+| `OPENROUTER_API_KEY` | Hosted evaluation | OpenRouter API key for evaluating free-tier hosted models |
+| `HF_TOKEN` | Immutable storage | Hugging Face user access token with write permissions for dataset upload |
+
+### GitHub Pages Setup
+1. In the repository on GitHub, navigate to **Settings > Pages**.
+2. Under **Build and deployment > Source**, select **GitHub Actions**.
+3. Deployed site URL: `https://rdvprasad36.github.io/DriftWatch-TE/`
+
+### First Manual Run
+To execute your first manual evaluation without waiting for the Monday cron schedule:
+1. Navigate to the **Actions** tab on GitHub.
+2. Select **Weekly Evaluation Pipeline** from the left sidebar.
+3. Click **Run workflow**, set `dry_run: true` (if running before the study launch date of 2026-11-09), and click **Run workflow**.
+
+Alternatively, run an offline trial run locally with the fake provider:
+```bash
+python -m driftwatch.cli.main run --week 2026-11-09 --suites attacks_v1 --models fake --trials 2
+```
+
+### Where to Find Evaluation Outputs (Outputs 1 to 4)
+- **Output 1 (Longitudinal Drift):**
+  - Data: `results/analysis/analysis.json` (`per_model_trend` and GEE slope)
+  - Dashboard: View at `#drift`
+  - Report: Section 4 of `reports/report.md` and `reports/report.html`
+- **Output 2 (Multilingual Telugu & Tenglish Disparity):**
+  - Data: `results/analysis/analysis.json` (`language_interactions` and `native_vs_machine`)
+  - Dashboard: View at `#languages`
+  - Report: Section 5 of `reports/report.md` and `reports/report.html`
+- **Output 3 (Trial Records Export):**
+  - Data: `results/exports/records.csv`, `results/exports/records.jsonl`, and `results/exports/schema.json`
+  - Dashboard: View and search at `#data`
+- **Output 4 (Evaluation Reports):**
+  - Final Report: `reports/report.md` and `reports/report.html` (Dashboard `#report`)
+  - Weekly Reports: `reports/weekly/<date>.md`, `reports/weekly/<date>.html`, and `reports/weekly/index.json` (Dashboard `#weekly-reports`)
+
+### How to Verify Suite Integrity Offline
+All test suites are frozen and locked with SHA-256 cryptographic hashes in `suites/SUITE_LOCK.json`. To verify that test suites have not been modified or tampered with:
+```bash
+driftwatch verify
+```
+This runs completely offline and fails with exit code 3 if any scenario prompt, injection string, or evaluation invariant has been altered.
+
+---
+
+## 10. Responsible Research & Ethics
 
 - **Sandboxed Execution:** All attacks target mock e-commerce tools exclusively (`get_order_status`, `request_refund`, `search_catalog`, `apply_discount`, `cancel_order`). No real external APIs or personal accounts are ever contacted.
 - **Header Redaction:** API authorization keys and tokens are scrubbed from all in-memory traces and serialized bundles.
@@ -173,7 +288,7 @@ The dashboard includes 6 interactive views:
 
 ---
 
-## 9. Citation
+## 11. Citation
 
 ```bibtex
 @misc{driftwatch2026,
@@ -182,13 +297,13 @@ The dashboard includes 6 interactive views:
   year={2026},
   publisher={Zenodo},
   doi={TODO: 10.5281/zenodo.TODO},
-  url={https://github.com/TODO:ORG/driftwatch}
+  url={https://github.com/Rdvprasad36/DriftWatch-TE}
 }
 ```
 
 ---
 
-## 10. License
+## 12. License
 
 This project is licensed under the **Apache License 2.0**. Test suites and datasets are released under **CC-BY 4.0**.
 

@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "weeks": [
+    {
+      "week": "2026-10-16",
+      "is_pilot": true,
+      "status": "Pilot",
+      "file_md": "2026-10-16.md",
+      "file_html": "2026-10-16.html"
+    }
+  ]
+}
