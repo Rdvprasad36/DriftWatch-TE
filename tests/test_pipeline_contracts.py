@@ -335,3 +335,55 @@ class TestSecurityAndSampleIsolation:
             for pattern in secret_patterns:
                 matches = pattern.findall(text)
                 assert not matches, f"Potential secret leak in {p}: {matches}"
+
+
+class TestStudyConfigurationContract:
+    """Validate config/study.yaml model identifier and stability rules."""
+
+    def test_model_requested_ids_no_unjustified_dynamic_tags(self) -> None:
+        """Fails if any requested_id in study.yaml contains 'latest', 'preview',
+
+        or ':free', unless an explicit justification field exists.
+        """
+        from driftwatch.config import load_study_config
+
+        config = load_study_config()
+        restricted_substrings = ["latest", "preview", ":free"]
+
+        for model in config.models:
+            req_id = model.requested_id
+            found_tags = [sub for sub in restricted_substrings if sub in req_id]
+            if found_tags:
+                assert model.justification and model.justification.strip(), (
+                    f"Model '{model.alias}' requested_id '{req_id}' contains dynamic/unpinned "
+                    f"tags {found_tags} without an explicit 'justification' field in "
+                    f"config/study.yaml"
+                )
+
+    def test_model_requested_ids_unjustified_fails(self, tmp_path: Path) -> None:
+        """Verifies that an unjustified dynamic tag causes the validation check to fail."""
+        from driftwatch.config import load_study_config
+
+        bad_config_yaml = """
+study_start_date: "2026-11-09"
+planned_weeks: 12
+models:
+  - alias: "unjustified-latest"
+    provider: "google"
+    requested_id: "gemini-2.0-flash-latest"
+"""
+        bad_cfg_file = tmp_path / "study.yaml"
+        bad_cfg_file.write_text(bad_config_yaml, encoding="utf-8")
+        bad_config = load_study_config(bad_cfg_file)
+
+        with pytest.raises(AssertionError, match="without an explicit 'justification'"):
+            for model in bad_config.models:
+                found_tags = [
+                    sub for sub in ["latest", "preview", ":free"] if sub in model.requested_id
+                ]
+                if found_tags:
+                    assert model.justification and model.justification.strip(), (
+                        f"Model '{model.alias}' requested_id '{model.requested_id}' contains "
+                        f"dynamic/unpinned tags {found_tags} without an explicit "
+                        f"'justification' field in config/study.yaml"
+                    )

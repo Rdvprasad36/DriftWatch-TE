@@ -6,8 +6,8 @@ name: Keepalive Scheduled Workflows
 # Crucial Rule: Commits pushed by GitHub Actions using the default GITHUB_TOKEN
 # (such as github-actions[bot]) DO NOT reset this 60-day inactivity timer!
 #
-# This workflow prevents automatic schedule suspension by pinging the repository
-# every month using the keepalive action.
+# This workflow prevents automatic schedule suspension by re-enabling the
+# weekly evaluation workflow via the GitHub API if it was disabled.
 
 on:
   schedule:
@@ -17,18 +17,38 @@ on:
 
 permissions:
   actions: write
-  contents: write
 
 jobs:
-  cronjob-based-keepalive:
-    name: Prevent Inactivity Schedule Disabling
+  keepalive:
+    name: Re-enable Scheduled Workflows
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Re-enable weekly workflow if disabled
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          repo="${{ github.repository }}"
+          workflow="weekly.yml"
 
-      - name: Keepalive Workflow
-        uses: gautamkrishnar/keepalive-workflow@v2
-        with:
-          use_api: true
+          echo "Checking status of ${workflow} in ${repo}..."
+          state=$(gh api "repos/${repo}/actions/workflows/${workflow}" --jq '.state')
+          echo "Current state: ${state}"
 
+          if [ "$state" = "disabled_inactivity" ]; then
+            echo "Workflow was disabled by GitHub due to inactivity. Re-enabling..."
+            gh api -X PUT "repos/${repo}/actions/workflows/${workflow}/enable"
+            echo "Workflow re-enabled successfully."
+          elif [ "$state" = "active" ]; then
+            echo "Workflow is already active. No action needed."
+          else
+            echo "Workflow is in state '${state}'. Manual review may be needed."
+          fi
+
+          # Also check healthcheck workflow
+          hc_workflow="healthcheck.yml"
+          hc_state=$(gh api "repos/${repo}/actions/workflows/${hc_workflow}" --jq '.state' 2>/dev/null || echo "not_found")
+          echo "healthcheck.yml state: ${hc_state}"
+          if [ "$hc_state" = "disabled_inactivity" ]; then
+            echo "Re-enabling healthcheck workflow..."
+            gh api -X PUT "repos/${repo}/actions/workflows/${hc_workflow}/enable"
+          fi

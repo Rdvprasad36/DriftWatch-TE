@@ -173,12 +173,15 @@ class OpenAICompatProvider(BaseProvider):
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json",
         }
+        target_path = path
+        if self._base_url.endswith("/v1") and target_path.startswith("/v1/"):
+            target_path = target_path[3:]
         async with httpx.AsyncClient(
             base_url=self._base_url,
             headers=headers,
             timeout=self._timeout,
         ) as client:
-            return await client.post(path, json=body)
+            return await client.post(target_path, json=body)
 
     def _parse_response(
         self, resp: httpx.Response, model: str, latency_ms: float

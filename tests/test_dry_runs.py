@@ -80,7 +80,8 @@ class TestDryRunsPipeline:
             assert (week_dir / "canary.json").exists()
             assert (week_dir / "trials.parquet").exists()
             assert (week_dir / "meta.json").exists()
-            assert (summary_dir / f"{week}.json").exists()
+            assert (summary_dir / "weekly" / f"{week}.json").exists()
+            assert (summary_dir / "index.json").exists()
 
         # Compare canary hashes between Dry Run 1 and Dry Run 2
         canary1_data = json.loads((results_dir / weeks[0] / "canary.json").read_text())

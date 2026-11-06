@@ -7,6 +7,7 @@ planned_weeks: 12
 github_repo: "https://github.com/Rdvprasad36/DriftWatch-TE"
 hf_dataset_repo: "TODO"
 preregistration_url: "TODO"
+local_model_digest: "baf6a787fdff"
 
 models:
   - alias: "groq"
@@ -15,9 +16,11 @@ models:
   - alias: "openrouter"
     provider: "openrouter"
     requested_id: "dots-studio/dots-3-note-preview:free"
+    justification: "OpenRouter free-tier preview model benchmarked to observe free-tier provider drift and routing behavior."
   - alias: "google"
     provider: "google"
     requested_id: "gemini-flash-latest"
+    justification: "Google AI Studio dynamic alias monitored longitudinally to detect silent rolling upstream checkpoint updates."
   - alias: "local"
     provider: "local"
     requested_id: "llama3.2:1b"

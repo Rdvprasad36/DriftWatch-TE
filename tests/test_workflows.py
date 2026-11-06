@@ -97,10 +97,76 @@ class TestWeeklyWorkflow:
         assert has_matrix, "weekly.yml must define a matrix over models"
 
     def test_weekly_injects_secrets_from_env(self) -> None:
-        """weekly.yml references required provider secrets (AGENTS.md rule 4)."""
+        """weekly.yml references required provider secrets and avoids deprecated names."""
         wf = _load_workflow("weekly.yml")
         content = yaml.dump(wf)
-        assert "GROQ_API_KEY" in content or "HF_TOKEN" in content
+        # Canonical secrets must all be passed
+        for secret_name in ("GROQ_API_KEY", "GOOGLE_AI_API_KEY", "OPENROUTER_API_KEY", "HF_TOKEN"):
+            assert secret_name in content, f"weekly.yml missing {secret_name}"
+        # GEMINI_API_KEY must not be used (canonical name is GOOGLE_AI_API_KEY)
+        assert "GEMINI_API_KEY" not in content, "weekly.yml must not use GEMINI_API_KEY"
+
+    def test_weekly_preflight_fails_closed(self) -> None:
+        """preflight job verifies required secrets and hf_dataset_repo before evaluation."""
+        wf = _load_workflow("weekly.yml")
+        preflight_steps = wf["jobs"]["preflight"]["steps"]
+        step_runs = " ".join(str(s.get("run", "")) for s in preflight_steps)
+        assert "FAIL-CLOSED" in step_runs
+        assert "hf_dataset_repo" in step_runs
+        assert "is_study_week" in step_runs
+
+    def test_weekly_hf_upload_mandatory_for_study_weeks(self) -> None:
+        """Hugging Face upload is mandatory during study weeks."""
+        wf = _load_workflow("weekly.yml")
+        finalize_steps = wf["jobs"]["finalize"]["steps"]
+        upload_step = next(
+            s for s in finalize_steps if "Upload bundle to Hugging Face" in s.get("name", "")
+        )
+        assert "is_study_week" in upload_step.get("run", "")
+        expected_coe = "${{ needs.preflight.outputs.is_dry_run == 'true' }}"
+        assert upload_step.get("continue-on-error") == expected_coe
+
+    def test_weekly_completeness_gate_present(self) -> None:
+        """finalize job includes completeness gate checking model trials and opening issues."""
+        wf = _load_workflow("weekly.yml")
+        finalize_steps = wf["jobs"]["finalize"]["steps"]
+        step_names = [s.get("name", "") for s in finalize_steps]
+        assert any("Completeness Gate" in name for name in step_names)
+
+    def test_weekly_least_privilege_permissions(self) -> None:
+        """Enforce least privilege: evaluation=read, finalize=write, deploy=pages."""
+        wf = _load_workflow("weekly.yml")
+        jobs = wf["jobs"]
+
+        # Evaluation jobs get contents: read only, no pages or id-token
+        for ejob_name in ("evaluate-hosted", "evaluate-local"):
+            perms = jobs[ejob_name].get("permissions", {})
+            assert perms.get("contents") == "read", f"{ejob_name} must have contents: read"
+            assert "pages" not in perms, f"{ejob_name} must not have pages permission"
+            assert "id-token" not in perms, f"{ejob_name} must not have id-token permission"
+
+        # Finalize job gets contents: write, no pages or id-token
+        fin_perms = jobs["finalize"].get("permissions", {})
+        assert fin_perms.get("contents") == "write", "finalize must have contents: write"
+        assert "pages" not in fin_perms, "finalize must not have pages permission"
+        assert "id-token" not in fin_perms, "finalize must not have id-token permission"
+
+        # Deploy job gets pages: write and id-token: write
+        dep_perms = jobs["deploy"].get("permissions", {})
+        assert dep_perms.get("pages") == "write", "deploy must have pages: write"
+        assert dep_perms.get("id-token") == "write", "deploy must have id-token: write"
+
+    def test_weekly_local_model_readiness_and_digest_pinning(self) -> None:
+        """evaluate-local uses readiness loop, timeouts, and pins model digest."""
+        wf = _load_workflow("weekly.yml")
+        local_job = wf["jobs"]["evaluate-local"]
+        assert local_job.get("timeout-minutes") is not None
+        assert local_job.get("timeout-minutes") >= 30
+
+        step_runs = " ".join(str(s.get("run", "")) for s in local_job["steps"])
+        assert "curl -sf http://localhost:11434/api/version" in step_runs
+        assert "local_model_digest" in step_runs
+        assert "Model digest mismatch" in step_runs
 
 
 # ---------------------------------------------------------------------------
@@ -149,3 +215,25 @@ class TestHealthCheckAndKeepaliveWorkflows:
         assert "name" in wf
         triggers = wf.get(True) or wf.get("on")
         assert "schedule" in triggers
+
+    def test_keepalive_has_no_third_party_actions(self) -> None:
+        """keepalive.yml must not use third-party actions."""
+        wf = _load_workflow("keepalive.yml")
+        for job in wf.get("jobs", {}).values():
+            for step in job.get("steps", []):
+                uses = step.get("uses", "")
+                if uses:
+                    assert uses.startswith("actions/"), (
+                        f"Third-party action found in keepalive.yml: {uses}"
+                    )
+
+    def test_no_third_party_actions_in_weekly(self) -> None:
+        """weekly.yml must not use third-party actions (nick-fields/retry, etc)."""
+        wf = _load_workflow("weekly.yml")
+        for job_name, job in wf.get("jobs", {}).items():
+            for step in job.get("steps", []):
+                uses = step.get("uses", "")
+                if uses:
+                    assert uses.startswith("actions/"), (
+                        f"Third-party action in weekly.yml job '{job_name}': {uses}"
+                    )

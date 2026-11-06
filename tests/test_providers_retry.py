@@ -168,7 +168,8 @@ class TestRetryBehavior:
 
         mock_post.assert_called_once()  # no retry for network errors
         assert result.error is not None
-        assert "Network error" in result.error
+        assert result.error_type == "ConnectError"
+        assert "Connection refused" in result.error
         assert result.ok is False
 
 

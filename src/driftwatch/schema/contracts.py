@@ -31,6 +31,9 @@ class WeekIndexEntry(BaseModel):
 
     week: str
     is_pilot: bool = False
+    complete: bool = True
+    status: str | None = None
+    incomplete_models: list[str] = Field(default_factory=list)
     total_trials: int = 0
     file: str
 
@@ -79,6 +82,9 @@ class WeeklySummaryContract(BaseModel):
     schema_version: str = Field(default=SCHEMA_VERSION)
     week: str
     is_pilot: bool
+    complete: bool = True
+    status: str | None = None
+    incomplete_models: list[str] = Field(default_factory=list)
     total_trials: int
     total_attack_successes: int
     total_task_successes: int

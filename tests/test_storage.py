@@ -412,7 +412,8 @@ class TestDriftwatchSummarizeCLI:
         assert result.exit_code == 0, (
             f"CLI exited with {result.exit_code}:\n{result.output}"
         )
-        assert (output_dir / "2026-10-19.json").exists()
+        assert (output_dir / "weekly" / "2026-10-19.json").exists()
+        assert (output_dir / "index.json").exists()
 
     def test_summarize_missing_week_exits_2(
         self, tmp_path: Path

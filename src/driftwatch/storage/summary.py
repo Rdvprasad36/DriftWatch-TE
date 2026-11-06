@@ -190,6 +190,9 @@ def generate_summary(
         "schema_version": SCHEMA_VERSION,
         "week": week,
         "is_pilot": is_pilot,
+        "complete": True,
+        "status": "complete",
+        "incomplete_models": [],
         "total_trials": total,
         "total_attack_successes": total_attacks,
         "total_task_successes": total_task,
@@ -249,18 +252,21 @@ def update_summary_index(output_dir: Path, repo_root: Path | None = None) -> Pat
         try:
             data = json.loads(f.read_text(encoding="utf-8"))
             is_pilot = data.get("is_pilot", date_str < cfg.study_start_date)
+            is_complete = data.get("complete", True)
             total_trials = data.get("total_trials", 0)
 
-            weeks_entries.append(
-                {
-                    "week": date_str,
-                    "is_pilot": is_pilot,
-                    "total_trials": total_trials,
-                    "file": f"weekly/{date_str}.json",
-                }
-            )
+            week_entry: dict[str, Any] = {
+                "week": date_str,
+                "is_pilot": is_pilot,
+                "complete": is_complete,
+                "status": data.get("status", "complete" if is_complete else "incomplete"),
+                "incomplete_models": data.get("incomplete_models", []),
+                "total_trials": total_trials,
+                "file": f"weekly/{date_str}.json",
+            }
+            weeks_entries.append(week_entry)
 
-            if not is_pilot:
+            if not is_pilot and is_complete:
                 latest_date = date_str
 
             # Accumulate model info

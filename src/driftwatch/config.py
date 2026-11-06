@@ -27,6 +27,7 @@ class ModelConfig(BaseModel):
     alias: str
     provider: str
     requested_id: str
+    justification: str | None = None
 
 
 class StudyConfig(BaseModel):
@@ -37,6 +38,7 @@ class StudyConfig(BaseModel):
     github_repo: str = "https://github.com/Rdvprasad36/DriftWatch-TE"
     hf_dataset_repo: str = "TODO"
     preregistration_url: str = "TODO"
+    local_model_digest: str = "baf6a787fdff"
     models: list[ModelConfig] = Field(default_factory=list)
 
 
