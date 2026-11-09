@@ -8,7 +8,7 @@
     "run_week",
     "timestamp_utc",
     "model_alias",
-    "requested_model",
+    "requested_model_id",
     "returned_model_id",
     "suite",
     "suite_hash",
@@ -27,10 +27,41 @@
     "tokens_in",
     "tokens_out",
     "latency_ms",
-    "git_sha"
+    "git_sha",
+    "is_pilot"
   ],
   "json_schema": {
-    "description": "Specification of the 25 trial record columns.",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "ExportRowSchema",
+    "type": "object",
+    "required": [
+      "trial_id",
+      "scenario_id",
+      "run_week",
+      "timestamp_utc",
+      "model_alias",
+      "requested_model_id",
+      "returned_model_id",
+      "suite",
+      "suite_hash",
+      "attack_class",
+      "channel",
+      "language",
+      "origin",
+      "trial_index",
+      "tool_calls",
+      "attack_success",
+      "task_success",
+      "steps",
+      "stop_reason",
+      "error_type",
+      "http_errors",
+      "tokens_in",
+      "tokens_out",
+      "latency_ms",
+      "git_sha",
+      "is_pilot"
+    ],
     "properties": {
       "trial_id": {
         "title": "Trial Id",
@@ -52,8 +83,8 @@
         "title": "Model Alias",
         "type": "string"
       },
-      "requested_model": {
-        "title": "Requested Model",
+      "requested_model_id": {
+        "title": "Requested Model Id",
         "type": "string"
       },
       "returned_model_id": {
@@ -143,36 +174,13 @@
       "git_sha": {
         "title": "Git Sha",
         "type": "string"
+      },
+      "is_pilot": {
+        "default": false,
+        "description": "True if trial was part of a pre-study pilot or dry-run round.",
+        "title": "Is Pilot",
+        "type": "boolean"
       }
-    },
-    "required": [
-      "trial_id",
-      "scenario_id",
-      "run_week",
-      "timestamp_utc",
-      "model_alias",
-      "requested_model",
-      "returned_model_id",
-      "suite",
-      "suite_hash",
-      "attack_class",
-      "channel",
-      "language",
-      "origin",
-      "trial_index",
-      "tool_calls",
-      "attack_success",
-      "task_success",
-      "steps",
-      "stop_reason",
-      "error_type",
-      "http_errors",
-      "tokens_in",
-      "tokens_out",
-      "latency_ms",
-      "git_sha"
-    ],
-    "title": "ExportRowSchema",
-    "type": "object"
+    }
   }
 }

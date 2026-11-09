@@ -63,8 +63,9 @@ def build_export_row(
     row: dict[str, Any],
     week: str,
     default_git_sha: str = "unknown",
+    is_pilot: bool | None = None,
 ) -> dict[str, Any]:
-    """Transform an internal trial row into the versioned 25-column schema."""
+    """Transform an internal trial row into the versioned tabular schema."""
     raw_trial_id = row.get("trial_id")
     fallback_id = f"{week}_{row.get('scenario_id', 'sc')}_{row.get('trial', 0)}"
     trial_id = str(raw_trial_id or fallback_id)
@@ -78,6 +79,13 @@ def build_export_row(
     if raw_idx is None:
         raw_idx = row.get("trial", 0)
     trial_idx = int(raw_idx)
+
+    # pilot flag
+    pilot_flag = (
+        bool(is_pilot)
+        if is_pilot is not None
+        else bool(row.get("is_pilot", False) or row.get("dry_run", False))
+    )
 
     # tool_calls as JSON string
     raw_calls = row.get("tool_calls")
@@ -127,6 +135,7 @@ def build_export_row(
         "tokens_out": int(row.get("tokens_out", 0)),
         "latency_ms": round(float(row.get("latency_ms", 0.0)), 2),
         "git_sha": str(row.get("git_sha") or default_git_sha),
+        "is_pilot": pilot_flag,
     }
 
     # Safety checks: ensure no secrets or headers
@@ -142,6 +151,7 @@ def export_all(
     results_root: Path,
     events_file: Path | None = None,
     repo_root: Path | None = None,
+    study_only: bool = True,
 ) -> dict[str, Path]:
     """Scan all weekly runs, export records, events, and update summaries.
 
@@ -150,6 +160,8 @@ def export_all(
         results_root: Target directory for exports (e.g. ``results/``).
         events_file: Optional path to raw events JSON.
         repo_root: Repository root path.
+        study_only: If True, only study weeks are exported to records.*
+            (pilot / dry-run weeks are excluded).
 
     Returns:
         Mapping of output artifact names to generated file paths.
@@ -162,6 +174,22 @@ def export_all(
     # 1. Gather all trial records from all available weekly bundles
     all_rows: list[dict[str, Any]] = []
 
+    # Read pilot weeks and study_start_date from summary index if available
+    pilot_weeks: set[str] = set()
+    study_start: str = "2026-11-23"
+    index_file = summary_dir / "index.json"
+    if index_file.is_file():
+        try:
+            idx_data = json.loads(index_file.read_text(encoding="utf-8"))
+            study_start = idx_data.get("study_start_date", study_start)
+            for w_entry in idx_data.get("weeks", []):
+                if isinstance(w_entry, dict) and w_entry.get("is_pilot"):
+                    pilot_weeks.add(str(w_entry.get("week")))
+                elif isinstance(w_entry, str) and w_entry < study_start:
+                    pilot_weeks.add(w_entry)
+        except Exception:
+            pass
+
     # Look for both parquet and ndjson
     candidate_weeks: list[tuple[str, Path]] = []
     if weekly_root.is_dir():
@@ -169,14 +197,22 @@ def export_all(
             if week_dir.is_dir() and not week_dir.name.startswith("."):
                 candidate_weeks.append((week_dir.name, week_dir))
 
-    # Also check if results/summary has weekly data
-    weekly_summary_dir = summary_dir / "weekly"
-    if weekly_summary_dir.is_dir():
-        for _ in sorted(weekly_summary_dir.glob("*.json")):
-            # If not in candidate_weeks, we might have trials in run bundles
-            pass
-
     for week_str, wdir in candidate_weeks:
+        # Check if week is pilot from index.json or meta.json
+        meta_file = wdir / "meta.json"
+        is_pilot = week_str in pilot_weeks
+        if meta_file.is_file():
+            try:
+                m_data = json.loads(meta_file.read_text(encoding="utf-8"))
+                if m_data.get("is_pilot") or m_data.get("dry_run"):
+                    is_pilot = True
+            except Exception:
+                pass
+
+        if study_only and is_pilot:
+            logger.info("Skipping pilot week %s from production records export", week_str)
+            continue
+
         parquet_file = wdir / "trials.parquet"
         ndjson_file = wdir / "trials.ndjson"
 
@@ -197,7 +233,7 @@ def export_all(
                 logger.warning("Error reading %s: %s", ndjson_file, exc)
 
         for r in week_rows:
-            all_rows.append(build_export_row(r, week_str))
+            all_rows.append(build_export_row(r, week_str, is_pilot=is_pilot))
 
     # 2. Write records.csv
     csv_path = exports_dir / "records.csv"

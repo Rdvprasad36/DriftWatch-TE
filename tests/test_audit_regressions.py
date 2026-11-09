@@ -221,3 +221,22 @@ class TestAuditRegressions:
         assert "<img" not in navbar_html.lower()
         assert "DriftWatch-" in navbar_html
         assert "TE" in navbar_html
+
+    def test_estimate_noise_script_runs_synthetic_demo(self) -> None:
+        """scripts/estimate_noise.py runs --synthetic-demo and outputs noise estimates."""
+        import subprocess
+        import sys
+
+        result = subprocess.run(
+            [sys.executable, "scripts/estimate_noise.py", "--synthetic-demo"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        assert "EMPIRICAL NOISE ESTIMATION RESULTS BY MODEL" in result.stdout
+        assert "sigma_w" in result.stdout
+        assert "tau" in result.stdout
+        assert "PROJECTED STUDY POWER USING ESTIMATED PARAMETERS" in result.stdout
+        assert "google" in result.stdout
+        assert "groq" in result.stdout
+        assert "openrouter" in result.stdout

@@ -27,6 +27,7 @@ from tools.make_sample_data import generate_sample_data
 from driftwatch.analysis.pipeline import run_analysis_pipeline
 from driftwatch.reporting.generator import generate_reports
 from driftwatch.schema.contracts import (
+    RECORD_SCHEMA_COLUMNS,
     AnalysisContract,
     EventsContract,
     ExportRowSchema,
@@ -205,14 +206,15 @@ class TestContractSchemas:
         assert jsonl_file.exists()
         assert schema_file.exists()
 
-        # Check CSV header matches the 25 fields
+        # Check CSV header matches the schema columns (including is_pilot)
         with csv_file.open(encoding="utf-8") as f:
             reader = csv.DictReader(f)
             row = next(reader)
-            assert len(row) == 25
+            assert len(row) == len(RECORD_SCHEMA_COLUMNS)
             assert row["trial_id"] == "trial_001"
             assert row["language"] == "te"
             assert row["origin"] == "machine"  # inferred from attacks_v1
+            assert "is_pilot" in row
 
         # Check JSONL row validates with ExportRowSchema
         with jsonl_file.open(encoding="utf-8") as f:

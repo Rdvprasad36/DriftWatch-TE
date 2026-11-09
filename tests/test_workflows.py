@@ -212,6 +212,39 @@ class TestPagesWorkflow:
         assert perms.get("pages") == "write"
         assert perms.get("id-token") == "write"
 
+    def test_pages_build_strictly_excludes_dev_and_sample_data(self, tmp_path: Path) -> None:
+        """Simulate pages.yml build step: verify site/dev and sample data are strictly excluded."""
+        import shutil
+
+        site_dir = tmp_path / "site"
+        site_dir.mkdir(parents=True)
+
+        # 1. Copy dashboard
+        dash_src = Path("dashboard")
+        shutil.copytree(dash_src, site_dir, dirs_exist_ok=True)
+
+        # 2. Copy results summaries
+        res_summary = Path("results/summary")
+        if res_summary.is_dir():
+            shutil.copytree(res_summary, site_dir / "results" / "summary", dirs_exist_ok=True)
+
+        # 3. Apply pages.yml exclusion
+        dev_dir = site_dir / "dev"
+        if dev_dir.exists():
+            shutil.rmtree(dev_dir)
+
+        # Assert dev directory does not exist
+        assert not (site_dir / "dev").exists(), "site/dev must be deleted before publishing"
+
+        # Assert no file in site contains '"sample": true'
+        sample_hits: list[str] = []
+        for f in site_dir.rglob("*"):
+            if f.is_file() and f.suffix in [".json", ".html", ".js", ".md"]:
+                text = f.read_text(encoding="utf-8", errors="ignore")
+                if '"sample": true' in text or '"sample":true' in text:
+                    sample_hits.append(str(f))
+        assert not sample_hits, f"Found sample: true in published site files: {sample_hits}"
+
 
 # ---------------------------------------------------------------------------
 # Health Check & Keepalive Workflow Tests

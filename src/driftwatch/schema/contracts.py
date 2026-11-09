@@ -246,6 +246,10 @@ class ExportRowSchema(BaseModel):
     tokens_out: int
     latency_ms: float
     git_sha: str
+    is_pilot: bool = Field(
+        default=False,
+        description="True if trial was part of a pre-study pilot or dry-run round.",
+    )
 
 
 RECORD_SCHEMA_COLUMNS: list[str] = list(ExportRowSchema.model_fields.keys())
