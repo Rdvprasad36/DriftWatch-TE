@@ -20,9 +20,7 @@ from driftwatch.suites.integrity import freeze_suites, verify_suites
 
 
 class TestDryRunsPipeline:
-    def test_two_dry_runs_produce_valid_bundles_and_stable_canaries(
-        self, tmp_path: Path
-    ) -> None:
+    def test_two_dry_runs_produce_valid_bundles_and_stable_canaries(self, tmp_path: Path) -> None:
         """Simulate two consecutive weekly dry runs (design.md §4.7 / prd.md §9).
 
         Dry Run 1 (week 2026-10-05) and Dry Run 2 (week 2026-10-12)
@@ -40,10 +38,14 @@ class TestDryRunsPipeline:
                 cli,
                 [
                     "canary",
-                    "--week", week,
-                    "--models", "fake",
-                    "--suite-dir", "suites/canary",
-                    "--results-dir", str(results_dir),
+                    "--week",
+                    week,
+                    "--models",
+                    "fake",
+                    "--suite-dir",
+                    "suites/canary",
+                    "--results-dir",
+                    str(results_dir),
                 ],
             )
             assert canary_res.exit_code == 0, f"Canary run failed: {canary_res.output}"
@@ -53,12 +55,18 @@ class TestDryRunsPipeline:
                 cli,
                 [
                     "run",
-                    "--week", week,
-                    "--suites", "canary",
-                    "--models", "fake",
-                    "--trials", "2",
-                    "--results-dir", str(results_dir),
-                    "--suite-root", "suites",
+                    "--week",
+                    week,
+                    "--suites",
+                    "canary",
+                    "--models",
+                    "fake",
+                    "--trials",
+                    "2",
+                    "--results-dir",
+                    str(results_dir),
+                    "--suite-root",
+                    "suites",
                 ],
             )
             assert run_res.exit_code == 0, f"Trial run failed: {run_res.output}"
@@ -68,9 +76,12 @@ class TestDryRunsPipeline:
                 cli,
                 [
                     "summarize",
-                    "--week", week,
-                    "--results-dir", str(results_dir),
-                    "--output-dir", str(summary_dir),
+                    "--week",
+                    week,
+                    "--results-dir",
+                    str(results_dir),
+                    "--output-dir",
+                    str(summary_dir),
                 ],
             )
             assert summary_res.exit_code == 0, f"Summarize failed: {summary_res.output}"
@@ -87,12 +98,10 @@ class TestDryRunsPipeline:
         canary1_data = json.loads((results_dir / weeks[0] / "canary.json").read_text())
         canary2_data = json.loads((results_dir / weeks[1] / "canary.json").read_text())
 
-        drift_report = compare_canary_runs(
-            canary1_data["results"], canary2_data["results"]
+        drift_report = compare_canary_runs(canary1_data["results"], canary2_data["results"])
+        assert drift_report["changed_count"] == 0, (
+            "No drift expected under controlled FakeProvider"
         )
-        assert (
-            drift_report["changed_count"] == 0
-        ), "No drift expected under controlled FakeProvider"
         assert drift_report["drift_detected"] is False
 
 

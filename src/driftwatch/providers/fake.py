@@ -215,4 +215,3 @@ class FakeProvider(BaseProvider):
                 cls.make_text_response("I've looked up the order. It is refundable."),
             ]
         )
-

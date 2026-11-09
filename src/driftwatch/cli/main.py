@@ -112,6 +112,22 @@ def verify(suites_dir: Path) -> None:
         sys.exit(EXIT_HASH_MISMATCH)
 
 
+@cli.command(name="suite-report")
+@click.option(
+    "--suites-dir",
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    default=Path("suites"),
+    help="Path to the suites root directory.",
+)
+def suite_report(suites_dir: Path) -> None:
+    """Print an audit report of scenarios per suite by language, channel, attack class, origin, and tool."""  # noqa: E501
+    from driftwatch.suites.report import format_suite_report, generate_suite_report
+
+    report = generate_suite_report(suites_dir)
+    click.echo(format_suite_report(report))
+    sys.exit(EXIT_OK)
+
+
 # ---------------------------------------------------------------------------
 # driftwatch run
 # ---------------------------------------------------------------------------
@@ -653,8 +669,7 @@ def weekly_report(
             output_dir=Path(output_dir),
         )
         click.echo(
-            f"Weekly report generated: {out_paths['report_md']} and "
-            f"{out_paths['report_html']}"
+            f"Weekly report generated: {out_paths['report_md']} and {out_paths['report_html']}"
         )
         click.echo(f"Manifest index updated: {out_paths['manifest']}")
         sys.exit(EXIT_OK)

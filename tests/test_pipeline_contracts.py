@@ -54,6 +54,7 @@ class TestContractSchemas:
         assert validated.schema_version == "1.0.0"
         assert validated.planned_weeks == 12
         from driftwatch.config import load_study_config
+
         assert validated.study_start_date == load_study_config().study_start_date
         assert isinstance(validated.weeks, list)
         assert isinstance(validated.models, list)

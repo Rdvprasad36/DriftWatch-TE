@@ -31,4 +31,3 @@ __all__ = [
     "run_canaries",
     "write_canary_bundle",
 ]
-

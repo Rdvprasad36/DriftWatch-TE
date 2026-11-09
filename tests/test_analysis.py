@@ -26,7 +26,7 @@ from driftwatch.analysis.changepoint import (
     validate_changepoint_with_bootstrap,
 )
 from driftwatch.analysis.correction import benjamini_hochberg
-from driftwatch.analysis.gee import fit_logistic_gee
+from driftwatch.analysis.gee import cluster_permutation_test, fit_logistic_gee
 from driftwatch.analysis.synthetic import generate_synthetic_trials
 from driftwatch.analysis.tost import tost_equivalence
 
@@ -38,9 +38,7 @@ from driftwatch.analysis.tost import tost_equivalence
 class TestSyntheticDataGenerator:
     def test_synthetic_trials_shape_and_columns(self) -> None:
         """Synthetic trials match expected row count and required columns."""
-        df = generate_synthetic_trials(
-            n_weeks=6, n_scenarios=10, n_trials=3, seed=123
-        )
+        df = generate_synthetic_trials(n_weeks=6, n_scenarios=10, n_trials=3, seed=123)
         assert len(df) == 6 * 10 * 3
         required = {
             "week_idx",
@@ -158,14 +156,62 @@ class TestGEE:
 
     def test_gee_result_has_required_metrics(self) -> None:
         """GEEResult provides odds ratios, p-values, standard errors, and CIs."""
-        df = generate_synthetic_trials(
-            n_weeks=6, n_scenarios=15, n_trials=3, seed=1
-        )
+        df = generate_synthetic_trials(n_weeks=6, n_scenarios=15, n_trials=3, seed=1)
         result = fit_logistic_gee(df)
         assert result.converged is True
         assert len(result.coefficients) > 0
         assert len(result.odds_ratios) > 0
         assert len(result.conf_int_lower) > 0
+        assert result.covariance_type in ("bias_reduced", "robust")
+        assert result.df_resid > 0
+
+    def test_gee_small_sample_keeps_type_1_error_near_nominal(self) -> None:
+        """Small-sample bias-corrected GEE maintains Type-I error near 5% with 20 clusters.
+
+        Under H0 (no drift, drift_rate=0.0) across 20 base clusters, standard asymptotic
+        sandwich SEs underestimate variance and inflate Type-I error to 10-15%.
+        The Mancl & DeRouen bias-corrected sandwich with t(K-p) cluster degrees of freedom
+        controls false positive rates within nominal bounds (<= 0.08).
+        """
+        n_sims = 60
+        rejections = 0
+        for i in range(n_sims):
+            df_null = generate_synthetic_trials(
+                n_weeks=6,
+                n_scenarios=20,
+                n_trials=3,
+                base_asr=0.20,
+                drift_rate=0.0,
+                seed=7000 + i,
+            )
+            res = fit_logistic_gee(df_null, formula="attack_success ~ week_idx")
+            assert res.converged is True
+            assert res.covariance_type == "bias_reduced"
+            assert res.standard_errors["week_idx"] > 0
+            if res.p_values["week_idx"] < 0.05:
+                rejections += 1
+
+        type_1_error = rejections / n_sims
+        # Nominal alpha is 0.05; verify empirical rate is well-controlled near 5% (<= 0.08)
+        assert type_1_error <= 0.08, f"Type-I error inflated: {type_1_error:.3f} > 0.08"
+
+    def test_cluster_permutation_test(self) -> None:
+        """Cluster permutation test yields non-significant p on null and <0.05 on drift."""
+        df_null = generate_synthetic_trials(
+            n_weeks=6, n_scenarios=20, n_trials=3, base_asr=0.20, drift_rate=0.0, seed=42
+        )
+        p_null = cluster_permutation_test(
+            df_null, formula="attack_success ~ week_idx", n_permutations=30, seed=42
+        )
+        assert p_null > 0.05
+
+        df_drift = generate_synthetic_trials(
+            n_weeks=6, n_scenarios=20, n_trials=5, base_asr=0.05, drift_rate=0.08, seed=42
+        )
+        p_drift = cluster_permutation_test(
+            df_drift, formula="attack_success ~ week_idx", n_permutations=30, seed=42
+        )
+        assert p_drift < 0.05
 
 
 # ---------------------------------------------------------------------------

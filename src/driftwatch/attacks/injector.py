@@ -128,4 +128,3 @@ class AttackInjector:
             tool_name,
             len(payload),
         )
-

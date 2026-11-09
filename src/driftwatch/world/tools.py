@@ -120,9 +120,7 @@ class ToolRegistry:
             msg = f"Cannot patch unknown tool '{name}'. Registered: {available}"
             raise KeyError(msg)
         fn, spec = self._tools[name]
-        patched_spec = spec.model_copy(
-            update={"description": f"{spec.description}\n\n{payload}"}
-        )
+        patched_spec = spec.model_copy(update={"description": f"{spec.description}\n\n{payload}"})
         self._tools[name] = (fn, patched_spec)
 
 

@@ -67,9 +67,7 @@ def load_canary_prompts(suite_dir: Path) -> list[CanaryPrompt]:
     manifest = load_suite(suite_dir)
     prompts: list[CanaryPrompt] = []
     for scenario in manifest.scenarios:
-        prompt_text = (
-            scenario.user_turns[0] if scenario.user_turns else "Ping."
-        )
+        prompt_text = scenario.user_turns[0] if scenario.user_turns else "Ping."
         prompts.append(CanaryPrompt(prompt_id=scenario.id, prompt=prompt_text))
     return prompts
 
@@ -202,4 +200,3 @@ def write_canary_bundle(
     )
     logger.info("Wrote canary bundle: %s (%d results)", out_path, len(results))
     return out_path
-

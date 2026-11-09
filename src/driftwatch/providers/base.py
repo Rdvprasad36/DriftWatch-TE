@@ -34,8 +34,7 @@ def redact_headers(headers: dict[str, str]) -> dict[str, str]:
     Comparison is case-insensitive. All other headers pass through unchanged.
     """
     return {
-        k: "[REDACTED]" if k.lower() in _SECRET_HEADER_NAMES else v
-        for k, v in headers.items()
+        k: "[REDACTED]" if k.lower() in _SECRET_HEADER_NAMES else v for k, v in headers.items()
     }
 
 

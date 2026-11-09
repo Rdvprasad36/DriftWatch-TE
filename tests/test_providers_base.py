@@ -246,4 +246,3 @@ class TestFakeProvider:
         provider = FakeProvider(responses=[])
         with pytest.raises(FakeProviderExhausted):
             await provider.complete([], [], "fake", 0.0)
-

@@ -98,9 +98,7 @@ class TestRetryBehavior:
     async def test_retries_on_500_then_succeeds(self, provider: OpenAICompatProvider) -> None:
         server_err = make_httpx_resp(500, {"error": "internal"})
         ok_resp = make_httpx_resp(200, VALID_BODY)
-        with patch.object(
-            provider, "_post", new=AsyncMock(side_effect=[server_err, ok_resp])
-        ):
+        with patch.object(provider, "_post", new=AsyncMock(side_effect=[server_err, ok_resp])):
             result = await provider.complete([], [], "llama3", 0.7)
         assert result.ok is True
 
@@ -296,9 +294,7 @@ class TestHeaderCapture:
 
 
 class TestModelTracking:
-    async def test_returned_model_captured_from_body(
-        self, provider: OpenAICompatProvider
-    ) -> None:
+    async def test_returned_model_captured_from_body(self, provider: OpenAICompatProvider) -> None:
         """FR3: returned model id from response body is preserved, even if it differs."""
         body: dict[str, Any] = {**VALID_BODY, "model": "llama3-70b-8192-versioned"}
         resp = make_httpx_resp(200, body)
@@ -370,4 +366,3 @@ class TestRequestBodyConstruction:
             await provider.complete([], [], "m", 0.7, max_tokens=512)
 
         assert captured_body[0]["max_tokens"] == 512
-

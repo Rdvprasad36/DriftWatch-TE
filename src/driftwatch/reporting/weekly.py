@@ -71,9 +71,7 @@ def generate_weekly_report(
             index_data = json.loads(index_path.read_text(encoding="utf-8"))
 
     all_weeks = index_data.get("weeks", [])
-    study_weeks = [
-        w for w in all_weeks if not w.get("is_pilot") and w.get("week") >= study_start
-    ]
+    study_weeks = [w for w in all_weeks if not w.get("is_pilot") and w.get("week") >= study_start]
 
     is_pilot = week < study_start or weekly_data.get("is_pilot", False)
     week_number_str = "Pilot"
@@ -200,7 +198,8 @@ def generate_weekly_report(
         md_lines.append(row)
 
     ctrl_str = (
-        f"{control_task_success:.1%}" if control_task_success is not None
+        f"{control_task_success:.1%}"
+        if control_task_success is not None
         else "No control suite trials"
     )
 
@@ -353,9 +352,7 @@ def generate_weekly_report(
         with contextlib.suppress(Exception):
             manifest = json.loads(index_manifest_path.read_text(encoding="utf-8"))
 
-    existing_weeks = {
-        w_entry.get("week"): w_entry for w_entry in manifest.get("weeks", [])
-    }
+    existing_weeks = {w_entry.get("week"): w_entry for w_entry in manifest.get("weeks", [])}
     existing_weeks[week] = {
         "week": week,
         "is_pilot": is_pilot,

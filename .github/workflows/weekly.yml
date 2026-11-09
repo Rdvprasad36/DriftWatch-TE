@@ -401,6 +401,7 @@ jobs:
                   weekly_run_dir=Path(f"weekly/{week}"),
                   week=week,
                   token=token,
+                  is_dry_run=False,
               )
               print("Hugging Face dataset upload completed successfully.")
           else:
@@ -411,6 +412,7 @@ jobs:
                       weekly_run_dir=Path(f"weekly/{week}"),
                       week=week,
                       token=token,
+                      is_dry_run=True,
                   )
               else:
                   print("Dry run: skipping optional HF upload (hf_dataset_repo is 'TODO' or HF_TOKEN unset).")

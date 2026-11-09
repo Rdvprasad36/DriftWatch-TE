@@ -99,4 +99,3 @@ def load_parquet_rows(parquet_path: Path) -> list[dict[str, Any]]:
         rows.append(row)
 
     return rows
-

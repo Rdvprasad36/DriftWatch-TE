@@ -44,16 +44,10 @@ def make_fake_registry(
 ) -> ProviderRegistry:
     """Build a ProviderRegistry with a FakeProvider."""
     resp_list = responses or [
-        FakeProvider.make_text_response(
-            "Canary output response 1.", model=returned_model_id
-        ),
-        FakeProvider.make_text_response(
-            "Canary output response 2.", model=returned_model_id
-        ),
+        FakeProvider.make_text_response("Canary output response 1.", model=returned_model_id),
+        FakeProvider.make_text_response("Canary output response 2.", model=returned_model_id),
     ]
-    provider = FakeProvider(
-        responses=resp_list, returned_model_id=returned_model_id
-    )
+    provider = FakeProvider(responses=resp_list, returned_model_id=returned_model_id)
     registry = ProviderRegistry()
     registry.register("fake", provider)
     return registry
@@ -114,16 +108,12 @@ class TestCanaryHashing:
 class TestCanaryRunner:
     async def test_canary_runs_at_temperature_zero(self) -> None:
         """Canary execution must always use temperature=0.0 (FR5 / design.md §2)."""
-        provider = FakeProvider(
-            responses=[FakeProvider.make_text_response("Canary answer.")]
-        )
+        provider = FakeProvider(responses=[FakeProvider.make_text_response("Canary answer.")])
         registry = ProviderRegistry()
         registry.register("fake", provider)
 
         prompts = [CanaryPrompt(prompt_id="canary_01", prompt="Ping test.")]
-        results = await run_canaries(
-            prompts, provider_registry=registry, model_aliases=["fake"]
-        )
+        results = await run_canaries(prompts, provider_registry=registry, model_aliases=["fake"])
 
         assert len(results) == 1
         assert results[0].prompt_id == "canary_01"
@@ -137,9 +127,7 @@ class TestCanaryRunner:
         """Records returned_model_id from provider response (FR3, FR5)."""
         registry = make_fake_registry(returned_model_id="gpt-4o-2026-10")
         prompts = [CanaryPrompt(prompt_id="c01", prompt="Hello")]
-        results = await run_canaries(
-            prompts, provider_registry=registry, model_aliases=["fake"]
-        )
+        results = await run_canaries(prompts, provider_registry=registry, model_aliases=["fake"])
 
         assert results[0].returned_model_id == "gpt-4o-2026-10"
         assert results[0].model_alias == "fake"
@@ -152,9 +140,7 @@ class TestCanaryRunner:
         registry.register("fake", provider)
 
         prompts = [CanaryPrompt(prompt_id="c01", prompt="Hello")]
-        results = await run_canaries(
-            prompts, provider_registry=registry, model_aliases=["fake"]
-        )
+        results = await run_canaries(prompts, provider_registry=registry, model_aliases=["fake"])
 
         assert len(results) == 1
         assert results[0].error is not None
@@ -262,12 +248,8 @@ class TestCanaryBundle:
     def test_compare_canary_runs_detects_no_drift(self) -> None:
         """Identical runs report 0 hash changes."""
         h = compute_output_hash("Test")
-        baseline = [
-            {"prompt_id": "c01", "model_alias": "fake", "output_hash": h}
-        ]
-        current = [
-            {"prompt_id": "c01", "model_alias": "fake", "output_hash": h}
-        ]
+        baseline = [{"prompt_id": "c01", "model_alias": "fake", "output_hash": h}]
+        current = [{"prompt_id": "c01", "model_alias": "fake", "output_hash": h}]
         report = compare_canary_runs(baseline, current)
         assert report["total_compared"] == 1
         assert report["changed_count"] == 0
@@ -277,12 +259,8 @@ class TestCanaryBundle:
         """Hash mismatch flags model drift (design.md §4.7)."""
         h1 = compute_output_hash("Test 1")
         h2 = compute_output_hash("Test 2")
-        baseline = [
-            {"prompt_id": "c01", "model_alias": "fake", "output_hash": h1}
-        ]
-        current = [
-            {"prompt_id": "c01", "model_alias": "fake", "output_hash": h2}
-        ]
+        baseline = [{"prompt_id": "c01", "model_alias": "fake", "output_hash": h1}]
+        current = [{"prompt_id": "c01", "model_alias": "fake", "output_hash": h2}]
         report = compare_canary_runs(baseline, current)
         assert report["total_compared"] == 1
         assert report["changed_count"] == 1
@@ -306,10 +284,14 @@ class TestDriftwatchCanaryCLI:
             cli,
             [
                 "canary",
-                "--week", "2026-10-19",
-                "--models", "fake",
-                "--suite-dir", "suites/canary",
-                "--results-dir", str(tmp_path / "weekly"),
+                "--week",
+                "2026-10-19",
+                "--models",
+                "fake",
+                "--suite-dir",
+                "suites/canary",
+                "--results-dir",
+                str(tmp_path / "weekly"),
             ],
         )
         assert result.exit_code == 0, f"CLI error: {result.output}"
@@ -326,10 +308,14 @@ class TestDriftwatchCanaryCLI:
             cli,
             [
                 "canary",
-                "--week", "2026-10-19",
-                "--models", "fake",
-                "--suite-dir", "suites/nonexistent_canary_dir",
-                "--results-dir", str(tmp_path / "weekly"),
+                "--week",
+                "2026-10-19",
+                "--models",
+                "fake",
+                "--suite-dir",
+                "suites/nonexistent_canary_dir",
+                "--results-dir",
+                str(tmp_path / "weekly"),
             ],
         )
         assert result.exit_code == 2

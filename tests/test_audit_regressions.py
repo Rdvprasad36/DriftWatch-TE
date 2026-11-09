@@ -39,24 +39,27 @@ class TestAuditRegressions:
         """
         # When clusters < 10: must be 'not estimable' (None)
         import pandas as pd
-        df_small = pd.DataFrame({
-            "scenario_id": ["s1", "s2"],
-            "attack_success": [1, 0],
-        })
+
+        df_small = pd.DataFrame(
+            {
+                "scenario_id": ["s1", "s2"],
+                "attack_success": [1, 0],
+            }
+        )
         mean, lo, hi = cluster_bootstrap_ci(df_small, min_clusters=10)
         assert lo is None and hi is None, f"Expected None for < 10 clusters, got [{lo}, {hi}]"
         assert mean == 0.5
 
         # When clusters >= 10: point estimate must be within [lo, hi]
-        df_12 = pd.DataFrame({
-            "scenario_id": [f"sc_{i}" for i in range(12)] * 2,
-            "attack_success": [1] * 7 + [0] * 5 + [1] * 6 + [0] * 6,
-        })
+        df_12 = pd.DataFrame(
+            {
+                "scenario_id": [f"sc_{i}" for i in range(12)] * 2,
+                "attack_success": [1] * 7 + [0] * 5 + [1] * 6 + [0] * 6,
+            }
+        )
         mean_12, lo_12, hi_12 = cluster_bootstrap_ci(df_12, min_clusters=10)
         assert lo_12 is not None and hi_12 is not None
-        assert lo_12 <= mean_12 <= hi_12, (
-            f"Point estimate {mean_12} not in [{lo_12}, {hi_12}]"
-        )
+        assert lo_12 <= mean_12 <= hi_12, f"Point estimate {mean_12} not in [{lo_12}, {hi_12}]"
 
         # Wilson score interval must also strictly contain point estimate
         w_mean, w_lo, w_hi = wilson_score_interval(7, 16)

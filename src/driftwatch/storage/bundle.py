@@ -99,10 +99,7 @@ def finalize_bundle(
         raise FileNotFoundError(msg)
 
     if parquet_path.exists() and not allow_overwrite:
-        msg = (
-            f"Bundle already exists: '{parquet_path}'. "
-            "Use --force-new-version to overwrite."
-        )
+        msg = f"Bundle already exists: '{parquet_path}'. Use --force-new-version to overwrite."
         raise FileExistsError(msg)
 
     # Convert NDJSON → Parquet
@@ -139,4 +136,3 @@ def finalize_bundle(
         meta_path.name,
     )
     return meta
-

@@ -59,9 +59,7 @@ def generate_reports(
     if not suite_hashes and (root / "suites" / "SUITE_LOCK.json").is_file():
         try:
             lock = json.loads((root / "suites" / "SUITE_LOCK.json").read_text(encoding="utf-8"))
-            suite_hashes = {
-                k: v.get("suite_hash", "") for k, v in lock.get("entries", {}).items()
-            }
+            suite_hashes = {k: v.get("suite_hash", "") for k, v in lock.get("entries", {}).items()}
         except Exception:
             pass
 
@@ -461,7 +459,7 @@ def generate_reports(
         "      <h1>DriftWatch-TE: Longitudinal Security Evaluation Report</h1>",
         (
             f'      <div class="meta-bar">Generated: {now_utc} &bull; Git SHA: '
-            f'<code>{git_sha}</code> &bull; Study Weeks: {study_weeks_count} of {planned_w}</div>'
+            f"<code>{git_sha}</code> &bull; Study Weeks: {study_weeks_count} of {planned_w}</div>"
         ),
         "    </header>",
         "    <h2>1. Summary</h2>",

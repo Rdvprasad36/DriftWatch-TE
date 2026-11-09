@@ -59,8 +59,7 @@ def compare_canary_runs(
         - changes: List of change detail dicts
     """
     baseline_map: dict[tuple[str, str], dict[str, Any]] = {
-        (str(row["prompt_id"]), str(row.get("model_alias", ""))): row
-        for row in baseline
+        (str(row["prompt_id"]), str(row.get("model_alias", ""))): row for row in baseline
     }
 
     changes: list[dict[str, Any]] = []
@@ -95,4 +94,3 @@ def compare_canary_runs(
         "drift_detected": drift_detected,
         "changes": changes,
     }
-

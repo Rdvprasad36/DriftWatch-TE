@@ -90,9 +90,7 @@ def make_registry(responses_per_call: int = 2) -> ProviderRegistry:
         ) -> Any:
             if self._index >= len(self._responses):
                 self._index = 0  # cycle
-            return await super().complete(
-                messages, tools, model, temperature, max_tokens
-            )
+            return await super().complete(messages, tools, model, temperature, max_tokens)
 
     provider = InfiniteFakeProvider(responses=responses * 10)
     registry = ProviderRegistry()
@@ -180,10 +178,16 @@ class TestRunWriter:
         suite = make_suite()
         job = expand_jobs([suite], ["fake"], 1)[0]
         from driftwatch.agent.trial import TrialResult
+
         result = TrialResult(
-            scenario_id="s01", language="en", channel="tool_output",
-            model_alias="fake", returned_model_id="fake-v1", fingerprint=None,
-            attack_success=False, task_success=True,
+            scenario_id="s01",
+            language="en",
+            channel="tool_output",
+            model_alias="fake",
+            returned_model_id="fake-v1",
+            fingerprint=None,
+            attack_success=False,
+            task_success=True,
         )
 
         async def _run() -> None:
@@ -197,10 +201,16 @@ class TestRunWriter:
         suite = make_suite()
         job = expand_jobs([suite], ["fake"], 1)[0]
         from driftwatch.agent.trial import TrialResult
+
         result = TrialResult(
-            scenario_id="s01", language="en", channel="tool_output",
-            model_alias="fake", returned_model_id="fake-v1", fingerprint=None,
-            attack_success=True, task_success=False,
+            scenario_id="s01",
+            language="en",
+            channel="tool_output",
+            model_alias="fake",
+            returned_model_id="fake-v1",
+            fingerprint=None,
+            attack_success=True,
+            task_success=False,
         )
 
         async def _run() -> None:
@@ -221,10 +231,16 @@ class TestRunWriter:
         suite = make_suite()
         job = expand_jobs([suite], ["fake"], 1)[0]
         from driftwatch.agent.trial import TrialResult
+
         result = TrialResult(
-            scenario_id="s01", language="en", channel="tool_output",
-            model_alias="fake", returned_model_id="fake-v1", fingerprint=None,
-            attack_success=False, task_success=False,
+            scenario_id="s01",
+            language="en",
+            channel="tool_output",
+            model_alias="fake",
+            returned_model_id="fake-v1",
+            fingerprint=None,
+            attack_success=False,
+            task_success=False,
         )
 
         async def _run() -> None:
@@ -242,10 +258,16 @@ class TestRunWriter:
         suite = make_suite()
         job = expand_jobs([suite], ["fake"], 1)[0]
         from driftwatch.agent.trial import TrialResult
+
         result = TrialResult(
-            scenario_id="s01", language="en", channel="tool_output",
-            model_alias="fake", returned_model_id="fake-v1", fingerprint=None,
-            attack_success=False, task_success=False,
+            scenario_id="s01",
+            language="en",
+            channel="tool_output",
+            model_alias="fake",
+            returned_model_id="fake-v1",
+            fingerprint=None,
+            attack_success=False,
+            task_success=False,
         )
 
         async def _run() -> None:
@@ -268,10 +290,16 @@ class TestRunWriter:
         suite = make_suite()
         job = expand_jobs([suite], ["fake"], 1)[0]
         from driftwatch.agent.trial import TrialResult
+
         result = TrialResult(
-            scenario_id="s01", language="en", channel="tool_output",
-            model_alias="fake", returned_model_id="fake-v1", fingerprint=None,
-            attack_success=False, task_success=False,
+            scenario_id="s01",
+            language="en",
+            channel="tool_output",
+            model_alias="fake",
+            returned_model_id="fake-v1",
+            fingerprint=None,
+            attack_success=False,
+            task_success=False,
         )
 
         async def _run() -> None:
@@ -306,10 +334,16 @@ class TestRunWriter:
         suite = make_suite()
         job = expand_jobs([suite], ["fake"], 1)[0]
         from driftwatch.agent.trial import TrialResult
+
         result = TrialResult(
-            scenario_id="s01", language="en", channel="tool_output",
-            model_alias="fake", returned_model_id="fake-v1", fingerprint=None,
-            attack_success=False, task_success=False,
+            scenario_id="s01",
+            language="en",
+            channel="tool_output",
+            model_alias="fake",
+            returned_model_id="fake-v1",
+            fingerprint=None,
+            attack_success=False,
+            task_success=False,
         )
 
         async def _run() -> None:
@@ -422,9 +456,7 @@ class TestRunJobs:
 
         lines = writer._staging_path.read_text().strip().split("\n")
         job_ids_in_output = [json.loads(line)["job_id"] for line in lines]
-        assert len(job_ids_in_output) == len(set(job_ids_in_output)), (
-            "Duplicate job rows found"
-        )
+        assert len(job_ids_in_output) == len(set(job_ids_in_output)), "Duplicate job rows found"
 
     async def test_concurrency_bound_respected(self, tmp_path: Path) -> None:
         """No more than `concurrency` LLM calls run simultaneously."""
@@ -453,9 +485,7 @@ class TestRunJobs:
                 # Reset index to allow cycling
                 if self._index >= len(self._responses):
                     self._index = 0
-                return await super().complete(
-                    messages, tools, model, temperature, max_tokens
-                )
+                return await super().complete(messages, tools, model, temperature, max_tokens)
 
         responses = [
             FakeProvider.make_tool_response("lookup_order", {"order_id": "1042"}),
@@ -518,18 +548,22 @@ class TestDriftwatchRunCLI:
             cli,
             [
                 "run",
-                "--week", "2026-10-19",
-                "--suites", "canary",
-                "--models", "fake",
-                "--trials", "1",
-                "--results-dir", str(tmp_path / "weekly"),
-                "--suite-root", "suites",
+                "--week",
+                "2026-10-19",
+                "--suites",
+                "canary",
+                "--models",
+                "fake",
+                "--trials",
+                "1",
+                "--results-dir",
+                str(tmp_path / "weekly"),
+                "--suite-root",
+                "suites",
             ],
         )
         # Should exit 0 (ok) or 1 (partial run) — never 2 (harness error)
-        assert result.exit_code in (0, 1), (
-            f"CLI exited with {result.exit_code}:\n{result.output}"
-        )
+        assert result.exit_code in (0, 1), f"CLI exited with {result.exit_code}:\n{result.output}"
 
     def test_run_command_missing_suite_exits_2(self, tmp_path: Path) -> None:
         """Unknown suite name → harness error (exit code 2)."""
@@ -542,13 +576,18 @@ class TestDriftwatchRunCLI:
             cli,
             [
                 "run",
-                "--week", "2026-10-19",
-                "--suites", "nonexistent_suite_xyz",
-                "--models", "fake",
-                "--trials", "1",
-                "--results-dir", str(tmp_path / "weekly"),
-                "--suite-root", "suites",
+                "--week",
+                "2026-10-19",
+                "--suites",
+                "nonexistent_suite_xyz",
+                "--models",
+                "fake",
+                "--trials",
+                "1",
+                "--results-dir",
+                str(tmp_path / "weekly"),
+                "--suite-root",
+                "suites",
             ],
         )
         assert result.exit_code == 2
-

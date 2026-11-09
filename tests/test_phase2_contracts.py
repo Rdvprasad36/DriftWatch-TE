@@ -167,8 +167,6 @@ def test_power_simulation_script() -> None:
     # Checks for 3, 5, 10
     lines = result.stdout.splitlines()
     trials_found = [
-        line.split()[0]
-        for line in lines
-        if line.strip() and line.split()[0] in ["3", "5", "10"]
+        line.split()[0] for line in lines if line.strip() and line.split()[0] in ["3", "5", "10"]
     ]
     assert trials_found == ["3", "5", "10"]

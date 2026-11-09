@@ -68,4 +68,3 @@ def load_study_config(config_path: Path | None = None) -> StudyConfig:
     except Exception as exc:
         logger.error("Failed to load study config from '%s': %s", path, exc)
         return StudyConfig()
-

@@ -116,9 +116,7 @@ class TestParquetConversion:
         assert parquet_path.exists()
         assert count == len(SAMPLE_ROWS)
 
-    def test_parquet_round_trip_preserves_data(
-        self, tmp_path: Path
-    ) -> None:
+    def test_parquet_round_trip_preserves_data(self, tmp_path: Path) -> None:
         """Data survives NDJSON -> Parquet -> read-back."""
         from driftwatch.storage.parquet import (
             load_parquet_rows,
@@ -141,9 +139,7 @@ class TestParquetConversion:
         assert rows[2]["model_alias"] == "groq"
         assert rows[2]["temperature"] == pytest.approx(0.7)
 
-    def test_parquet_preserves_none_fingerprint(
-        self, tmp_path: Path
-    ) -> None:
+    def test_parquet_preserves_none_fingerprint(self, tmp_path: Path) -> None:
         """Nullable fields (fingerprint) round-trip as None."""
         from driftwatch.storage.parquet import (
             load_parquet_rows,
@@ -159,9 +155,7 @@ class TestParquetConversion:
         assert rows[0]["fingerprint"] is None
         assert rows[1]["fingerprint"] == "fp-xyz"
 
-    def test_empty_ndjson_produces_empty_parquet(
-        self, tmp_path: Path
-    ) -> None:
+    def test_empty_ndjson_produces_empty_parquet(self, tmp_path: Path) -> None:
         """Empty NDJSON file -> Parquet with 0 rows."""
         from driftwatch.storage.parquet import (
             load_parquet_rows,
@@ -184,9 +178,7 @@ class TestParquetConversion:
 
 
 class TestBundleFinalize:
-    def test_finalize_creates_parquet_and_meta(
-        self, tmp_path: Path
-    ) -> None:
+    def test_finalize_creates_parquet_and_meta(self, tmp_path: Path) -> None:
         """finalize_bundle converts NDJSON to Parquet and writes meta."""
         from driftwatch.storage.bundle import finalize_bundle
 
@@ -213,9 +205,7 @@ class TestBundleFinalize:
         with pytest.raises(FileExistsError, match="already exists"):
             finalize_bundle(run_dir, week="2026-10-19")
 
-    def test_finalize_allows_overwrite_with_flag(
-        self, tmp_path: Path
-    ) -> None:
+    def test_finalize_allows_overwrite_with_flag(self, tmp_path: Path) -> None:
         """allow_overwrite=True permits re-finalization."""
         from driftwatch.storage.bundle import finalize_bundle
 
@@ -224,9 +214,7 @@ class TestBundleFinalize:
         finalize_bundle(run_dir, week="2026-10-19")
 
         _write_ndjson(run_dir / "trials.ndjson", SAMPLE_ROWS)
-        meta = finalize_bundle(
-            run_dir, week="2026-10-19", allow_overwrite=True
-        )
+        meta = finalize_bundle(run_dir, week="2026-10-19", allow_overwrite=True)
         assert meta["row_count"] == len(SAMPLE_ROWS)
 
     def test_meta_json_has_required_fields(self, tmp_path: Path) -> None:
@@ -258,9 +246,7 @@ class TestSummary:
 
         run_dir = tmp_path / "weekly" / "2026-10-19"
         _write_ndjson(run_dir / "trials.ndjson", SAMPLE_ROWS)
-        ndjson_to_parquet(
-            run_dir / "trials.ndjson", run_dir / "trials.parquet"
-        )
+        ndjson_to_parquet(run_dir / "trials.ndjson", run_dir / "trials.parquet")
 
         summary = generate_summary(run_dir, week="2026-10-19")
 
@@ -279,9 +265,7 @@ class TestSummary:
 
         run_dir = tmp_path / "weekly" / "2026-10-19"
         _write_ndjson(run_dir / "trials.ndjson", SAMPLE_ROWS)
-        ndjson_to_parquet(
-            run_dir / "trials.ndjson", run_dir / "trials.parquet"
-        )
+        ndjson_to_parquet(run_dir / "trials.ndjson", run_dir / "trials.parquet")
 
         summary = generate_summary(run_dir, week="2026-10-19")
 
@@ -298,18 +282,85 @@ class TestSummary:
         run_dir = tmp_path / "weekly" / "2026-10-19"
         output_dir = tmp_path / "results" / "summary"
         _write_ndjson(run_dir / "trials.ndjson", SAMPLE_ROWS)
-        ndjson_to_parquet(
-            run_dir / "trials.ndjson", run_dir / "trials.parquet"
-        )
+        ndjson_to_parquet(run_dir / "trials.ndjson", run_dir / "trials.parquet")
 
-        path = write_summary(
-            run_dir, week="2026-10-19", output_dir=output_dir
-        )
+        path = write_summary(run_dir, week="2026-10-19", output_dir=output_dir)
 
         assert path.exists()
         assert path.name == "2026-10-19.json"
         data = json.loads(path.read_text())
         assert data["week"] == "2026-10-19"
+
+    def test_summary_computes_overall_and_exposed_asr(self, tmp_path: Path) -> None:
+        """Summary tracks exposed trials and reports overall and exposed ASR."""
+        from driftwatch.storage.summary import generate_summary
+
+        run_dir = tmp_path / "weekly" / "2026-11-09"
+        rows = [
+            # Trial 1: Exposed, Attack Success
+            {
+                "scenario_id": "a1",
+                "base_id": "b1",
+                "model_alias": "fake",
+                "language": "en",
+                "channel": "tool_output",
+                "suite": "attacks_v1",
+                "attack_success": True,
+                "task_success": False,
+                "exposed": True,
+            },
+            # Trial 2: Exposed, Attack Failed
+            {
+                "scenario_id": "a2",
+                "base_id": "b1",
+                "model_alias": "fake",
+                "language": "en",
+                "channel": "tool_output",
+                "suite": "attacks_v1",
+                "attack_success": False,
+                "task_success": True,
+                "exposed": True,
+            },
+            # Trial 3: NOT Exposed, Attack Failed
+            {
+                "scenario_id": "a3",
+                "base_id": "b2",
+                "model_alias": "fake",
+                "language": "en",
+                "channel": "tool_output",
+                "suite": "attacks_v1",
+                "attack_success": False,
+                "task_success": False,
+                "exposed": False,
+            },
+            # Trial 4: NOT Exposed, Attack Failed
+            {
+                "scenario_id": "a4",
+                "base_id": "b2",
+                "model_alias": "fake",
+                "language": "en",
+                "channel": "tool_output",
+                "suite": "attacks_v1",
+                "attack_success": False,
+                "task_success": False,
+                "exposed": False,
+            },
+        ]
+        _write_ndjson(run_dir / "trials.ndjson", rows)
+        summary = generate_summary(run_dir, week="2026-11-09")
+
+        assert summary["total_trials"] == 4
+        assert summary["total_attack_successes"] == 1
+        assert summary["total_exposed_trials"] == 2
+        # Overall ASR: 1 / 4 = 0.25
+        assert summary["overall_asr"] == pytest.approx(0.25)
+        # Conditional ASR (exposed): 1 / 2 = 0.50
+        assert summary["overall_asr_exposed"] == pytest.approx(0.50)
+
+        # Per model
+        fake = summary["models"]["fake"]
+        assert fake["asr"] == pytest.approx(0.25)
+        assert fake["asr_exposed"] == pytest.approx(0.50)
 
 
 # ---------------------------------------------------------------------------
@@ -320,7 +371,7 @@ class TestSummary:
 class TestHFUpload:
     def test_upload_calls_hf_api(self, tmp_path: Path) -> None:
         """upload_bundle calls HfApi.upload_folder with correct args."""
-        from driftwatch.storage.hf_upload import upload_bundle
+        from driftwatch.storage.hf_upload import upload_bundle, upload_weekly_bundle
 
         run_dir = tmp_path / "weekly" / "2026-10-19"
         run_dir.mkdir(parents=True)
@@ -328,9 +379,7 @@ class TestHFUpload:
         (run_dir / "meta.json").write_text("{}")
 
         mock_api = MagicMock()
-        with patch(
-            "driftwatch.storage.hf_upload.HfApi", return_value=mock_api
-        ):
+        with patch("driftwatch.storage.hf_upload.HfApi", return_value=mock_api):
             upload_bundle(
                 run_dir,
                 repo_id="user/driftwatch-data",
@@ -341,7 +390,68 @@ class TestHFUpload:
         mock_api.upload_folder.assert_called_once()
         call_kwargs = mock_api.upload_folder.call_args
         assert call_kwargs.kwargs["repo_id"] == "user/driftwatch-data"
-        assert "2026-10-19" in call_kwargs.kwargs["path_in_repo"]
+        assert call_kwargs.kwargs["path_in_repo"] == "weekly/2026-10-19"
+        assert call_kwargs.kwargs["repo_type"] == "dataset"
+
+        # Verify dryrun upload path and alias upload_weekly_bundle
+        mock_api.reset_mock()
+        with patch("driftwatch.storage.hf_upload.HfApi", return_value=mock_api):
+            upload_weekly_bundle(
+                weekly_run_dir=run_dir,
+                repo_id="user/driftwatch-data",
+                week="2026-10-19",
+                token="fake-token",
+                is_dry_run=True,
+            )
+        call_kwargs = mock_api.upload_folder.call_args
+        assert call_kwargs.kwargs["path_in_repo"] == "dryrun/2026-10-19"
+        assert call_kwargs.kwargs["repo_type"] == "dataset"
+
+    def test_weekly_workflow_upload_calls_exact_signature(self, tmp_path: Path) -> None:
+        """Call upload_weekly_bundle exactly as weekly.yml invokes it."""
+        from driftwatch.storage.hf_upload import upload_weekly_bundle
+
+        week = "2026-11-23"
+        weekly_run_dir = tmp_path / "weekly" / week
+        weekly_run_dir.mkdir(parents=True)
+        (weekly_run_dir / "trials.parquet").write_text("fake parquet data")
+        (weekly_run_dir / "meta.json").write_text(json.dumps({"week": week}))
+
+        mock_api = MagicMock()
+        with patch("driftwatch.storage.hf_upload.HfApi", return_value=mock_api):
+            # 1. Study week upload call matching weekly.yml lines 399-405
+            url_study = upload_weekly_bundle(
+                repo_id="rdvprasad36/driftwatch-te-data",
+                weekly_run_dir=weekly_run_dir,
+                week=week,
+                token="hf_mock_token_12345",
+                is_dry_run=False,
+            )
+            assert "rdvprasad36/driftwatch-te-data" in url_study
+            assert f"weekly/{week}" in url_study
+            mock_api.upload_folder.assert_called_once_with(
+                folder_path=str(weekly_run_dir),
+                repo_id="rdvprasad36/driftwatch-te-data",
+                path_in_repo=f"weekly/{week}",
+                repo_type="dataset",
+            )
+
+            # 2. Dry run upload call matching weekly.yml lines 410-416
+            mock_api.reset_mock()
+            url_dryrun = upload_weekly_bundle(
+                repo_id="rdvprasad36/driftwatch-te-data",
+                weekly_run_dir=weekly_run_dir,
+                week=week,
+                token="hf_mock_token_12345",
+                is_dry_run=True,
+            )
+            assert f"dryrun/{week}" in url_dryrun
+            mock_api.upload_folder.assert_called_once_with(
+                folder_path=str(weekly_run_dir),
+                repo_id="rdvprasad36/driftwatch-te-data",
+                path_in_repo=f"dryrun/{week}",
+                repo_type="dataset",
+            )
 
     def test_upload_raises_without_token(self, tmp_path: Path) -> None:
         """upload_bundle raises ValueError if no token is provided."""
@@ -389,13 +499,9 @@ class TestDriftwatchSummarizeCLI:
 
         run_dir = tmp_path / "weekly" / "2026-10-19"
         _write_ndjson(run_dir / "trials.ndjson", SAMPLE_ROWS)
-        ndjson_to_parquet(
-            run_dir / "trials.ndjson", run_dir / "trials.parquet"
-        )
+        ndjson_to_parquet(run_dir / "trials.ndjson", run_dir / "trials.parquet")
         # Also create meta.json so the bundle looks complete
-        (run_dir / "meta.json").write_text(
-            json.dumps({"week": "2026-10-19"})
-        )
+        (run_dir / "meta.json").write_text(json.dumps({"week": "2026-10-19"}))
 
         output_dir = tmp_path / "results" / "summary"
         runner = CliRunner()
@@ -403,21 +509,20 @@ class TestDriftwatchSummarizeCLI:
             cli,
             [
                 "summarize",
-                "--week", "2026-10-19",
-                "--results-dir", str(tmp_path / "weekly"),
-                "--output-dir", str(output_dir),
+                "--week",
+                "2026-10-19",
+                "--results-dir",
+                str(tmp_path / "weekly"),
+                "--output-dir",
+                str(output_dir),
             ],
         )
 
-        assert result.exit_code == 0, (
-            f"CLI exited with {result.exit_code}:\n{result.output}"
-        )
+        assert result.exit_code == 0, f"CLI exited with {result.exit_code}:\n{result.output}"
         assert (output_dir / "weekly" / "2026-10-19.json").exists()
         assert (output_dir / "index.json").exists()
 
-    def test_summarize_missing_week_exits_2(
-        self, tmp_path: Path
-    ) -> None:
+    def test_summarize_missing_week_exits_2(self, tmp_path: Path) -> None:
         """Missing week directory -> exit code 2."""
         from click.testing import CliRunner
 
@@ -428,10 +533,12 @@ class TestDriftwatchSummarizeCLI:
             cli,
             [
                 "summarize",
-                "--week", "2099-01-01",
-                "--results-dir", str(tmp_path / "weekly"),
-                "--output-dir", str(tmp_path / "out"),
+                "--week",
+                "2099-01-01",
+                "--results-dir",
+                str(tmp_path / "weekly"),
+                "--output-dir",
+                str(tmp_path / "out"),
             ],
         )
         assert result.exit_code == 2
-

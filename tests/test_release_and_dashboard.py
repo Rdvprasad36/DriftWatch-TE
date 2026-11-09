@@ -339,9 +339,25 @@ class TestDatasetCardAndRelease:
         assert len(data["creators"]) > 0
 
     def test_release_script_dry_run(self) -> None:
-        """Release packaging script runs a dry-run check."""
+        """Release packaging script runs a dry-run check.
+
+        Skips ONLY when suites/SUITE_LOCK.json contains an explicit "frozen": false marker.
+        After driftwatch freeze the marker is true and the test must fail on any mismatch.
+        """
         release_script = Path("scripts/release.py")
         assert release_script.is_file(), "scripts/release.py must exist"
+
+        lock_path = Path("suites/SUITE_LOCK.json")
+        if lock_path.is_file():
+            try:
+                lock_data = json.loads(lock_path.read_text(encoding="utf-8"))
+                if lock_data.get("frozen") is False:
+                    pytest.skip(
+                        "suites/SUITE_LOCK.json contains an explicit 'frozen': false marker; "
+                        "skipping release dry-run until suites are frozen via 'driftwatch freeze'."
+                    )
+            except Exception:
+                pass
 
         import subprocess
         import sys
@@ -353,3 +369,21 @@ class TestDatasetCardAndRelease:
         )
         assert result.returncode == 0, f"Release script failed: {result.stderr}\n{result.stdout}"
         assert "Dry-run verification passed" in result.stdout
+
+    def test_dashboard_sample_opt_in_and_no_auto_fallback(self) -> None:
+        """Dashboard sample mode must be opt-in via ?sample=1 with no auto fallback."""
+        index_html = Path("dashboard/index.html")
+        assert index_html.is_file(), "dashboard/index.html must exist"
+        content = index_html.read_text(encoding="utf-8")
+
+        # Opt-in check for sample parameter
+        assert "sample=1" in content or "sample=true" in content
+
+        # Check that automatic fallback to sample data was removed
+        assert "isSampleOptIn" in content
+        assert "showDataLoadError" in content
+        assert "dashboard-data-error" in content
+
+        # Parquet button renamed and updated
+        assert "Open dataset on Hugging Face" in content
+        assert "updateDatasetButton" in content
