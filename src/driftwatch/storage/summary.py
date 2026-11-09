@@ -69,11 +69,13 @@ def compute_slice_stats(rows: list[dict[str, Any]]) -> dict[str, Any]:
     # Cluster bootstrap requires >= 10 scenario clusters (Item 2a)
     if len(scenarios) >= 10:
         df = pd.DataFrame(rows)
+        cluster_k = "base_id" if "base_id" in df.columns else "scenario_id"
         _mean, ci_low, ci_high = cluster_bootstrap_ci(
             df,
             metric_col="attack_success",
-            cluster_col="scenario_id",
+            cluster_col=cluster_k,
             min_clusters=10,
+            allow_non_base_cluster=(cluster_k != "base_id"),
         )
         if ci_low is not None and ci_high is not None:
             ci_95: list[float] | None = [round(ci_low, 4), round(ci_high, 4)]

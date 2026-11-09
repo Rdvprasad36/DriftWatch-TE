@@ -1,15 +1,18 @@
 {
   "schema_version": "1.0.0",
-  "study_start_date": "2026-11-09",
+  "study_start_date": "2026-11-23",
   "planned_weeks": 12,
-  "next_scheduled_run_date": "2026-11-09",
+  "next_scheduled_run_date": "2026-11-23",
   "github_repo": "https://github.com/Rdvprasad36/DriftWatch-TE",
-  "hf_dataset_repo": "TODO",
+  "hf_dataset_repo": "rdvprasad36/driftwatch-te-data",
   "preregistration_url": "TODO",
   "weeks": [
     {
       "week": "2026-10-16",
       "is_pilot": true,
+      "complete": true,
+      "status": "complete",
+      "incomplete_models": [],
       "total_trials": 16,
       "file": "weekly/2026-10-16.json"
     }
@@ -49,5 +52,5 @@
     "attacks_v1": "dafc0338875444212e4c07a414e1a7d902f7a89b5cab8f943791bb6a1df114b4",
     "control": "1ae8f9e419a98dee801cb5f4c59d7a8b178d012b161dac5e48a57c578b1e93cd"
   },
-  "last_updated_utc": "2026-11-05T11:17:40.844281+00:00"
+  "last_updated_utc": "2026-11-09T05:26:45.840348+00:00"
 }

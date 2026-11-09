@@ -47,7 +47,7 @@ class Job:
 def expand_jobs(
     suites: list[SuiteManifest],
     model_aliases: list[str],
-    trials: int,
+    trials: int | dict[str, int] = 5,
     agent_temperature: float = DEFAULT_AGENT_TEMPERATURE,
 ) -> list[Job]:
     """Expand suites × scenarios × models × trials into a flat job list.
@@ -55,7 +55,8 @@ def expand_jobs(
     Args:
         suites: Loaded suite manifests.
         model_aliases: Model aliases to test (e.g. ``["fake"]``).
-        trials: Number of trials per (scenario, model) pair.
+        trials: Number of trials per (scenario, model) pair, or dict mapping
+            suite name to trial count (e.g. from config/study.yaml).
         agent_temperature: Temperature for non-canary suites.
 
     Returns:
@@ -63,11 +64,14 @@ def expand_jobs(
     """
     jobs: list[Job] = []
     for suite in suites:
+        # Determine trial count for this suite
+        suite_trials = trials.get(suite.name, 5) if isinstance(trials, dict) else int(trials)
+
         # Canary suites always use temperature 0
         temp = CANARY_TEMPERATURE if suite.name.startswith("canary") else agent_temperature
         for scenario in suite.scenarios:
             for alias in model_aliases:
-                for trial_idx in range(trials):
+                for trial_idx in range(suite_trials):
                     job_id = make_job_id(suite.name, scenario.id, alias, trial_idx)
                     jobs.append(
                         Job(
@@ -81,10 +85,9 @@ def expand_jobs(
                         )
                     )
     logger.info(
-        "Expanded %d job(s) from %d suite(s) × %d model(s) × %d trial(s).",
+        "Expanded %d job(s) from %d suite(s) × %d model(s).",
         len(jobs),
         len(suites),
         len(model_aliases),
-        trials,
     )
     return jobs

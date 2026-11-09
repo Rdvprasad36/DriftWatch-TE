@@ -42,6 +42,7 @@ class TestAuditRegressions:
 
         df_small = pd.DataFrame(
             {
+                "base_id": ["s1", "s2"],
                 "scenario_id": ["s1", "s2"],
                 "attack_success": [1, 0],
             }
@@ -53,6 +54,7 @@ class TestAuditRegressions:
         # When clusters >= 10: point estimate must be within [lo, hi]
         df_12 = pd.DataFrame(
             {
+                "base_id": [f"sc_{i}" for i in range(12)] * 2,
                 "scenario_id": [f"sc_{i}" for i in range(12)] * 2,
                 "attack_success": [1] * 7 + [0] * 5 + [1] * 6 + [0] * 6,
             }

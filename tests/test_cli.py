@@ -57,3 +57,49 @@ class TestVerifyCommand:
         result = runner.invoke(cli, ["verify", "--suites-dir", str(tmp_suites_dir)])
         assert result.exit_code == EXIT_HASH_MISMATCH
         assert "mismatch" in result.output.lower()
+
+    def test_verify_unfrozen_skips_enforcement_and_exits_zero(self, tmp_suites_dir: Path) -> None:
+        """When SUITE_LOCK.json contains 'frozen': false, verify skips enforcement and exits 0."""
+        import json
+
+        runner = CliRunner()
+        runner.invoke(cli, ["freeze", "--suites-dir", str(tmp_suites_dir)])
+
+        # Mark lock explicitly unfrozen
+        lock_file = tmp_suites_dir / "SUITE_LOCK.json"
+        data = json.loads(lock_file.read_text(encoding="utf-8"))
+        data["frozen"] = False
+        lock_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+        # Tamper a scenario file to create an intentional hash mismatch
+        scenario = tmp_suites_dir / "attacks_v1" / "scenario_01.yaml"
+        scenario.write_text(
+            scenario.read_text(encoding="utf-8") + "\n# unfrozen edit", encoding="utf-8"
+        )
+
+        result = runner.invoke(cli, ["verify", "--suites-dir", str(tmp_suites_dir)])
+        assert result.exit_code == EXIT_OK
+        assert "suites not frozen, hash enforcement skipped" in result.output
+
+    def test_verify_frozen_strictly_enforces_hashes(self, tmp_suites_dir: Path) -> None:
+        """When SUITE_LOCK.json contains 'frozen': true, verify fails on any hash mismatch."""
+        import json
+
+        runner = CliRunner()
+        runner.invoke(cli, ["freeze", "--suites-dir", str(tmp_suites_dir)])
+
+        # Ensure lock explicitly marked frozen: true
+        lock_file = tmp_suites_dir / "SUITE_LOCK.json"
+        data = json.loads(lock_file.read_text(encoding="utf-8"))
+        data["frozen"] = True
+        lock_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+        # Tamper a scenario file
+        scenario = tmp_suites_dir / "attacks_v1" / "scenario_01.yaml"
+        scenario.write_text(
+            scenario.read_text(encoding="utf-8") + "\n# frozen edit", encoding="utf-8"
+        )
+
+        result = runner.invoke(cli, ["verify", "--suites-dir", str(tmp_suites_dir)])
+        assert result.exit_code == EXIT_HASH_MISMATCH
+        assert "mismatch" in result.output.lower()

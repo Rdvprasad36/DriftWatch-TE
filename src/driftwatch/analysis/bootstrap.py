@@ -58,6 +58,7 @@ def cluster_bootstrap_ci(
     alpha: float = 0.05,
     seed: int = 42,
     min_clusters: int = 10,
+    allow_non_base_cluster: bool = False,
 ) -> tuple[float, float | None, float | None]:
     """Compute two-stage cluster bootstrap 95% CI (resample base attacks, then trials).
 
@@ -80,25 +81,27 @@ def cluster_bootstrap_ci(
         alpha: Significance level (default 0.05 for 95% CI).
         seed: Random seed.
         min_clusters: Minimum base clusters required (default 10).
+        allow_non_base_cluster: If False, raises ValueError when cluster_col != "base_id".
 
     Returns:
         tuple of (empirical_mean, ci_lower, ci_upper).
         ci_lower and ci_upper are None if unique clusters < min_clusters.
     """
+    if cluster_col != "base_id" and not allow_non_base_cluster:
+        raise ValueError(
+            f"Forbidden: analysis must cluster on 'base_id', got '{cluster_col}'. "
+            "Pass allow_non_base_cluster=True to override."
+        )
+
     if data.empty:
         return 0.0, None, None
 
+    if cluster_col not in data.columns:
+        raise KeyError(f"Cluster column '{cluster_col}' not found in DataFrame")
+
     empirical_mean = float(data[metric_col].mean())
 
-    actual_cluster_col = cluster_col
-    if (
-        actual_cluster_col not in data.columns
-        and actual_cluster_col == "base_id"
-        and "scenario_id" in data.columns
-    ):
-        actual_cluster_col = "scenario_id"
-
-    unique_clusters = data[actual_cluster_col].unique()
+    unique_clusters = data[cluster_col].unique()
     n_clusters = len(unique_clusters)
     if n_clusters < min_clusters:
         return empirical_mean, None, None
@@ -107,7 +110,7 @@ def cluster_bootstrap_ci(
 
     # Pre-group data by cluster for speed
     cluster_groups: dict[Any, np.ndarray] = {
-        c: group[metric_col].to_numpy() for c, group in data.groupby(actual_cluster_col)
+        c: group[metric_col].to_numpy() for c, group in data.groupby(cluster_col)
     }
 
     boot_means: list[float] = []

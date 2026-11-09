@@ -44,6 +44,10 @@ jobs:
       week: ${{ steps.gate.outputs.week }}
       is_dry_run: ${{ steps.gate.outputs.is_dry_run }}
       is_study_week: ${{ steps.gate.outputs.is_study_week }}
+      trials: ${{ steps.gate.outputs.trials }}
+      attacks_trials: ${{ steps.gate.outputs.attacks_trials }}
+      control_trials: ${{ steps.gate.outputs.control_trials }}
+      canary_trials: ${{ steps.gate.outputs.canary_trials }}
     env:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY }}
@@ -88,10 +92,20 @@ jobs:
           is_before_start = week < start_date
           is_study_week = not is_before_start and not dry_run
 
+          trials_input = "${{ inputs.trials }}".strip()
+          t_cfg = config.trials_per_scenario
+          attacks_t = int(trials_input) if trials_input and trials_input != "0" else t_cfg.get("attacks_v1", 10)
+          control_t = int(trials_input) if trials_input and trials_input != "0" else t_cfg.get("control", 5)
+          canary_t = int(trials_input) if trials_input and trials_input != "0" else t_cfg.get("canary", 2)
+
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"week={week}\n")
               f.write(f"is_dry_run={'true' if dry_run else 'false'}\n")
               f.write(f"is_study_week={'true' if is_study_week else 'false'}\n")
+              f.write(f"attacks_trials={attacks_t}\n")
+              f.write(f"control_trials={control_t}\n")
+              f.write(f"canary_trials={canary_t}\n")
+              f.write(f"trials={attacks_t}\n")
 
           if is_before_start and not dry_run:
               print(f"Current date {week} is prior to pre-registered STUDY_START_DATE ({start_date}).")
@@ -108,6 +122,14 @@ jobs:
 
           # Fail closed for study weeks: verify required secrets & hf_dataset_repo
           if is_study_week:
+              # Non-dry-run study weeks require frozen suites ('frozen': true)
+              from pathlib import Path
+              from driftwatch.suites.integrity import is_suites_frozen
+              if not is_suites_frozen(Path("suites")):
+                  print("FAIL-CLOSED PREFLIGHT ERROR: Suites are not frozen ('frozen': true required in suites/SUITE_LOCK.json).")
+                  print("Run 'driftwatch freeze' to lock benchmark suites before formal study weeks.")
+                  sys.exit(1)
+
               required_secrets = [
                   "GROQ_API_KEY",
                   "GOOGLE_AI_API_KEY",
@@ -205,7 +227,7 @@ jobs:
               --week "${{ env.WEEK }}" \
               --suites "${{ inputs.suites || 'canary,control,attacks_v1' }}" \
               --models "${{ matrix.model }}" \
-              --trials ${{ inputs.trials || 5 }} \
+              --trials ${{ needs.preflight.outputs.attacks_trials || inputs.trials || 10 }} \
               --results-dir "weekly"; then
               echo "Evaluation succeeded on attempt $attempt"
               break
@@ -318,7 +340,7 @@ jobs:
             --week "${{ env.WEEK }}" \
             --suites "${{ inputs.suites || 'canary,control,attacks_v1' }}" \
             --models "local" \
-            --trials ${{ inputs.trials || 5 }} \
+            --trials ${{ needs.preflight.outputs.attacks_trials || inputs.trials || 10 }} \
             --results-dir "weekly"
 
       - name: Upload local bundle artifact

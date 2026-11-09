@@ -43,6 +43,6 @@ jobs:
           if [ -f "suites/SUITE_LOCK.json" ]; then
             python -m driftwatch.cli.main verify
           else
-            echo "Suites not yet frozen (freeze planned for Step 10 before Run 1)."
+            echo "WARNING: suites not frozen, hash enforcement skipped"
           fi
 

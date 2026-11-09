@@ -25,4 +25,6 @@ results/raw/
 tmp_pilot/
 dryrun/
 weekly/
+*.log
+
 
