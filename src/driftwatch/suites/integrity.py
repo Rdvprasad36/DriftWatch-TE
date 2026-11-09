@@ -94,7 +94,8 @@ def freeze_suites(suites_root: Path) -> SuiteLockFile:
 class VerifyResult:
     """Result of a suite verification."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, frozen: bool = True) -> None:
+        self.frozen: bool = frozen
         self.ok: list[str] = []
         self.mismatched: list[tuple[str, str, str]] = []  # (name, locked, current)
         self.missing_on_disk: list[str] = []
@@ -102,7 +103,21 @@ class VerifyResult:
 
     @property
     def passed(self) -> bool:
+        if not self.frozen:
+            return True
         return not self.mismatched and not self.missing_on_disk
+
+
+def is_suites_frozen(suites_root: Path) -> bool:
+    """Check whether suites are explicitly marked as frozen in SUITE_LOCK.json."""
+    lock_path = _lock_path(suites_root)
+    if not lock_path.is_file():
+        return False
+    try:
+        lock = read_lock_file(suites_root)
+        return bool(lock.frozen)
+    except Exception:
+        return False
 
 
 def verify_suites(suites_root: Path) -> VerifyResult:
@@ -120,7 +135,10 @@ def verify_suites(suites_root: Path) -> VerifyResult:
         raise FileNotFoundError(msg)
 
     lock = read_lock_file(suites_root)
-    result = VerifyResult()
+    result = VerifyResult(frozen=bool(lock.frozen))
+    if not result.frozen:
+        logger.warning("suites not frozen, hash enforcement skipped")
+        return result
 
     # Check each locked suite
     for name, entry in lock.entries.items():

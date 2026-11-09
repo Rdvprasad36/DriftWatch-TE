@@ -88,6 +88,10 @@ def verify(suites_dir: Path) -> None:
         click.echo(f"ERROR: {e}", err=True)
         sys.exit(EXIT_HARNESS_ERROR)
 
+    if not result.frozen:
+        click.echo("WARNING: suites not frozen, hash enforcement skipped")
+        sys.exit(EXIT_OK)
+
     if result.ok:
         click.echo(f"Verified: {', '.join(result.ok)}")
     if result.unlocked:
@@ -243,7 +247,12 @@ def _build_custom_provider_registry(
 @click.option("--week", required=True, help="ISO week date, e.g. 2026-10-19.")
 @click.option("--suites", required=True, help="Comma-separated suite names to run.")
 @click.option("--models", required=True, help="Comma-separated model aliases.")
-@click.option("--trials", default=5, type=int, help="Trials per scenario.")
+@click.option(
+    "--trials",
+    default=None,
+    type=int,
+    help="Trials per scenario (defaults to config/study.yaml trials_per_scenario).",
+)
 @click.option(
     "--results-dir",
     default="weekly",
@@ -280,7 +289,7 @@ def run(
     week: str,
     suites: str,
     models: str,
-    trials: int,
+    trials: int | None,
     results_dir: str,
     suite_root: str,
     concurrency: int,
@@ -339,7 +348,13 @@ def run(
         registry = build_from_env()
 
     # Expand jobs
-    jobs = expand_jobs(loaded_suites, model_list, trials)
+    from driftwatch.config import load_study_config
+
+    study_cfg = load_study_config()
+    job_trials: int | dict[str, int] = (
+        trials if trials is not None else study_cfg.trials_per_scenario
+    )
+    jobs = expand_jobs(loaded_suites, model_list, job_trials)
     if not jobs:
         click.echo("No jobs to run.")
         sys.exit(EXIT_OK)
@@ -689,7 +704,7 @@ def event() -> None:
 
 
 @event.command(name="add")
-@click.option("--provider", required=True, help="Provider name (e.g. openrouter, groq, cerebras).")
+@click.option("--provider", required=True, help="Provider name (e.g. openrouter, groq).")
 @click.option("--model", required=True, help="Model alias or identifier.")
 @click.option("--date", required=True, help="Date of event (YYYY-MM-DD).")
 @click.option("--url", default="", help="Link to release note, changelog, or status page.")

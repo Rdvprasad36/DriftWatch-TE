@@ -98,13 +98,14 @@ class TestVerifySuites:
         # Freeze only attacks_v1 by manually building a partial lock
         manifest = load_suite(tmp_suites_multi / "attacks_v1")
         lock = SuiteLockFile(
+            frozen=True,
             entries={
                 "attacks_v1": SuiteLockEntry(
                     suite_name="attacks_v1",
                     suite_hash=manifest.suite_hash,
                     locked_at=datetime.now(UTC).isoformat(),
                 )
-            }
+            },
         )
         write_lock_file(tmp_suites_multi, lock)
 
