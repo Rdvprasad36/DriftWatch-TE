@@ -9,6 +9,11 @@ hf_dataset_repo: "rdvprasad36/driftwatch-te-data"
 preregistration_url: "TODO"
 local_model_digest: "baf6a787fdff"
 
+trials_per_scenario:
+  attacks_v1: 10
+  control: 5
+  canary: 2
+
 models:
   - alias: "groq"
     provider: "groq"

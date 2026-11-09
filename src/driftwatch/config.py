@@ -39,6 +39,9 @@ class StudyConfig(BaseModel):
     hf_dataset_repo: str = "TODO"
     preregistration_url: str = "TODO"
     local_model_digest: str = "baf6a787fdff"
+    trials_per_scenario: dict[str, int] = Field(
+        default_factory=lambda: {"attacks_v1": 10, "control": 5, "canary": 2}
+    )
     models: list[ModelConfig] = Field(default_factory=list)
 
 

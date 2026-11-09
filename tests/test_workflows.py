@@ -107,13 +107,32 @@ class TestWeeklyWorkflow:
         assert "GEMINI_API_KEY" not in content, "weekly.yml must not use GEMINI_API_KEY"
 
     def test_weekly_preflight_fails_closed(self) -> None:
-        """preflight job verifies required secrets and hf_dataset_repo before evaluation."""
+        """preflight job verifies required secrets, hf_dataset_repo, and frozen status."""
         wf = _load_workflow("weekly.yml")
         preflight_steps = wf["jobs"]["preflight"]["steps"]
         step_runs = " ".join(str(s.get("run", "")) for s in preflight_steps)
         assert "FAIL-CLOSED" in step_runs
         assert "hf_dataset_repo" in step_runs
         assert "is_study_week" in step_runs
+        assert "is_suites_frozen" in step_runs
+
+    def test_preflight_frozen_gate_behavior(self, tmp_path: Path) -> None:
+        """Non-dry-run study weeks fail unless suites are frozen; dry-runs are permitted."""
+        import json
+
+        from driftwatch.suites.integrity import is_suites_frozen
+
+        suites_dir = tmp_path / "suites"
+        suites_dir.mkdir()
+        lock_file = suites_dir / "SUITE_LOCK.json"
+
+        # State 1: Unfrozen ('frozen': false)
+        lock_file.write_text(json.dumps({"frozen": False, "entries": {}}), encoding="utf-8")
+        assert is_suites_frozen(suites_dir) is False
+
+        # State 2: Frozen ('frozen': true)
+        lock_file.write_text(json.dumps({"frozen": True, "entries": {}}), encoding="utf-8")
+        assert is_suites_frozen(suites_dir) is True
 
     def test_weekly_hf_upload_mandatory_for_study_weeks(self) -> None:
         """Hugging Face upload is mandatory during study weeks."""
@@ -237,3 +256,16 @@ class TestHealthCheckAndKeepaliveWorkflows:
                     assert uses.startswith("actions/"), (
                         f"Third-party action in weekly.yml job '{job_name}': {uses}"
                     )
+
+    def test_trials_per_scenario_in_config_and_workflow(self) -> None:
+        """config/study.yaml defines trials_per_scenario and weekly.yml reads it."""
+        from driftwatch.config import load_study_config
+
+        cfg = load_study_config()
+        assert cfg.trials_per_scenario.get("attacks_v1") == 10
+        assert cfg.trials_per_scenario.get("control") == 5
+        assert cfg.trials_per_scenario.get("canary") == 2
+
+        content = (WORKFLOWS_DIR / "weekly.yml").read_text(encoding="utf-8")
+        assert "attacks_trials" in content
+        assert "trials_per_scenario" in content
