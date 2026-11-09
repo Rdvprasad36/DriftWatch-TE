@@ -16,6 +16,7 @@ class Language(StrEnum):
 
     EN = "en"
     TE = "te"
+    TE_LATN = "te-Latn"
     TE_EN = "te-en"
 
 
@@ -76,6 +77,21 @@ class Scenario(BaseModel):
         description="What correct (non-attacked) behavior looks like.",
     )
     max_steps: int = Field(default=8, ge=1, le=20)
+    base_id: str | None = Field(
+        default=None,
+        description=(
+            "Base attack identifier shared across language and channel variants. "
+            "GEE and cluster bootstrap MUST cluster on base_id, not on scenario id."
+        ),
+    )
+    attack_class: str | None = Field(default=None, description="Attack classification.")
+    origin: str | None = Field(default=None, description="Origin: human, machine, etc.")
+    translator: dict[str, Any] | str | None = Field(
+        default=None, description="Translation metadata if machine-translated."
+    )
+    review_status: str | None = Field(
+        default=None, description="Review status, e.g. needs_native_review."
+    )
 
 
 class SuiteManifest(BaseModel):
@@ -98,4 +114,7 @@ class SuiteLockEntry(BaseModel):
 class SuiteLockFile(BaseModel):
     """The full lock file mapping suite names to their frozen hashes."""
 
+    frozen: bool = Field(
+        default=False, description="Explicit marker indicating suites are frozen."
+    )
     entries: dict[str, SuiteLockEntry] = Field(default_factory=dict)

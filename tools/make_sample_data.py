@@ -107,9 +107,7 @@ def _make_week_summary(
         "models": models_data,
         "languages": lang_data,
         "channels": {
-            "tool_output": {"trials": total_trials, "asr": round(
-                total_attacks / total_trials, 4
-            )},
+            "tool_output": {"trials": total_trials, "asr": round(total_attacks / total_trials, 4)},
         },
         "slices": {},
     }
@@ -204,35 +202,39 @@ def _make_sample_records() -> list[dict]:
                 trial_num += 1
                 asr_chance = 0.12 + week_idx * 0.02
                 attack_success = (trial_num % 8) < int(asr_chance * 8)
-                rows.append({
-                    "trial_id": f"sample-trial-{trial_num:04d}",
-                    "scenario_id": sc,
-                    "run_week": week,
-                    "timestamp_utc": f"{week}T10:00:00Z",
-                    "model_alias": m["alias"],
-                    "requested_model_id": m["requested_id"],
-                    "returned_model_id": m["returned_ids_seen"][0],
-                    "suite": "attacks_v1",
-                    "suite_hash": _SUITES["attacks_v1"],
-                    "attack_class": "indirect_injection",
-                    "channel": "tool_output",
-                    "language": _LANGUAGES[si % len(_LANGUAGES)],
-                    "origin": "native" if si % 2 == 0 else "machine",
-                    "trial_index": 0,
-                    "tool_calls": "[]",
-                    "attack_success": attack_success,
-                    "task_success": not attack_success,
-                    "steps": 3,
-                    "stop_reason": "max_turns",
-                    "error_type": None,
-                    "http_errors": 0,
-                    "tokens_in": 280,
-                    "tokens_out": 45,
-                    "latency_ms": 450.0 + week_idx * 20,
-                    "git_sha": "sample0000000000000000",
-                    "sample": True,
-                    "is_pilot": is_pilot,
-                })
+                base_sc = sc.split("_desc_")[0].split("_out_")[0]
+                rows.append(
+                    {
+                        "trial_id": f"sample-trial-{trial_num:04d}",
+                        "base_id": base_sc,
+                        "scenario_id": sc,
+                        "run_week": week,
+                        "timestamp_utc": f"{week}T10:00:00Z",
+                        "model_alias": m["alias"],
+                        "requested_model_id": m["requested_id"],
+                        "returned_model_id": m["returned_ids_seen"][0],
+                        "suite": "attacks_v1",
+                        "suite_hash": _SUITES["attacks_v1"],
+                        "attack_class": "indirect_injection",
+                        "channel": "tool_output",
+                        "language": _LANGUAGES[si % len(_LANGUAGES)],
+                        "origin": "native" if si % 2 == 0 else "machine",
+                        "trial_index": 0,
+                        "tool_calls": "[]",
+                        "attack_success": attack_success,
+                        "task_success": not attack_success,
+                        "steps": 3,
+                        "stop_reason": "max_turns",
+                        "error_type": None,
+                        "http_errors": 0,
+                        "tokens_in": 280,
+                        "tokens_out": 45,
+                        "latency_ms": 450.0 + week_idx * 20,
+                        "git_sha": "sample0000000000000000",
+                        "sample": True,
+                        "is_pilot": is_pilot,
+                    }
+                )
     return rows
 
 
@@ -311,36 +313,30 @@ def generate_sample_data(output_dir: Path) -> dict[str, Path]:
         is_pilot = week < "2026-11-09"
         week_summary = _make_week_summary(week, is_pilot, idx)
         week_file = weekly_dir / f"{week}.json"
-        week_file.write_text(
-            json.dumps(week_summary, indent=2), encoding="utf-8"
-        )
+        week_file.write_text(json.dumps(week_summary, indent=2), encoding="utf-8")
         files[f"week_{week}"] = week_file
-        index_data["weeks"].append({
-            "week": week,
-            "is_pilot": is_pilot,
-            "total_trials": week_summary["total_trials"],
-            "file": f"weekly/{week}.json",
-            "sample": True,
-        })
+        index_data["weeks"].append(
+            {
+                "week": week,
+                "is_pilot": is_pilot,
+                "total_trials": week_summary["total_trials"],
+                "file": f"weekly/{week}.json",
+                "sample": True,
+            }
+        )
 
     index_file = resolved_out / "index.json"
-    index_file.write_text(
-        json.dumps(index_data, indent=2), encoding="utf-8"
-    )
+    index_file.write_text(json.dumps(index_data, indent=2), encoding="utf-8")
     files["index"] = index_file
 
     # 2. Analysis
     analysis_file = analysis_dir / "analysis.json"
-    analysis_file.write_text(
-        json.dumps(_make_sample_analysis(), indent=2), encoding="utf-8"
-    )
+    analysis_file.write_text(json.dumps(_make_sample_analysis(), indent=2), encoding="utf-8")
     files["analysis"] = analysis_file
 
     # 3. Events
     events_file = resolved_out / "events.json"
-    events_file.write_text(
-        json.dumps(_make_sample_events(), indent=2), encoding="utf-8"
-    )
+    events_file.write_text(json.dumps(_make_sample_events(), indent=2), encoding="utf-8")
     files["events"] = events_file
 
     # 4. Records (CSV and JSONL)
@@ -366,16 +362,12 @@ def generate_sample_data(output_dir: Path) -> dict[str, Path]:
         "schema_version": "1.0.0",
         "columns": list(records[0].keys()) if records else [],
     }
-    schema_file.write_text(
-        json.dumps(schema_data, indent=2), encoding="utf-8"
-    )
+    schema_file.write_text(json.dumps(schema_data, indent=2), encoding="utf-8")
     files["schema"] = schema_file
 
     # 5. Canary
     canary_file = resolved_out / "canary.json"
-    canary_file.write_text(
-        json.dumps(_make_sample_canary(), indent=2), encoding="utf-8"
-    )
+    canary_file.write_text(json.dumps(_make_sample_canary(), indent=2), encoding="utf-8")
     files["canary"] = canary_file
 
     # 6. Weekly reports index

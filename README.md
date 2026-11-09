@@ -204,11 +204,18 @@ The summary report will be available at `reports/weekly/2026-11-09.md` and `repo
 
 ## 8. Interactive Dashboard
 
-The results dashboard is deployed to GitHub Pages and can also be viewed locally without running a local web server:
+The results dashboard is deployed to GitHub Pages and can also be served locally from the repository root:
 
 ```bash
-# Open directly in your browser:
-# Open dashboard/index.html in any modern browser
+# Serve locally from the repository root
+python -m http.server 8000
+
+# Open in browser:
+# 1. Live study evaluation results (default):
+http://localhost:8000/dashboard/
+
+# 2. Opt-in sample mode (UI dev fixture data with red banner):
+http://localhost:8000/dashboard/?sample=1
 ```
 
 The dashboard includes 10 interactive views:

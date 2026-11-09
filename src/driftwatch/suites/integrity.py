@@ -86,6 +86,7 @@ def freeze_suites(suites_root: Path) -> SuiteLockFile:
             )
             logger.info("Locked suite '%s': %s", manifest.name, manifest.suite_hash[:16])
 
+    existing_lock.frozen = True
     write_lock_file(suites_root, existing_lock)
     return existing_lock
 
