@@ -109,7 +109,7 @@ class TestBootstrap:
         mean_val, ci_low, ci_high = cluster_bootstrap_ci(
             df,
             metric_col="attack_success",
-            cluster_col="scenario_id",
+            cluster_col="base_id",
             n_resamples=500,
             seed=99,
         )

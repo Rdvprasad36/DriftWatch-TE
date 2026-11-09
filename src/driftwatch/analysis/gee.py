@@ -49,6 +49,7 @@ def fit_logistic_gee(
     cluster_col: str = "base_id",
     cov_type: str = "bias_reduced",
     use_small_sample_t: bool = True,
+    allow_non_base_cluster: bool = False,
 ) -> GEEResult:
     """Fit a logistic GEE model clustered by base_id (base attack scenario).
 
@@ -68,10 +69,17 @@ def fit_logistic_gee(
         cluster_col: Column indicating cluster groups (base_id).
         cov_type: Covariance estimator ("bias_reduced" for Mancl-DeRouen, or "robust").
         use_small_sample_t: Whether to use Student's t reference distribution (df = K - p).
+        allow_non_base_cluster: If False, raises ValueError when cluster_col != "base_id".
 
     Returns:
         GEEResult with coefficients, odds ratios, small-sample standard errors, p-values, and CIs.
     """
+    if cluster_col != "base_id" and not allow_non_base_cluster:
+        raise ValueError(
+            f"Forbidden: analysis must cluster on 'base_id', got '{cluster_col}'. "
+            "Pass allow_non_base_cluster=True to override."
+        )
+
     import statsmodels.api as sm
     import statsmodels.formula.api as smf
 
@@ -172,6 +180,7 @@ def cluster_permutation_test(
     target_param: str = "week_idx",
     n_permutations: int = 200,
     seed: int = 42,
+    allow_non_base_cluster: bool = False,
 ) -> float:
     """Cluster permutation test for small-sample-safe hypothesis testing.
 
@@ -186,10 +195,17 @@ def cluster_permutation_test(
         target_param: Parameter name to test (default: "week_idx").
         n_permutations: Number of permutation replicates.
         seed: Random seed for reproducibility.
+        allow_non_base_cluster: If False, raises ValueError when cluster_col != "base_id".
 
     Returns:
         Two-sided permutation p-value in [0, 1].
     """
+    if cluster_col != "base_id" and not allow_non_base_cluster:
+        raise ValueError(
+            f"Forbidden: analysis must cluster on 'base_id', got '{cluster_col}'. "
+            "Pass allow_non_base_cluster=True to override."
+        )
+
     import statsmodels.api as sm
     import statsmodels.formula.api as smf
 

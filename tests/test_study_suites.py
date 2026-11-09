@@ -199,6 +199,21 @@ def test_analysis_clusters_on_base_id_not_variant_id() -> None:
     mean_val, low_val, high_val = cluster_bootstrap_ci(df)
     assert mean_val is not None
 
+    # Calling with cluster_col="scenario_id" must raise ValueError unless
+    # allow_non_base_cluster=True is passed
     with pytest.raises(ValueError, match="Forbidden: analysis must cluster on 'base_id'"):
-        if "scenario_id" != "base_id":
-            raise ValueError("Forbidden: analysis must cluster on 'base_id'")
+        cluster_bootstrap_ci(df, cluster_col="scenario_id")
+
+    # Add required dummy regressors for GEE formula
+    df["week_idx"] = 0
+    df["language"] = "en"
+    df["channel"] = "tool_output"
+
+    with pytest.raises(ValueError, match="Forbidden: analysis must cluster on 'base_id'"):
+        fit_logistic_gee(df, cluster_col="scenario_id")
+
+    # Overriding with allow_non_base_cluster=True allows non-base cluster column
+    mean_override, _, _ = cluster_bootstrap_ci(
+        df, cluster_col="scenario_id", allow_non_base_cluster=True
+    )
+    assert mean_override is not None

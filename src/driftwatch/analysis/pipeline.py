@@ -199,6 +199,7 @@ def run_analysis_pipeline(
                         m_df,
                         formula="attack_success ~ week_idx + C(language) + C(channel)",
                         cluster_col=cluster_k,
+                        allow_non_base_cluster=(cluster_k != "base_id"),
                     )
                     b1 = gee_res.coefficients.get("week_idx", 0.0)
                     b1_p = gee_res.p_values.get("week_idx", 1.0)
@@ -291,6 +292,7 @@ def run_analysis_pipeline(
                     "attack_success ~ week_idx + C(language) + week_idx:C(language) + C(channel)"
                 ),
                 cluster_col=cluster_k,
+                allow_non_base_cluster=(cluster_k != "base_id"),
             )
             gee_coefficients = {k: round(float(v), 4) for k, v in lang_gee.coefficients.items()}
             for coef_name, coef_val in lang_gee.coefficients.items():
