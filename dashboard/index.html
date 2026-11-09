@@ -1253,9 +1253,9 @@
                 <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 JSONL
               </a>
-              <button disabled class="btn btn-secondary" id="download-parquet-btn" title="Dataset not published yet" style="opacity:0.6; cursor:not-allowed;">
-                <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-                Parquet (Dataset not published yet)
+              <button disabled class="btn btn-secondary" id="download-parquet-btn" title="Dataset not published yet (requires at least one completed study week)" style="opacity:0.6; cursor:not-allowed;">
+                <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Open dataset on Hugging Face
               </button>
             </div>
             <div style="font-size:var(--f-xs); color:var(--text-tertiary);" id="data-checksum">SHA-256 Verified</div>
@@ -1409,8 +1409,12 @@
                 <span class="report-meta-val" id="weekly-report-trials">-</span>
               </div>
               <div class="report-meta-box">
-                <span class="report-meta-label">Aggregate ASR</span>
+                <span class="report-meta-label">Overall ASR</span>
                 <span class="report-meta-val" id="weekly-report-asr">-</span>
+              </div>
+              <div class="report-meta-box">
+                <span class="report-meta-label">ASR | Exposed</span>
+                <span class="report-meta-val" id="weekly-report-asr-exposed">-</span>
               </div>
               <div class="report-meta-box">
                 <span class="report-meta-label">Benign Task Success</span>
@@ -1426,7 +1430,7 @@
             <div class="card-title" style="margin-bottom:var(--sp-3); font-size:var(--f-base);">Per-Model Attack Success Rate</div>
             <div class="tbl-wrap">
               <table class="data-table" id="weekly-model-table" aria-label="Weekly per-model evaluation table">
-                <thead><tr><th>Model Alias</th><th>Trials (n)</th><th>Attack Success Rate</th><th>95% Interval</th><th>Change vs Week 1</th><th>Completion Rate</th></tr></thead>
+                <thead><tr><th>Model Alias</th><th>Trials (n)</th><th>Attack Success Rate</th><th>ASR (Exposed)</th><th>95% Interval</th><th>Change vs Week 1</th><th>Completion Rate</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -1728,35 +1732,100 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
           .catch(function() { return null; });
       }
 
-      function loadAllData() {
-        var isSample = window.location.search.includes('sample=true') ||
-                       window.location.search.includes('dev=true') ||
-                       window.location.href.includes('sample=true') ||
-                       window.location.href.includes('dev=true');
-        if (isSample) {
-          appState.isSampleData = true;
-          var sb = document.getElementById('sample-banner');
-          if (sb) sb.style.display = 'block';
-        }
-
-        var forceDev = isSample;
-        var indexCandidates = forceDev
-          ? ['dashboard/dev/sample/index.json', 'dev/sample/index.json', '../results/summary/index.json', 'results/summary/index.json']
-          : ['../results/summary/index.json', 'results/summary/index.json', 'dashboard/dev/sample/index.json', 'dev/sample/index.json'];
-
-        tryLoadIndex(indexCandidates, 0);
+      function isSampleOptIn() {
+        var search = window.location.search || '';
+        var hash = window.location.hash || '';
+        return search.includes('sample=1') ||
+               search.includes('sample=true') ||
+               hash.includes('sample=1') ||
+               hash.includes('sample=true');
       }
 
-      function tryLoadIndex(candidates, idx) {
+      function showDataLoadError() {
+        var errEl = document.getElementById('dashboard-data-error');
+        if (!errEl) {
+          var container = document.querySelector('.content-area') || document.querySelector('.app-main');
+          if (container) {
+            errEl = document.createElement('div');
+            errEl.id = 'dashboard-data-error';
+            errEl.className = 'card card-pad-lg';
+            errEl.style.cssText = 'max-width:720px; margin:var(--sp-8) auto; border-left:4px solid var(--oi-vermilion); background:var(--bg-surface); box-shadow:0 10px 25px rgba(0,0,0,0.2);';
+            container.prepend(errEl);
+          }
+        }
+        if (errEl) {
+          errEl.style.display = 'block';
+          errEl.innerHTML =
+            '<div style="display:flex; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-3);">' +
+              '<svg style="width:28px; height:28px; color:var(--oi-vermilion); flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+              '<h3 style="margin:0; font-size:var(--f-xl); font-weight:700; color:var(--text-primary);">Study Evaluation Results Not Found</h3>' +
+            '</div>' +
+            '<p style="color:var(--text-secondary); margin-bottom:var(--sp-4); font-size:var(--f-base); line-height:1.6;">' +
+              'Could not load study summary records from <code>results/summary/index.json</code>. No live evaluation weeks have been uploaded yet, or the local HTTP server was launched from a different folder.' +
+            '</p>' +
+            '<div style="background:var(--bg-inset); border-radius:var(--r-md); padding:var(--sp-4); font-size:var(--f-sm); color:var(--text-secondary); line-height:1.6;">' +
+              '<div style="font-weight:700; color:var(--text-primary); margin-bottom:var(--sp-2);">Options to resolve:</div>' +
+              '• <strong>To preview sample dev fixtures:</strong> Open the dashboard in opt-in sample mode: <a href="?sample=1" style="color:var(--brand-accent); font-weight:700; text-decoration:underline;">?sample=1</a>.<br>' +
+              '• <strong>To serve from repo root:</strong> Run <code>python -m http.server 8000</code> and open <code>http://localhost:8000/dashboard/</code>.' +
+            '</div>';
+        }
+      }
+
+      function updateDatasetButton() {
+        var hfBtn = document.getElementById('download-parquet-btn');
+        if (!hfBtn) return;
+        var hasStudyWeek = appState.index && Array.isArray(appState.index.weeks) && appState.index.weeks.some(function(w) {
+          return !w.is_pilot && (w.complete !== false);
+        });
+        var repo = (appState.index && appState.index.hf_dataset_repo) || '';
+        if (hasStudyWeek && repo && repo !== 'TODO') {
+          hfBtn.disabled = false;
+          hfBtn.style.opacity = '1.0';
+          hfBtn.style.cursor = 'pointer';
+          hfBtn.title = 'Open published dataset on Hugging Face (' + repo + ')';
+          hfBtn.onclick = function() {
+            window.open('https://huggingface.co/datasets/' + repo, '_blank');
+          };
+        } else {
+          hfBtn.disabled = true;
+          hfBtn.style.opacity = '0.6';
+          hfBtn.style.cursor = 'not-allowed';
+          hfBtn.title = 'Dataset not published yet (requires at least one completed study week)';
+          hfBtn.onclick = null;
+        }
+      }
+
+      function loadAllData() {
+        var isSample = isSampleOptIn();
+        appState.isSampleData = isSample;
+
+        var sb = document.getElementById('sample-banner');
+        if (sb) sb.style.display = isSample ? 'block' : 'none';
+
+        // Strict: NO automatic fallback to sample data. Sample mode must be explicitly opt-in with ?sample=1
+        var indexCandidates = isSample
+          ? ['dashboard/dev/sample/index.json', 'dev/sample/index.json']
+          : ['../results/summary/index.json', 'results/summary/index.json'];
+
+        tryLoadIndex(indexCandidates, 0, isSample);
+      }
+
+      function tryLoadIndex(candidates, idx, isSample) {
         if (idx >= candidates.length) {
+          if (!appState.index) {
+            showDataLoadError();
+          }
           renderDashboard();
           return;
         }
         fetchJSON(candidates[idx]).then(function(data) {
           if (data) {
+            var errEl = document.getElementById('dashboard-data-error');
+            if (errEl) errEl.style.display = 'none';
+
             appState.index = data;
             var baseDir = candidates[idx].substring(0, candidates[idx].lastIndexOf('/') + 1);
-            if (data.sample) appState.isSampleData = true;
+            if (isSample || data.sample) appState.isSampleData = true;
 
             var sampleBanner = document.getElementById('sample-banner');
             if (sampleBanner) sampleBanner.style.display = appState.isSampleData ? 'block' : 'none';
@@ -1766,15 +1835,22 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
               if (pilotBanner) pilotBanner.style.display = appState.isPilot ? 'block' : 'none';
 
               // Load analysis, events, schema in parallel
+              var analysisCandidate = isSample
+                ? fetchJSON(baseDir + 'analysis/analysis.json').then(function(d) { return d || fetchJSON(baseDir + 'analysis.json'); })
+                : fetchJSON('../results/analysis/analysis.json').then(function(d) { return d || fetchJSON('results/analysis/analysis.json'); });
+
+              var eventsCandidate = isSample
+                ? fetchJSON(baseDir + 'events.json')
+                : fetchJSON('../results/events.json').then(function(d) { return d || fetchJSON('results/events.json'); });
+
+              var schemaCandidate = isSample
+                ? fetchJSON(baseDir + 'exports/schema.json').then(function(d) { return d || fetchJSON(baseDir + 'schema.json'); })
+                : fetchJSON('../results/exports/schema.json').then(function(d) { return d || fetchJSON('results/exports/schema.json'); });
+
               Promise.all([
-                fetchJSON('../results/analysis/analysis.json')
-                  .then(function(d) { return d || fetchJSON('results/analysis/analysis.json'); })
-                  .then(function(d) { return d || fetchJSON(baseDir + 'analysis.json'); }),
-                fetchJSON('../results/events.json')
-                  .then(function(d) { return d || fetchJSON('results/events.json'); })
-                  .then(function(d) { return d || fetchJSON(baseDir + 'events.json'); }),
-                fetchJSON('../results/exports/schema.json')
-                  .then(function(d) { return d || fetchJSON('results/exports/schema.json'); })
+                analysisCandidate,
+                eventsCandidate,
+                schemaCandidate
               ]).then(function(results) {
                 appState.analysis = results[0];
                 if (results[1] && Array.isArray(results[1].events)) appState.events = results[1].events;
@@ -1783,7 +1859,7 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
               });
             });
           } else {
-            tryLoadIndex(candidates, idx + 1);
+            tryLoadIndex(candidates, idx + 1, isSample);
           }
         });
       }
@@ -1821,6 +1897,7 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
         renderReport();
         renderSchema();
         loadTrialRecords();
+        updateDatasetButton();
       }
 
       function getThemeColors() {
@@ -2709,6 +2786,12 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
 
         setTxt('weekly-report-trials', data.total_trials || 0);
         setTxt('weekly-report-asr', data.overall_asr !== undefined ? formatPct(data.overall_asr) : '-');
+        setTxt(
+          'weekly-report-asr-exposed',
+          data.overall_asr_exposed !== undefined && data.overall_asr_exposed !== null
+            ? formatPct(data.overall_asr_exposed)
+            : (data.overall_asr !== undefined ? formatPct(data.overall_asr) : '-')
+        );
 
         var ctrlSucc = 'N/A';
         if (data.slices) {
@@ -2765,10 +2848,14 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
             }
 
             var tr = document.createElement('tr');
+            var mAsrExposed = mInfo.asr_exposed !== undefined && mInfo.asr_exposed !== null
+              ? formatPct(mInfo.asr_exposed)
+              : formatPct(mAsr);
             tr.innerHTML =
               '<td><code>' + mAlias + '</code></td>' +
               '<td>' + mTrials + '</td>' +
               '<td>' + formatPct(mAsr) + '</td>' +
+              '<td>' + mAsrExposed + '</td>' +
               '<td>' + ciStr + '</td>' +
               '<td>' + deltaStr + '</td>' +
               '<td>' + mComp + '</td>';

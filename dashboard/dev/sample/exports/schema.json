@@ -3,6 +3,7 @@
   "schema_version": "1.0.0",
   "columns": [
     "trial_id",
+    "base_id",
     "scenario_id",
     "run_week",
     "timestamp_utc",
