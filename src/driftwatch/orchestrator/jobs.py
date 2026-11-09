@@ -26,9 +26,7 @@ DEFAULT_AGENT_TEMPERATURE: float = 0.7
 CANARY_TEMPERATURE: float = 0.0
 
 
-def make_job_id(
-    suite_name: str, scenario_id: str, model_alias: str, trial: int
-) -> str:
+def make_job_id(suite_name: str, scenario_id: str, model_alias: str, trial: int) -> str:
     """Build a unique, human-readable job ID."""
     return f"{suite_name}:{scenario_id}:{model_alias}:{trial}"
 
@@ -66,17 +64,11 @@ def expand_jobs(
     jobs: list[Job] = []
     for suite in suites:
         # Canary suites always use temperature 0
-        temp = (
-            CANARY_TEMPERATURE
-            if suite.name.startswith("canary")
-            else agent_temperature
-        )
+        temp = CANARY_TEMPERATURE if suite.name.startswith("canary") else agent_temperature
         for scenario in suite.scenarios:
             for alias in model_aliases:
                 for trial_idx in range(trials):
-                    job_id = make_job_id(
-                        suite.name, scenario.id, alias, trial_idx
-                    )
+                    job_id = make_job_id(suite.name, scenario.id, alias, trial_idx)
                     jobs.append(
                         Job(
                             job_id=job_id,
@@ -96,4 +88,3 @@ def expand_jobs(
         trials,
     )
     return jobs
-

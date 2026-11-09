@@ -43,6 +43,8 @@ def compute_slice_stats(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "n_trials": 0,
             "n_scenarios": 0,
             "attack_success_rate": 0.0,
+            "asr_exposed": None,
+            "exposed_trials": 0,
             "task_success_rate": 0.0,
             "ci_95": None,
             "error_rate": 0.0,
@@ -55,6 +57,9 @@ def compute_slice_stats(rows: list[dict[str, Any]]) -> dict[str, Any]:
     atk_count = sum(1 for r in rows if r.get("attack_success"))
     task_count = sum(1 for r in rows if r.get("task_success"))
     err_count = sum(1 for r in rows if r.get("error_type"))
+    exposed_count = sum(1 for r in rows if r.get("exposed", False))
+    atk_exposed_count = sum(1 for r in rows if r.get("attack_success") and r.get("exposed", False))
+    asr_exposed = round(atk_exposed_count / exposed_count, 4) if exposed_count > 0 else None
 
     # Latency and tokens
     latencies = [float(r.get("latency_ms", 0.0)) for r in rows]
@@ -81,6 +86,8 @@ def compute_slice_stats(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "n_trials": n_trials,
         "n_scenarios": len(scenarios),
         "attack_success_rate": asr,
+        "asr_exposed": asr_exposed,
+        "exposed_trials": exposed_count,
         "task_success_rate": round(task_count / n_trials, 4),
         "ci_95": ci_95,
         "error_rate": round(err_count / n_trials, 4),
@@ -122,6 +129,13 @@ def generate_summary(
     total = len(rows)
     total_attacks = sum(1 for r in rows if r.get("attack_success"))
     total_task = sum(1 for r in rows if r.get("task_success"))
+    total_exposed = sum(1 for r in rows if r.get("exposed", False))
+    total_attacks_exposed = sum(
+        1 for r in rows if r.get("attack_success") and r.get("exposed", False)
+    )
+    overall_asr_exposed = (
+        round(total_attacks_exposed / total_exposed, 4) if total_exposed > 0 else None
+    )
 
     cfg = load_study_config()
     is_pilot = week < cfg.study_start_date or "dryrun" in week.lower()
@@ -152,6 +166,8 @@ def generate_summary(
                 "total_trials": 0,
                 "attack_successes": 0,
                 "task_successes": 0,
+                "exposed_trials": 0,
+                "attack_successes_exposed": 0,
                 "returned_ids": set(),
             }
         models[alias]["total_trials"] += 1
@@ -159,13 +175,21 @@ def generate_summary(
             models[alias]["attack_successes"] += 1
         if r.get("task_success"):
             models[alias]["task_successes"] += 1
+        if r.get("exposed", False):
+            models[alias]["exposed_trials"] += 1
+            if r.get("attack_success"):
+                models[alias]["attack_successes_exposed"] += 1
         rid = r.get("returned_model_id")
         if rid and str(rid) != alias:
             models[alias]["returned_ids"].add(str(rid))
 
     for stats in models.values():
         n = stats["total_trials"]
+        exp_n = stats["exposed_trials"]
         stats["asr"] = round(stats["attack_successes"] / n, 4) if n > 0 else None
+        stats["asr_exposed"] = (
+            round(stats["attack_successes_exposed"] / exp_n, 4) if exp_n > 0 else None
+        )
         stats["task_success_rate"] = round(stats["task_successes"] / n, 4) if n > 0 else None
         stats["returned_ids"] = sorted(list(stats["returned_ids"]))
 
@@ -177,14 +201,24 @@ def generate_summary(
             languages[lang] = {
                 "total_trials": 0,
                 "attack_successes": 0,
+                "exposed_trials": 0,
+                "attack_successes_exposed": 0,
             }
         languages[lang]["total_trials"] += 1
         if r.get("attack_success"):
             languages[lang]["attack_successes"] += 1
+        if r.get("exposed", False):
+            languages[lang]["exposed_trials"] += 1
+            if r.get("attack_success"):
+                languages[lang]["attack_successes_exposed"] += 1
 
     for stats in languages.values():
         n = stats["total_trials"]
+        exp_n = stats["exposed_trials"]
         stats["asr"] = round(stats["attack_successes"] / n, 4) if n > 0 else None
+        stats["asr_exposed"] = (
+            round(stats["attack_successes_exposed"] / exp_n, 4) if exp_n > 0 else None
+        )
 
     summary: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -196,7 +230,9 @@ def generate_summary(
         "total_trials": total,
         "total_attack_successes": total_attacks,
         "total_task_successes": total_task,
+        "total_exposed_trials": total_exposed,
         "overall_asr": round(total_attacks / total, 4) if total > 0 else 0.0,
+        "overall_asr_exposed": overall_asr_exposed,
         "slices": slices,
         "models": models,
         "languages": languages,

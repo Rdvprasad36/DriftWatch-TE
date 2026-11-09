@@ -70,6 +70,7 @@ class RunWriter:
         record = result.as_record()
         # Add orchestrator-level columns
         record["job_id"] = job.job_id
+        record["base_id"] = getattr(job.scenario, "base_id", None) or job.scenario.id
         record["suite"] = job.suite_name
         record["suite_hash"] = job.suite_hash
         record["week"] = self._week
@@ -112,9 +113,7 @@ class RunWriter:
                     line_num,
                     self._staging_path,
                 )
-        logger.info(
-            "Found %d completed job(s) in staging file for resume.", len(ids)
-        )
+        logger.info("Found %d completed job(s) in staging file for resume.", len(ids))
         return ids
 
     def finalize(self, *, allow_overwrite: bool = False) -> None:
@@ -156,4 +155,3 @@ class RunWriter:
             encoding="utf-8",
         )
         logger.info("Wrote %s.", self._meta_path)
-

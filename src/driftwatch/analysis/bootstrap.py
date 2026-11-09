@@ -42,9 +42,7 @@ def wilson_score_interval(
 
     denom = 1 + (z**2) / total
     center = (p_hat + (z**2) / (2 * total)) / denom
-    margin = (
-        z * math.sqrt((p_hat * (1 - p_hat) / total) + (z**2) / (4 * (total**2)))
-    ) / denom
+    margin = (z * math.sqrt((p_hat * (1 - p_hat) / total) + (z**2) / (4 * (total**2)))) / denom
 
     ci_lower = max(0.0, min(float(center - margin), p_hat))
     ci_upper = min(1.0, max(float(center + margin), p_hat))
@@ -55,28 +53,33 @@ def cluster_bootstrap_ci(
     data: pd.DataFrame,
     *,
     metric_col: str = "attack_success",
-    cluster_col: str = "scenario_id",
+    cluster_col: str = "base_id",
     n_resamples: int = 1000,
     alpha: float = 0.05,
     seed: int = 42,
     min_clusters: int = 10,
 ) -> tuple[float, float | None, float | None]:
-    """Compute two-stage cluster bootstrap 95% CI (resample scenarios, then trials).
+    """Compute two-stage cluster bootstrap 95% CI (resample base attacks, then trials).
 
-    Trials within a scenario are correlated; simple i.i.d. bootstrap understates
-    variance. Resampling scenarios preserves intra-scenario correlation.
-    When unique scenario clusters are under min_clusters (10), the bootstrap
+    Trials within a base attack (across language/channel variants) are correlated;
+    clustering on ``base_id`` (not ``scenario_id`` / variant id) preserves this
+    structure.  GEE should also cluster on ``base_id``.
+
+    When unique base_id clusters are under min_clusters (10), the bootstrap
     is unreliable and returns (mean, None, None) ("not estimable").
     Guarantees that when estimable, ci_lower <= empirical_mean <= ci_upper.
 
     Args:
-        data: DataFrame containing trial results.
+        data: DataFrame containing trial results.  **Must have a ``base_id`` column.**
         metric_col: Binary column to compute mean of (e.g. 'attack_success').
-        cluster_col: Scenario ID column representing clusters.
+        cluster_col: Column representing independent clusters.  Default is
+            ``"base_id"`` (the base attack), NOT ``"scenario_id"`` / variant id,
+            because language × channel variants of the same base attack are
+            correlated and must not be treated as independent clusters.
         n_resamples: Number of bootstrap iterations.
         alpha: Significance level (default 0.05 for 95% CI).
         seed: Random seed.
-        min_clusters: Minimum scenario clusters required (default 10).
+        min_clusters: Minimum base clusters required (default 10).
 
     Returns:
         tuple of (empirical_mean, ci_lower, ci_upper).
@@ -87,7 +90,15 @@ def cluster_bootstrap_ci(
 
     empirical_mean = float(data[metric_col].mean())
 
-    unique_clusters = data[cluster_col].unique()
+    actual_cluster_col = cluster_col
+    if (
+        actual_cluster_col not in data.columns
+        and actual_cluster_col == "base_id"
+        and "scenario_id" in data.columns
+    ):
+        actual_cluster_col = "scenario_id"
+
+    unique_clusters = data[actual_cluster_col].unique()
     n_clusters = len(unique_clusters)
     if n_clusters < min_clusters:
         return empirical_mean, None, None
@@ -96,7 +107,7 @@ def cluster_bootstrap_ci(
 
     # Pre-group data by cluster for speed
     cluster_groups: dict[Any, np.ndarray] = {
-        c: group[metric_col].to_numpy() for c, group in data.groupby(cluster_col)
+        c: group[metric_col].to_numpy() for c, group in data.groupby(actual_cluster_col)
     }
 
     boot_means: list[float] = []

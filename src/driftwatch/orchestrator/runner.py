@@ -140,11 +140,10 @@ async def _execute_job(
         tool_registry = build_default_registry()
 
         # Load and apply injection if present
+        payload: str | None = None
         if scenario.injection is not None:
             suite_dir = suite_root / scenario.suite
-            payload = load_payload(
-                scenario.injection.payload_ref, suite_dir
-            )
+            payload = load_payload(scenario.injection.payload_ref, suite_dir)
             injector.inject(
                 channel=scenario.channel,
                 injection=scenario.injection,
@@ -165,14 +164,13 @@ async def _execute_job(
             model_alias=job.model_alias,
             temperature=job.temperature,
             trial=job.trial,
+            payload=payload,
         )
         return result
 
     except Exception as exc:
         # Catch-all: never let a single job crash the orchestrator
-        logger.error(
-            "Unexpected error in job '%s': %s", job.job_id, exc, exc_info=True
-        )
+        logger.error("Unexpected error in job '%s': %s", job.job_id, exc, exc_info=True)
         return _error_result(job, f"unexpected:{type(exc).__name__}:{exc}")
 
 
@@ -187,6 +185,7 @@ def _error_result(job: Job, error_type: str) -> TrialResult:
         fingerprint=None,
         attack_success=False,
         task_success=False,
+        exposed=False,
         trial=job.trial,
         temperature=job.temperature,
         steps=0,

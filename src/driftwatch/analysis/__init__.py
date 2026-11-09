@@ -17,7 +17,11 @@ from driftwatch.analysis.changepoint import (
     validate_changepoint_with_bootstrap,
 )
 from driftwatch.analysis.correction import benjamini_hochberg
-from driftwatch.analysis.gee import GEEResult, fit_logistic_gee
+from driftwatch.analysis.gee import (
+    GEEResult,
+    cluster_permutation_test,
+    fit_logistic_gee,
+)
 from driftwatch.analysis.synthetic import generate_synthetic_trials
 from driftwatch.analysis.tost import TOSTResult, tost_equivalence
 
@@ -26,6 +30,7 @@ __all__ = [
     "TOSTResult",
     "benjamini_hochberg",
     "cluster_bootstrap_ci",
+    "cluster_permutation_test",
     "detect_changepoints_cusum",
     "detect_changepoints_pelt",
     "fit_logistic_gee",
@@ -34,4 +39,3 @@ __all__ = [
     "validate_changepoint_with_bootstrap",
     "wilson_score_interval",
 ]
-

@@ -122,4 +122,3 @@ def tost_equivalence(
         p_value_upper=p_upper,
         is_equivalent=is_equiv,
     )
-

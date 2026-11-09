@@ -54,6 +54,12 @@ def load_all_study_trials(weekly_root: Path) -> pd.DataFrame:
             for r in rows:
                 if "week" not in r:
                     r["week"] = week_str
+                if "base_id" not in r:
+                    sc_id = r.get("scenario_id", "")
+                    parts = sc_id.rsplit("_", 2)
+                    r["base_id"] = (
+                        parts[0] if len(parts) == 3 and parts[1] in ("desc", "out") else sc_id
+                    )
                 # Ensure is_pilot flag
                 r["is_pilot"] = r.get("is_pilot") or (
                     week_str < STUDY_START_DATE or "dryrun" in week_str.lower()
@@ -186,12 +192,13 @@ def run_analysis_pipeline(
 
         for m in models:
             m_df = study_df[study_df["model_alias"] == m]
-            if len(m_df["scenario_id"].unique()) > 1 and len(m_df) >= 20:
+            cluster_k = "base_id" if "base_id" in m_df.columns else "scenario_id"
+            if len(m_df[cluster_k].unique()) > 1 and len(m_df) >= 20:
                 try:
                     gee_res = fit_logistic_gee(
                         m_df,
                         formula="attack_success ~ week_idx + C(language) + C(channel)",
-                        cluster_col="scenario_id",
+                        cluster_col=cluster_k,
                     )
                     b1 = gee_res.coefficients.get("week_idx", 0.0)
                     b1_p = gee_res.p_values.get("week_idx", 1.0)
@@ -277,12 +284,13 @@ def run_analysis_pipeline(
 
         # 4. Language interactions (H4)
         try:
+            cluster_k = "base_id" if "base_id" in study_df.columns else "scenario_id"
             lang_gee = fit_logistic_gee(
                 study_df,
                 formula=(
                     "attack_success ~ week_idx + C(language) + week_idx:C(language) + C(channel)"
                 ),
-                cluster_col="scenario_id",
+                cluster_col=cluster_k,
             )
             gee_coefficients = {k: round(float(v), 4) for k, v in lang_gee.coefficients.items()}
             for coef_name, coef_val in lang_gee.coefficients.items():
@@ -337,6 +345,17 @@ def run_analysis_pipeline(
         if not study_df.empty and "attack_success" in study_df.columns
         else 0.0
     )
+    if not study_df.empty and "exposed" in study_df.columns:
+        exposed_df = study_df[study_df["exposed"] == 1]
+        overall_mean_exposed = (
+            round(float(exposed_df["attack_success"].mean()), 4)
+            if not exposed_df.empty and "attack_success" in exposed_df.columns
+            else overall_mean
+        )
+        total_exposed = int(len(exposed_df))
+    else:
+        overall_mean_exposed = overall_mean
+        total_exposed = len(study_df)
 
     report = {
         "schema_version": SCHEMA_VERSION,
@@ -349,6 +368,8 @@ def run_analysis_pipeline(
         "native_versus_machine": native_vs_machine,
         "hypotheses": hypotheses,
         "overall_mean_asr": overall_mean,
+        "overall_mean_asr_exposed": overall_mean_exposed,
+        "total_exposed_trials": total_exposed,
         "gee_coefficients": gee_coefficients,
         "tost_equivalence": local_control_eq
         or {

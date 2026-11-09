@@ -74,18 +74,22 @@ def generate_synthetic_trials(
                 atk_success = bool(attack_outcomes[trial])
                 # Benign task success is roughly inversely correlated with attack success
                 task_success = bool(rng.binomial(1, 0.85 if not atk_success else 0.15))
+                # Model was exposed if attack succeeded, or with high
+                # probability during tool execution
+                is_exposed = bool(atk_success or rng.binomial(1, 0.85))
 
                 rows.append(
                     {
                         "week_idx": week,
+                        "base_id": f"base_{s_idx % 20:02d}",
                         "scenario_id": scenario_id,
                         "language": lang,
                         "channel": chan,
                         "trial": trial,
                         "attack_success": int(atk_success),
                         "task_success": int(task_success),
+                        "exposed": int(is_exposed),
                     }
                 )
 
     return pd.DataFrame(rows)
-

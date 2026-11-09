@@ -61,6 +61,7 @@ class TrialResult:
     # Outcome (FR4 — deterministic predicates)
     attack_success: bool
     task_success: bool
+    exposed: bool = False
 
     # Execution metadata
     trial: int = 0
@@ -100,6 +101,7 @@ class TrialResult:
             "temperature": self.temperature,
             "attack_success": self.attack_success,
             "task_success": self.task_success,
+            "exposed": self.exposed,
             "steps": self.steps,
             "tokens_in": self.tokens_in,
             "tokens_out": self.tokens_out,
@@ -107,4 +109,3 @@ class TrialResult:
             "http_errors": self.http_errors,
             "error_type": self.error_type,
         }
-

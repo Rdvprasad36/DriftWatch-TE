@@ -148,4 +148,3 @@ def validate_changepoint_with_bootstrap(
         "ci_upper": ci_upper,
         "supported": supported,
     }
-

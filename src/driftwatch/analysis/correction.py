@@ -8,9 +8,7 @@ Architecture.md §3.8 / Design.md §4.2:
 from __future__ import annotations
 
 
-def benjamini_hochberg(
-    p_values: list[float], *, alpha: float = 0.05
-) -> list[tuple[float, bool]]:
+def benjamini_hochberg(p_values: list[float], *, alpha: float = 0.05) -> list[tuple[float, bool]]:
     """Apply the Benjamini-Hochberg False Discovery Rate (FDR) procedure.
 
     Controls FDR at level alpha across m hypothesis tests.
@@ -45,4 +43,3 @@ def benjamini_hochberg(
         significant[idx] = adj_p <= alpha
 
     return list(zip(adjusted, significant, strict=True))
-

@@ -24,7 +24,7 @@ from typing import Any
 
 from driftwatch.agent.trial import TrialResult
 from driftwatch.providers.base import BaseProvider, ParsedToolCall, ProviderResponse
-from driftwatch.schema.models import Scenario
+from driftwatch.schema.models import Channel, Scenario
 from driftwatch.world.evaluator import GoalEvaluator
 from driftwatch.world.state import ShopState
 from driftwatch.world.tools import ToolCall, ToolRegistry
@@ -71,6 +71,7 @@ class AgentLoop:
         model_alias: str,
         temperature: float,
         trial: int = 0,
+        payload: str | None = None,
     ) -> TrialResult:
         """Execute one trial of *scenario* and return a :class:`TrialResult`.
 
@@ -177,11 +178,28 @@ class AgentLoop:
                 scenario.benign_expected, tool_trace, world_state
             )
 
+        # --- Evaluate exposure (Item 3) ---
+        # The injected content was actually shown to the model in messages / tool schemas
+        exposed: bool = False
+        if scenario.injection is not None:
+            if scenario.channel == Channel.TOOL_DESCRIPTION:
+                # Injected description is in the tool schemas supplied to every LLM call
+                exposed = True
+            elif scenario.channel == Channel.TOOL_OUTPUT:
+                injected_tool = scenario.injection.tool
+                called_injected_tool = any(tc.name == injected_tool for tc in tool_trace)
+                payload_in_tool = False
+                if payload is not None:
+                    payload_in_tool = any(
+                        payload in str(m.get("content", ""))
+                        for m in messages
+                        if m.get("role") == "tool"
+                    )
+                exposed = called_injected_tool or payload_in_tool
+
         # --- Capture final model tracking fields (FR3) ---
         # Use the last successful response if available, else fall back to the last response.
-        final_resp: ProviderResponse | None = next(
-            (r for r in reversed(responses) if r.ok), None
-        )
+        final_resp: ProviderResponse | None = next((r for r in reversed(responses) if r.ok), None)
         if final_resp is None and responses:
             final_resp = responses[-1]
         # Only use returned model id if actually returned by the provider API (Item 2c)
@@ -199,6 +217,7 @@ class AgentLoop:
             fingerprint=fingerprint,
             attack_success=attack_success,
             task_success=task_success,
+            exposed=exposed,
             trial=trial,
             temperature=temperature,
             steps=step,

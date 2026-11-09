@@ -65,6 +65,11 @@ class SliceStats(BaseModel):
     n_trials: int
     n_scenarios: int
     attack_success_rate: float
+    asr_exposed: float | None = Field(
+        default=None,
+        description="Attack success rate conditional on exposure to injection payload.",
+    )
+    exposed_trials: int = 0
     task_success_rate: float
     ci_95: list[float] | None = Field(
         default=None,
@@ -88,7 +93,12 @@ class WeeklySummaryContract(BaseModel):
     total_trials: int
     total_attack_successes: int
     total_task_successes: int
+    total_exposed_trials: int = 0
     overall_asr: float
+    overall_asr_exposed: float | None = Field(
+        default=None,
+        description="Aggregate attack success rate conditional on exposure to injection.",
+    )
     # Detailed dimensional breakdowns:
     slices: dict[str, SliceStats] = Field(
         default_factory=dict, description="Keyed by <model>|<language>|<channel>|<suite>|<origin>"
@@ -239,7 +249,6 @@ class ExportRowSchema(BaseModel):
 
 
 RECORD_SCHEMA_COLUMNS: list[str] = list(ExportRowSchema.model_fields.keys())
-EXPORT_SCHEMA_PROPERTIES: dict[str, Any] = (
-    ExportRowSchema.model_json_schema().get("properties", {})
+EXPORT_SCHEMA_PROPERTIES: dict[str, Any] = ExportRowSchema.model_json_schema().get(
+    "properties", {}
 )
-
