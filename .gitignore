@@ -22,4 +22,7 @@ Thumbs.db
 # Project
 results/raw/
 *.parquet
+tmp_pilot/
+dryrun/
+weekly/
 

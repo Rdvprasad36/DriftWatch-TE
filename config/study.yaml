@@ -2,10 +2,10 @@
 # Central configuration file for study schedule, models, and endpoints.
 # All pipeline scripts, reports, and dashboards derive configuration from this file.
 
-study_start_date: "2026-11-09"
+study_start_date: "2026-11-23"
 planned_weeks: 12
 github_repo: "https://github.com/Rdvprasad36/DriftWatch-TE"
-hf_dataset_repo: "TODO"
+hf_dataset_repo: "rdvprasad36/driftwatch-te-data"
 preregistration_url: "TODO"
 local_model_digest: "baf6a787fdff"
 
