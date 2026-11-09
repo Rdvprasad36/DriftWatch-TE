@@ -1516,14 +1516,14 @@
           </p>
           <div class="tbl-wrap">
             <table class="data-table" aria-label="Hypotheses summary table">
-              <thead><tr><th>ID</th><th>Description</th><th>Pre-Registered Decision Rule</th></tr></thead>
+              <thead><tr><th>ID</th><th>Type</th><th>Description</th><th>Pre-Registered Decision Rule</th></tr></thead>
               <tbody>
-                <tr><td><strong>H1</strong></td><td>Longitudinal Drift in Attack Success</td><td>Logistic GEE slope b1 statistically significant after Benjamini-Hochberg FDR control (requires &gt;= 4 weeks).</td></tr>
-                <tr><td><strong>H2</strong></td><td>Abrupt Step-Change Points</td><td>PELT/CUSUM changepoint detection with 95% cluster-bootstrap shift interval excluding zero.</td></tr>
-                <tr><td><strong>H3</strong></td><td>Local Reference Model Stability</td><td>Two One-Sided Tests (TOST) on pinned local model within [-0.03, +0.03].</td></tr>
-                <tr><td><strong>H4</strong></td><td>Language Vulnerability Interaction</td><td>GEE interaction coefficients for Telugu and Tenglish showing higher drift than English.</td></tr>
-                <tr><td><strong>H5</strong></td><td>Vendor Changelog Alignment</td><td>Proportion of empirical changepoints coinciding with announced provider model versions.</td></tr>
-                <tr><td><strong>H6</strong></td><td>Native vs. Machine Translation Gap</td><td>Paired difference on matched scenarios testing translation artifact effects on vulnerability.</td></tr>
+                <tr><td><strong>H1</strong></td><td>Primary</td><td>Longitudinal Drift in Attack Success</td><td>Week-level permutation trend test on per-run ASR, Holm-Bonferroni across 3 hosted models (requires &gt;= 4 weeks). GEE is exploratory sensitivity check.</td></tr>
+                <tr><td><strong>H2</strong></td><td>Primary</td><td>Abrupt Step-Change Points</td><td>PELT changepoint detection with 95% cluster-bootstrap shift interval excluding zero. CUSUM is exploratory cross-check.</td></tr>
+                <tr><td><strong>H3</strong></td><td>Primary</td><td>Local Reference Model Stability</td><td>Two One-Sided Tests (TOST) on pinned local model within [-0.03, +0.03].</td></tr>
+                <tr><td><strong>H4</strong></td><td>Primary</td><td>Language Vulnerability Interaction</td><td>Week-level permutation test on per-language ASR difference (Telugu/Tenglish vs English), Holm-Bonferroni across 3 hosted models. GEE interaction is exploratory.</td></tr>
+                <tr><td><strong>H5</strong></td><td>Exploratory</td><td>Vendor Changelog Alignment</td><td>Proportion of empirical changepoints coinciding with announced provider model versions.</td></tr>
+                <tr><td><strong>H6</strong></td><td>Exploratory</td><td>Native vs. Machine Translation Gap</td><td>Paired difference on matched scenarios testing translation artifact effects on vulnerability.</td></tr>
               </tbody>
             </table>
           </div>
@@ -2043,23 +2043,25 @@ driftwatch run --week 2026-10-26 --suites canary,attacks_v1 --models local</pre>
           var hypos = (studyWeeks.length >= 4 && appState.analysis && appState.analysis.hypotheses)
             ? appState.analysis.hypotheses
             : {
-                H1: { status: 'not_enough_data', rule: 'Requires >= 4 study weeks (GEE logistic slope)' },
-                H2: { status: 'not_enough_data', rule: 'Requires >= 4 study weeks (PELT/CUSUM changepoints)' },
-                H3: { status: 'not_enough_data', rule: 'Requires >= 4 study weeks (TOST equivalence)' },
-                H4: { status: 'not_enough_data', rule: 'Requires >= 4 study weeks (Multilingual GEE interaction)' },
-                H5: { status: 'not_enough_data', rule: 'Requires >= 4 study weeks (Vendor changelog alignment)' },
-                H6: { status: 'not_enough_data', rule: 'Requires >= 4 study weeks (Native vs. machine paired difference)' }
+                H1: { status: 'not_enough_data', test_type: 'primary', rule: 'Requires >= 4 study weeks (Week-level HAC trend)' },
+                H2: { status: 'not_enough_data', test_type: 'primary', rule: 'Requires >= 4 study weeks (PELT changepoints)' },
+                H3: { status: 'not_enough_data', test_type: 'primary', rule: 'Requires >= 4 study weeks (TOST equivalence)' },
+                H4: { status: 'not_enough_data', test_type: 'primary', rule: 'Requires >= 4 study weeks (Week-level HAC language interaction)' },
+                H5: { status: 'not_enough_data', test_type: 'exploratory', rule: 'Requires >= 4 study weeks (Vendor changelog alignment)' },
+                H6: { status: 'not_enough_data', test_type: 'exploratory', rule: 'Requires >= 4 study weeks (Native vs. machine paired difference)' }
               };
           Object.keys(hypos).forEach(function(hKey) {
             var h = hypos[hKey];
             var cls = 'badge badge-' + (h.status || 'not_enough_data');
             var label = (h.status || 'not_enough_data').replace(/_/g, ' ');
+            var testType = (h.test_type || 'primary').toUpperCase();
+            var typeColor = testType === 'EXPLORATORY' ? 'color:var(--text-tertiary);' : 'color:var(--accent);';
             var chip = document.createElement('div');
             chip.className = 'hypo-chip';
             chip.innerHTML =
               '<div class="hypo-id">' + hKey + '</div>' +
               '<div class="hypo-body">' +
-                '<div class="hypo-title"><span>Hypothesis ' + hKey + '</span><span class="' + cls + '">' + label + '</span></div>' +
+                '<div class="hypo-title"><span>Hypothesis ' + hKey + ' <span style="font-size:0.6rem;font-weight:700;letter-spacing:0.05em;' + typeColor + '">[' + testType + ']</span></span><span class="' + cls + '">' + label + '</span></div>' +
                 '<div class="hypo-rule">' + (h.rule || '') + '</div>' +
               '</div>';
             hypoC.appendChild(chip);

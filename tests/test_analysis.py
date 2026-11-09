@@ -326,3 +326,34 @@ class TestDriftwatchAnalyzeCLI:
         assert "overall_mean_asr" in data
         assert "gee_coefficients" in data
         assert "tost_equivalence" in data
+        assert "hypotheses" in data
+        assert data["hypotheses"]["H1"]["test_type"] == "primary"
+        assert data["hypotheses"]["H5"]["test_type"] == "exploratory"
+        assert data["primary_method"] == "week_level_permutation_test"
+
+
+class TestWeekLevelInference:
+    def test_week_level_permutation_test_null_and_drift(self) -> None:
+        """Week-level permutation test returns high p-value on null and low on drift."""
+        from driftwatch.analysis.pipeline import _week_level_permutation_test
+
+        # True null: constant series
+        y_null = np.array([0.20, 0.19, 0.21, 0.20, 0.19, 0.22, 0.20, 0.21, 0.19, 0.20, 0.21, 0.20])
+        p_null, slope_null = _week_level_permutation_test(y_null, mode="trend")
+        assert p_null > 0.05
+        assert abs(slope_null) < 0.01
+
+        # Clear drift: linear increase from 0.10 to 0.40
+        y_drift = np.linspace(0.10, 0.40, 12)
+        p_drift, slope_drift = _week_level_permutation_test(y_drift, mode="trend")
+        assert p_drift < 0.05
+        assert slope_drift > 0.02
+
+    def test_week_level_step_test(self) -> None:
+        """Week-level permutation step test detects shift at step week."""
+        from driftwatch.analysis.pipeline import _week_level_permutation_test
+
+        y_step = np.array([0.10, 0.11, 0.09, 0.10, 0.12, 0.10, 0.35, 0.38, 0.34, 0.36, 0.37, 0.35])
+        p_step, diff_step = _week_level_permutation_test(y_step, mode="step", step_idx=6)
+        assert p_step < 0.05
+        assert diff_step > 0.20

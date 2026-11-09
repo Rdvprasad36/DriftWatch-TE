@@ -34,10 +34,8 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.power_sim import (  # noqa: E402
-    calculate_mde_80,
     expit,
     logit,
-    simulate_clustered_longitudinal_power,
 )
 
 logger = logging.getLogger("estimate_noise")
@@ -264,75 +262,63 @@ def project_power_for_estimate(
     est: NoiseEstimate,
     m_trials: int = 10,
     n_weeks: int = 12,
-    n_sims: int = 1000,
+    n_sims: int = 500,
     seed: int = 42,
 ) -> dict[str, float]:
-    """Run Monte Carlo simulation using the empirically estimated noise parameters."""
-    tr_5, se_tr = simulate_clustered_longitudinal_power(
-        n_scenarios=20,
-        trials_per_scenario=m_trials,
-        baseline_asr=est.baseline_asr,
-        effect_size=0.05,
-        rho=0.60,
-        p_expose=0.85,
-        sigma_u=0.50,
-        sigma_w=est.sigma_w,
-        tau=est.tau,
-        n_weeks=n_weeks,
-        mode="trend",
-        n_simulations=n_sims,
-        seed=seed,
-    )
-    tr_10, _ = simulate_clustered_longitudinal_power(
-        n_scenarios=20,
-        trials_per_scenario=m_trials,
-        baseline_asr=est.baseline_asr,
-        effect_size=0.10,
-        rho=0.60,
-        p_expose=0.85,
-        sigma_u=0.50,
-        sigma_w=est.sigma_w,
-        tau=est.tau,
-        n_weeks=n_weeks,
-        mode="trend",
-        n_simulations=n_sims,
-        seed=seed,
-    )
-    st_5, se_st = simulate_clustered_longitudinal_power(
-        n_scenarios=20,
-        trials_per_scenario=m_trials,
-        baseline_asr=est.baseline_asr,
-        effect_size=0.05,
-        rho=0.60,
-        p_expose=0.85,
-        sigma_u=0.50,
-        sigma_w=est.sigma_w,
-        tau=est.tau,
-        n_weeks=n_weeks,
-        mode="step",
-        step_week=6,
-        n_simulations=n_sims,
-        seed=seed,
-    )
-    st_10, _ = simulate_clustered_longitudinal_power(
-        n_scenarios=20,
-        trials_per_scenario=m_trials,
-        baseline_asr=est.baseline_asr,
-        effect_size=0.10,
-        rho=0.60,
-        p_expose=0.85,
-        sigma_u=0.50,
-        sigma_w=est.sigma_w,
-        tau=est.tau,
-        n_weeks=n_weeks,
-        mode="step",
-        step_week=6,
-        n_simulations=n_sims,
-        seed=seed,
-    )
+    """Run week-level Monte Carlo using empirically estimated noise parameters.
 
-    mde_tr = calculate_mde_80(se_tr, df=19)
-    mde_st = calculate_mde_80(se_st, df=19)
+    Uses the same Permutation Test estimator as the analysis pipeline and power simulation.
+    """
+    from scripts.power_sim import compute_pvalues, find_mde_bisection, generate_run_series_batch
+
+    rng = np.random.default_rng(seed)
+    step_idx = n_weeks // 2
+
+    def _power(effect: float, mode: str) -> float:
+        bar_y = generate_run_series_batch(
+            n_sims=n_sims,
+            trials_per_run=m_trials,
+            baseline_asr=est.baseline_asr,
+            sigma_w=est.sigma_w,
+            tau=est.tau,
+            n_runs=n_weeks,
+            effect_size=effect,
+            mode=mode,
+            step_idx=step_idx,
+            rng=rng,
+        )
+        p_vals = compute_pvalues(bar_y, "perm", mode, step_idx, seed=seed)
+        return float(np.mean(p_vals < 0.05))
+
+    tr_5 = _power(0.05, "trend")
+    tr_10 = _power(0.10, "trend")
+    st_5 = _power(0.05, "step")
+    st_10 = _power(0.10, "step")
+
+    mde_tr = find_mde_bisection(
+        method="perm",
+        mode="trend",
+        trials_per_run=m_trials,
+        baseline_asr=est.baseline_asr,
+        sigma_w=est.sigma_w,
+        tau=est.tau,
+        n_runs=n_weeks,
+        step_idx=step_idx,
+        n_sims=300,
+        seed=seed,
+    )
+    mde_st = find_mde_bisection(
+        method="perm",
+        mode="step",
+        trials_per_run=m_trials,
+        baseline_asr=est.baseline_asr,
+        sigma_w=est.sigma_w,
+        tau=est.tau,
+        n_runs=n_weeks,
+        step_idx=step_idx,
+        n_sims=300,
+        seed=seed,
+    )
 
     return {
         "trend_power_5pt": tr_5,
@@ -387,6 +373,8 @@ def main() -> int:
 
     if args.synthetic_demo:
         print("[DEMO MODE] Generating synthetic 4-day dry-run dataset across 3 models...")
+        print("*** DEMO ONLY — these numbers are fabricated for illustration. ***")
+        print("*** Do NOT cite these estimates in manuscripts or preregistration. ***")
         synthetic_bundles = generate_synthetic_dryruns(n_days=4, n_scenarios=20, m_trials=5)
         for d_trials in synthetic_bundles.values():
             all_trials.extend(d_trials)
@@ -485,9 +473,12 @@ def main() -> int:
         )
     print("=" * 86)
     print("Interpretation:")
+    if args.synthetic_demo:
+        print("  *** DEMO ONLY — all numbers above are synthetic and for illustration only. ***")
+        print("  *** Do NOT quote these estimates in the README, preregistration, or papers. ***")
     print("  • Estimates feed empirical noise directly into the pre-registered study design.")
-    print("  • MDE(Tr80) is the minimum detectable total linear trend over 12 weeks.")
-    print("  • MDE(St80) is the minimum detectable step change at week 6 for 80% power.")
+    print("  • MDE(Tr80) is the minimum detectable total linear trend over T weeks.")
+    print("  • MDE(St80) is the minimum detectable step change at midpoint for 80% power.")
     print("=" * 86)
     return 0
 
